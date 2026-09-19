@@ -3,19 +3,20 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fraud-graph"
+name = "fraud-graph-explorer"
 version = "0.1.0"
 description = "Detect fraud in bank loan applications using graph exploration"
 requires-python = ">=3.10"
 dependencies = [
     "django",
-    "markdown-pdf",
+    #"markdown-pdf",
+    "xhtml2pdf",
     "pdfplumber",
     # add others later: faker, pdfplumber, etc.
 ]
 
 [project.scripts]
-manage = "fraud_graph.manage:main"
+manage = "fraud_graph_explorer.manage:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

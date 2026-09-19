@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<!-- Use the dynamic active_lang variable -->
+<html lang="{{ active_lang }}">
+
+    <head>
+
+        <title>{{ ui.TITLE }}</title>
+
+        <!-- HTMX must be in the head! -->
+        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link rel="stylesheet" href="{% static 'css/crafter_style.css' %}">
+
+    </head>
+    <body>
+
+        <div class="header">
+            <h1>{{ ui.HEADER }}</h1>
+            <p>{{ ui.INSTRUCTIONS|safe }}</p>
+        </div>
+        <!-- This container is what HTMX will swap out -->
+        <div id="form-container" class="form-container">
+            {% include "sheet_crafter/_form.html" %}
+        </div>
+
+        <!-- Native HTML Dialog -->
+        <dialog id="tin-data-dialog" class="modal-dialog">
+            <div class="modal-dialog-container">
+
+                <h3 style="margin-top: 0;">{{ ui.MODAL_TITLE }}</h3>
+                <p>{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
+
+                <!-- Dialog Form -->
+                <form id="tin-data-form" method="dialog">
+
+                    <!-- Sex Selector -->
+                    <div class="modal-form-field">
+                        <label for="modal-sex-select" class="modal-label">
+                            {{ ui.MODAL_SEX_LABEL }}:
+                        </label>
+                        <!-- Added required attribute and empty disabled option -->
+                        <select id="modal-sex-select" name="sex" required>
+                            <option value="M">{{ ui.MODAL_SEX_MALE }}</option>
+                            <option value="F">{{ ui.MODAL_SEX_FEMALE }}</option>
+                        </select>
+                    </div>
+
+                    <!-- DOB Selector -->
+                    <div class="modal-form-field">
+                        <label for="modal-dob-input" class="modal-label">
+                            {{ ui.MODAL_DOB_LABEL }}:
+                        </label>
+                        <input type="date" id="modal-dob-input" name="dob" required>
+                    </div>
+
+                    <button type="submit" class="modal-button">
+                        {{ ui.MODAL_BTN }}
+                    </button>
+
+                </form>
+            </div>
+        </dialog>
+
+        <!-- Load the external JS file right before </body> -->
+        <script src="{% static 'js/sheet_crafter.js' %}" defer></script>
+
+    </body>
+
+</html>
+
+
+
+
+
+
+
+
+

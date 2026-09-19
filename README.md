@@ -38,7 +38,7 @@ The main analytical engine. It ingests the generated PDFs, extracts the key iden
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/yourusername/fraud-graph.git
-   cd fraud-graph
+   cd fraud-graph-explorer
    ```
 
 2. **Create and activate a virtual environment:**
@@ -70,10 +70,10 @@ The main analytical engine. It ingests the generated PDFs, extracts the key iden
 The project uses a strict Python `src` layout to ensure clean package management.
 
 ```text
-fraud-graph/                  
+fraud-graph-explorer/                  
 ├── pyproject.toml                
 ├── src/                          
-    └── fraud_graph/          
+    └── fraud_graph_explorer/          
         ├── manage.py
         ├── config/                <-- Django Project Settings
         ├── sheet_crafter/         <-- App 1: Interactive form, typo injection, MD to PDF

@@ -1,0 +1,108 @@
+<!-- src/fraud_graph_explorer/sheet_crafter/templates/sheet_crafter/_form.html -->
+<form method="POST" action="{% url 'sheet_crafter:crafter' %}" autocomplete="nope">
+    {% csrf_token %}
+
+    <div class="ddn-container">
+        <div class="select-group">
+            <!--suppress XmlInvalidId -->
+            <label for="{{ form.country_code.id_for_label }}">{{ ui.COUNTRY_LABEL }} {{ ui.CHANGE_TO_AUTOGEN }}:</label>
+             <!-- Manually write the select tag so we can put HTMX here -->
+            <select name="country_code"
+                    id="id_country_code"
+                    hx-get="."
+                    hx-target="#form-container"
+                    hx-trigger="change"
+                    hx-push-url="true"
+                    autocomplete="nope">
+                {% for value, name in form.country_code.field.choices %}
+                    <option value="{{ value }}" {% if form.country_code.value == value %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="button"
+                class="action-btn"
+                hx-get="."
+                hx-target="#form-container"
+                hx-include="[name='country_code']">
+            <i class="bi bi-dice-5"></i> {{ ui.BTN_RANDOMIZE }}
+        </button>
+        <button type="submit"
+                class="action-btn">
+            <i class="bi bi-file-earmark-pdf"></i> {{ ui.BTN_SAVE }}
+        </button>
+    </div>
+
+    <br>
+
+    <div class="pdf-container">
+        <p class="data-entry"> {{ ui.PDF_DATA }}</p>
+        {% for field in form %}
+            {% if field.name != 'country_code' %}
+                {# HIDDEN FIELDS: Render the input, but SKIP labels, sections, and UI elements #}
+                {% if field.is_hidden %}
+                    {{ field }}
+
+                {# VISIBLE FIELDS: Render labels, sections, and icons #}
+                {% else %}
+
+                    {% ifchanged field.field.section_title %}
+                        <h3>{{ field.field.section_title }}</h3>
+                    {% endifchanged %}
+
+                    <!--suppress XmlInvalidId -->
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+
+                    {# IF FIELD HAS A TOOLTIP (VAT, TIN, etc.) #}
+                    {% if field.field.hint_key %}
+
+                        {% if field.field.hint_key ==  'HINT_VAT'%}
+                            <!-- Tooltip for VAT -->
+                            <div class="input-group">
+                                {{ field }}
+                                <span class="tooltip-icon">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span class="tooltip-text">
+                                        {{ ui.HINT_VAT|safe }}
+                                    </span>
+                                </span>
+                            </div>
+                        {% elif field.field.hint_key ==  'HINT_TIN'%}
+                            <!-- Tooltip + Recalculate for TIN -->
+                            <div class="input-group-tin">
+                                 {{ field }}
+                                <span class="tooltip-icon">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span class="tooltip-text">
+                                        {{ ui.HINT_TIN|safe }}
+                                    </span>
+                                </span>
+                                {# IF FIELD NEEDS RECALCULATE BUTTON (TIN only) #}
+                                {% if field.field.needs_tin_calc %}
+                                <span class="recalc-icon"
+                                      hx-post="{% url 'sheet_crafter:calculate_tax_code' %}"
+                                      hx-target="#{{ field.id_for_label }}"
+                                      hx-vals='{{ field.field.calc_fields|safe }}'
+                                      hx-swap="outerHTML">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                    {% else %}
+
+                        {# NORMAL FIELDS WITHOUT TOOLTIPS #}
+                        <div class="input-single">{{ field }}</div>
+
+                    {% endif %}
+                {% endif %}
+
+            {% endif %}
+        {% endfor %}
+    </div>
+
+</form>
+
+

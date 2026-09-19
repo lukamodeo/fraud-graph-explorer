@@ -1,3 +1,4 @@
+# src/fraud_graph_explorer/config/settings.py
 """
 Django settings for config project.
 
@@ -11,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +30,24 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+# Enable translation system (required for get_language() to work)
+USE_I18N = True
+# Default language if browser doesn't match
+LANGUAGE_CODE = 'en-gb'
+# 3. Supported languages (which browser languages to accept)
+LANGUAGES = [
+    ('it', 'Italian'),
+    ('de', 'German'),
+    ('fr', 'French'),
+    ('es', 'Spanish'),
+    ('en-gb', 'British English'),
+]
+# # Where translation files live
+# LOCALE_PATHS = [
+#     BASE_DIR / 'locale',
+# ]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,13 +57,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'fraud_graph.sheet_crafter',
-    'fraud_graph.graph_explorer',
+    'fraud_graph_explorer.sheet_crafter',
+    'fraud_graph_explorer.graph_explorer',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',    # <== after Session, before Common !!!
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -51,15 +72,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'fraud_graph.config.urls'
+ROOT_URLCONF = 'fraud_graph_explorer.config.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        # Point Django to the new centralized templates folder
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': False,  # Set to False since we are using DIRS explicitly
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -68,7 +91,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'fraud_graph.config.wsgi.application'
+WSGI_APPLICATION = 'fraud_graph_explorer.config.wsgi.application'
 
 
 # Database
@@ -117,6 +140,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class SheetCrafterConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'fraud_graph.sheet_crafter'
+    name = 'fraud_graph_explorer.sheet_crafter'
