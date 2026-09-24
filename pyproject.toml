@@ -9,8 +9,9 @@ description = "Detect fraud in bank loan applications using graph exploration"
 requires-python = ">=3.10"
 dependencies = [
     "django",
-    #"markdown-pdf",
     "xhtml2pdf",
+    "python-stdnum",
+    "python-codicefiscale",
     "pdfplumber",
     # add others later: faker, pdfplumber, etc.
 ]

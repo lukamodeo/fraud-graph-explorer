@@ -78,14 +78,17 @@
                                         {{ ui.HINT_TIN|safe }}
                                     </span>
                                 </span>
-                                {# IF FIELD NEEDS RECALCULATE BUTTON (TIN only) #}
+                                {# IF FIELD NEEDS RECALCULATE BUTTON (TIN only if country is: IT or FR ) #}
                                 {% if field.field.needs_tin_calc %}
                                 <span class="recalc-icon"
-                                      hx-post="{% url 'sheet_crafter:calculate_tax_code' %}"
+                                      hx-post="{% url 'sheet_crafter:calculate_tin' %}"
                                       hx-target="#{{ field.id_for_label }}"
                                       hx-vals='{{ field.field.calc_fields|safe }}'
                                       hx-swap="outerHTML">
                                     <i class="bi bi-arrow-repeat"></i>
+                                    <span class="tooltip-text">
+                                        {{ ui.HINT_RECALC|safe }}
+                                    </span>
                                 </span>
                                 {% endif %}
                             </div>

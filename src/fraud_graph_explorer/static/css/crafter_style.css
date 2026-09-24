@@ -1,6 +1,6 @@
 
 body {
-    font-family: Tahoma, Arial, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
     background: #666;
     padding: 0;
     margin: 0;
@@ -157,21 +157,33 @@ form h3 {
 }
 .tooltip-text {
     visibility: hidden;
-    width: 360px;
-    background-color: #369;
     color: #fff;
     text-align: center;
-    border-radius: 6px;
+    border-radius: 8px;
+    border-bottom-right-radius: 0;
     padding: 8px;
     position: absolute;
     z-index: 1;
     bottom: 100%;
     left: 50%;
-    margin-left: -380px;
     opacity: 0;
     transition: opacity 0.3s;
     font-size: smaller;
 }
+
+.tooltip-icon .tooltip-text{
+    background-color: #369;
+    width: 360px;
+    margin-left: -384px;
+}
+
+.recalc-icon .tooltip-text {
+    background-color: #396;
+    width: 70px;
+    margin-left: -90px;
+}
+
+.recalc-icon:hover .tooltip-text,
 .tooltip-icon:hover .tooltip-text {
     visibility: visible;
     opacity: 1;
@@ -201,8 +213,12 @@ form h3 {
 }
 
 .modal-label {
-    font-weight: bold;
-    margin-right: 10px;
+    margin-bottom: 0.2rem;
+}
+
+.modal-check-label {
+    margin-right: 0.2rem;
+    display: inline;
 }
 
 
@@ -215,12 +231,13 @@ form h3 {
 .modal-form-field {
     display: flex;
     flex-direction: column;
-    align-items: center; /* center label and control */
+    align-items: center;    /* center label and control */
 }
 
+.modal-check-group,
 .modal-button {
-    grid-column: 1 / -1; /* span both columns */
-    justify-self: center; /* center button on second row */
+    grid-column: 1 / -1;    /* span both columns */
+    justify-self: center;   /* center button on second row */
 }
 
 .modal-form-field input,
@@ -239,6 +256,7 @@ form h3 {
         grid-template-columns: 1fr;
     }
 
+    .modal-check-group,
     .modal-button {
         grid-column: auto;
     }

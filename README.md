@@ -37,7 +37,7 @@ The main analytical engine. It ingests the generated PDFs, extracts the key iden
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/fraud-graph.git
+   git clone https://github.com/lukamodeo/fraud-graph-explorer.git
    cd fraud-graph-explorer
    ```
 
@@ -76,7 +76,7 @@ fraud-graph-explorer/
     └── fraud_graph_explorer/          
         ├── manage.py
         ├── config/                <-- Django Project Settings
-        ├── sheet_crafter/         <-- App 1: Interactive form, typo injection, MD to PDF
+        ├── sheet_crafter/         <-- App 1: Interactive form, typo injection, save as PDF
         └── graph_explorer/        <-- App 2: PDF ingestion, Vis.js graph exploration
 ```
 

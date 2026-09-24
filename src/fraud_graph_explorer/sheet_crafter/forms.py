@@ -4,15 +4,6 @@ from django import forms
 from fraud_graph_explorer.graph_explorer.ingestion_schema import FIELDS, SECTIONS
 
 class SheetCrafterForm(forms.Form):
-    # COUNTRIES = [
-    #     ('IT', 'Italy'),
-    #     ('DE', 'Germany'),
-    #     ('FR', 'France'),
-    #     ('ES', 'Spain'),
-    #     ('GB', 'United Kingdom'),   # <== default if not match
-    # ]
-    #
-    # country_code = forms.ChoiceField(choices=COUNTRIES, label="Country")
 
     country_code = forms.ChoiceField(label="Country")
 
@@ -33,17 +24,7 @@ class SheetCrafterForm(forms.Form):
 
         cc = country_code.upper()
 
-        # def get_schema_label(internal_name):
-        #     return FIELDS.get(internal_name, {}).get("labels", {}).get(cc, FIELDS[internal_name]["labels"]["GB"])
-
-        # self.fields['request_number'].label = get_schema_label('request_number')
-        # self.fields['company_name'].label = get_schema_label('company_name')
-        # self.fields['company_vatn_taxc'].label = get_schema_label('company_vatn_taxc')
-        # self.fields['legal_rep_name'].label = get_schema_label('legal_rep_name')
-        # self.fields['legal_rep_dob'].label = get_schema_label('legal_rep_dob')
-        # self.fields['taxcode_legal_representative'].label = get_schema_label('taxcode_legal_representative')
-
-        # 1. Loop through sections to maintain the exact PDF layout order
+        # Loop through sections to maintain the exact PDF layout order
         for section in SECTIONS:
             section_title = section["labels"].get(cc, section["labels"]["GB"])
 
@@ -55,13 +36,7 @@ class SheetCrafterForm(forms.Form):
                 # Read max_length from schema, default to 100
                 max_length = field_config.get("max_length", 100)
 
-                # 2. Create the form field dynamically
-                # self.fields[internal_name] = forms.CharField(
-                #     required=False,
-                #     max_length=max_length
-                # )
-
-                # CHECK FOR HIDDEN ATTRIBUTE
+                # Check for hidden attribute
                 if field_config.get("hidden"):
                     self.fields[internal_name] = forms.CharField(
                         required=False,
@@ -73,7 +48,7 @@ class SheetCrafterForm(forms.Form):
                         required=False,
                         max_length=max_length
                     )
-                    # 3. Assign the localized label
+                    # Assign the localized label
                     labels = field_config.get("labels", {})
                     self.fields[internal_name].label = labels.get(cc, labels.get("GB", internal_name))
 
@@ -84,12 +59,13 @@ class SheetCrafterForm(forms.Form):
                 self.fields[internal_name].hint_key = field_config.get("hint_key", "")
 
                 # Pass needs_tin_calc to template
-                self.fields[internal_name].needs_tin_calc = field_config.get("needs_tin_calc", False)
+                self.fields[internal_name].needs_tin_calc = field_config.get("needs_tin_calc", False) if cc in ['IT', 'FR'] else False
 
-                # Handle Sex Field Modal Trigger
+                # Handle Fields Modal Trigger
                 sex_field = field_config.get("sex_field")
                 dob_field = field_config.get("dob_field")
-                if sex_field and dob_field:
+                tin_field = field_config.get("tin_field")
+                if sex_field and dob_field and tin_field:
                     # Attach the names to the field object for the template
                     self.fields[internal_name].sex_field = sex_field
                     self.fields[internal_name].dob_field = dob_field
@@ -97,7 +73,7 @@ class SheetCrafterForm(forms.Form):
                     # ONLY inject the onchange trigger if the TIN is algorithmic!
                     if cc in ['IT', 'FR']:
                         self.fields[internal_name].widget.attrs.update({
-                            'onchange': f"openTinDataDialog('{sex_field}', '{dob_field}')"
+                            'onchange': f"openTinDataDialog('{sex_field}', '{dob_field}', '{tin_field}')"
                         })
                 else:
                     self.fields[internal_name].sex_field = ""

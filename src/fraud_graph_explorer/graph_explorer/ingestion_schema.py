@@ -6,7 +6,7 @@ FIELDS = {
         "type": "string",
         "tags": ["Sheet"],
         "max_length": 50,
-        "fake_type": "request_id",
+        "fake_type": "id",
         "labels": {
             "IT": "N. DOMANDA",
             "DE": "ANTRAGS-NR.",
@@ -84,7 +84,7 @@ FIELDS = {
     "company_iban": {
         "type": "string",
         "tags": ["IBAN"],
-        "max_length": 15,
+        "max_length": 34,
         "fake_type": "iban",
         "labels": {
             "IT": "IBAN",
@@ -98,9 +98,10 @@ FIELDS = {
         "type": "string",
         "tags": ["FULLNAME"],
         "max_length": 100,
-        "fake_type": "name",
+        "fake_type": "profile",
         "sex_field": "representative_sex",
         "dob_field": "representative_dob",
+        "tin_field": "representative_tin",
         "labels": {
             "IT": "NOME E COGNOME",
             "DE": "VORNAME UND NACHNAME",
@@ -113,54 +114,33 @@ FIELDS = {
         "type": "string",
         "tags": [],
         "max_length": 1,
-        "fake_type": "sex",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "SESSO",
-        #     "DE": "GESCHLECHT",
-        #     "FR": "SEXE",
-        #     "ES": "SEXO",
-        #     "GB": "SEX"
-        # }
     },
     "representative_dob": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthdate",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "DATA DI NASCITA",
-        #     "DE": "GEBURTSDATUM DES VERTRETERS",
-        #     "FR": "DATE DE NAISSANCE DU REPRÉSENTANT",
-        #     "ES": "FECHA DE NACIMIENTO DEL REPRESENTANTE",
-        #     "GB": "LEGAL REP DATE OF BIRTH"
-        # }
     },
     "representative_birthplace": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthplace",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "CODICE COMUNE",
-        #     "DE": "GEMEINDECODE",
-        #     "FR": "CODE COMMUNE",
-        #     "ES": "CÓDIGO MUNICIPIO",
-        #     "GB": "CITY CODE"
-        # }
     },
     "representative_tin": {
         "type": "keyword",
         "tags": ["TIN"],
         "max_length": 20,
-        "fake_type": "tin",
+        "fake_type": "profile",
         "hint_key": "HINT_TIN",
         "needs_tin_calc": True,
         "calc_fields": {
             "tin": "representative_tin",
-            "name": "representative_fullname",
+            "fullname": "representative_fullname",
             "sex": "representative_sex",
             "dob": "representative_dob",
             "birthplace": "representative_birthplace"
@@ -175,11 +155,11 @@ FIELDS = {
     },
     "representative_email": {
         "type": "string",
-        "tags": ["EMAIL"],
+        "tags": ["email"],
         "max_length": 50,
         "fake_type": "email",
         "labels": {
-            "IT": "INDIRIZZO E-MAIL",
+            "IT": "INDIRIZZO PEC",
             "DE": "E-MAIL-ADRESSE",
             "FR": "ADRESSE E-MAIL",
             "ES": "DIRECCIÓN DE CORREO ELECTRÓNICO",
@@ -203,9 +183,10 @@ FIELDS = {
         "type": "string",
         "tags": ["FULLNAME"],
         "max_length": 100,
-        "fake_type": "name",
+        "fake_type": "profile",
         "sex_field": "guarantor_1_sex",
         "dob_field": "guarantor_1_dob",
+        "tin_field": "guarantor_1_tin",
         "labels": {
             "IT": "NOME E COGNOME",
             "DE": "VORNAME UND NACHNAME",
@@ -218,54 +199,33 @@ FIELDS = {
         "type": "string",
         "tags": [],
         "max_length": 1,
-        "fake_type": "sex",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "SESSO",
-        #     "DE": "GESCHLECHT",
-        #     "FR": "SEXE",
-        #     "ES": "SEXO",
-        #     "GB": "SEX"
-        # }
     },
     "guarantor_1_dob": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthdate",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "DATA DI NASCITA",
-        #     "DE": "GEBURTSDATUM DES VERTRETERS",
-        #     "FR": "DATE DE NAISSANCE DU REPRÉSENTANT",
-        #     "ES": "FECHA DE NACIMIENTO DEL REPRESENTANTE",
-        #     "GB": "LEGAL REP DATE OF BIRTH"
-        # }
     },
     "guarantor_1_birthplace": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthplace",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "CODICE COMUNE",
-        #     "DE": "GEMEINDECODE",
-        #     "FR": "CODE COMMUNE",
-        #     "ES": "CÓDIGO MUNICIPIO",
-        #     "GB": "CITY CODE"
-        # }
     },
     "guarantor_1_tin": {
         "type": "keyword",
         "tags": ["TIN"],
         "max_length": 20,
-        "fake_type": "tin",
+        "fake_type": "profile",
         "hint_key": "HINT_TIN",
         "needs_tin_calc": True,
         "calc_fields": {
             "tin": "guarantor_1_tin",
-            "name": "guarantor_1_fullname",
+            "fullname": "guarantor_1_fullname",
             "sex": "guarantor_1_sex",
             "dob": "guarantor_1_dob",
             "birthplace": "guarantor_1_birthplace"
@@ -282,9 +242,10 @@ FIELDS = {
         "type": "string",
         "tags": ["FULLNAME"],
         "max_length": 100,
-        "fake_type": "name",
+        "fake_type": "profile",
         "sex_field": "guarantor_2_sex",
         "dob_field": "guarantor_2_dob",
+        "tin_field": "guarantor_2_tin",
         "labels": {
             "IT": "NOME E COGNOME",
             "DE": "VORNAME UND NACHNAME",
@@ -297,54 +258,33 @@ FIELDS = {
         "type": "string",
         "tags": [],
         "max_length": 1,
-        "fake_type": "sex",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "SESSO",
-        #     "DE": "GESCHLECHT",
-        #     "FR": "SEXE",
-        #     "ES": "SEXO",
-        #     "GB": "SEX"
-        # }
     },
     "guarantor_2_dob": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthdate",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "DATA DI NASCITA",
-        #     "DE": "GEBURTSDATUM DES VERTRETERS",
-        #     "FR": "DATE DE NAISSANCE DU REPRÉSENTANT",
-        #     "ES": "FECHA DE NACIMIENTO DEL REPRESENTANTE",
-        #     "GB": "LEGAL REP DATE OF BIRTH"
-        # }
     },
     "guarantor_2_birthplace": {
         "type": "string",
         "tags": [],
         "max_length": 10,
-        "fake_type": "birthplace",
+        "fake_type": "profile",
         "hidden": True,
-        # "labels": {
-        #     "IT": "CODICE COMUNE",
-        #     "DE": "GEMEINDECODE",
-        #     "FR": "CODE COMMUNE",
-        #     "ES": "CÓDIGO MUNICIPIO",
-        #     "GB": "CITY CODE"
-        # }
     },
     "guarantor_2_tin": {
         "type": "keyword",
         "tags": ["TIN"],
         "max_length": 20,
-        "fake_type": "tin",
+        "fake_type": "profile",
         "hint_key": "HINT_TIN",
         "needs_tin_calc": True,
         "calc_fields": {
             "tin": "guarantor_2_tin",
-            "name": "guarantor_2_fullname",
+            "fullname": "guarantor_2_fullname",
             "sex": "guarantor_2_sex",
             "dob": "guarantor_2_dob",
             "birthplace": "guarantor_2_birthplace"
@@ -362,11 +302,11 @@ FIELDS = {
 # Define the layout structure with localized Headers, Footer and Section
 PDF = {
     "header": {
-        "IT": "Scheda di Domanda di Prestito",
-        "DE": "Kreditantragsformular",
-        "FR": "Fiche de demande de prêt",
-        "ES": "Hoja de solicitud de préstamo",
-        "GB": "Loan Application Sheet"
+        "IT": "Domanda di Prestito",
+        "DE": "Kreditantrag",
+        "FR": "Demande de prêt",
+        "ES": "Solicitud de préstamo",
+        "GB": "Loan Application"
     },
     "footer": {
         "IT": "Scheda creata con dati sintetici a solo scopo di test",

@@ -6,11 +6,13 @@
 !README.md
 *.txt
 *.old
+seed_gen.py
 
 # Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+media/*
 
 # Virtual environments
 .venv/

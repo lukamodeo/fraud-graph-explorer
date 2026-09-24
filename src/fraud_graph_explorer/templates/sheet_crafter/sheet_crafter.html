@@ -31,6 +31,7 @@
             <div class="modal-dialog-container">
 
                 <h3 style="margin-top: 0;">{{ ui.MODAL_TITLE }}</h3>
+
                 <p>{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
 
                 <!-- Dialog Form -->
@@ -39,7 +40,7 @@
                     <!-- Sex Selector -->
                     <div class="modal-form-field">
                         <label for="modal-sex-select" class="modal-label">
-                            {{ ui.MODAL_SEX_LABEL }}:
+                            {{ ui.MODAL_SEX_LABEL }}
                         </label>
                         <!-- Added required attribute and empty disabled option -->
                         <select id="modal-sex-select" name="sex" required>
@@ -51,9 +52,17 @@
                     <!-- DOB Selector -->
                     <div class="modal-form-field">
                         <label for="modal-dob-input" class="modal-label">
-                            {{ ui.MODAL_DOB_LABEL }}:
+                            {{ ui.MODAL_DOB_LABEL }}
                         </label>
                         <input type="date" id="modal-dob-input" name="dob" required>
+                    </div>
+
+                    <!-- Recalculate TIN Checkbox -->
+                    <div class="modal-check-group">
+                        <input type="checkbox" id="modal-recalc-tin" name="recalc_tin" checked>
+                        <label for="modal-recalc-tin" class="modal-check-label">
+                            {{ ui.MODAL_RECALC_TIN_LABEL }}
+                        </label>
                     </div>
 
                     <button type="submit" class="modal-button">

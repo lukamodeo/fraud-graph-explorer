@@ -1,57 +1,48 @@
 # src/fraud_graph_explorer/sheet_crafter/views.py
 
 import os
-import uuid
 from django.shortcuts import render
 from django.http import FileResponse, Http404, HttpResponse
 from django.utils.translation import get_language               # <== Used just to read browser setting
 from .forms import SheetCrafterForm
-from .services import generate_pdf_sheet, generate_dynamic_initial_data
-#from .seed_data import get_random_profile
+from .services import generate_pdf_sheet, generate_dynamic_initial_data, _get_calculated_tin
 from .ui_translations import get_ui_strings
 
 
 
-def calculate_tax_code_view(request):
+def calculate_tin_view(request):
     if request.method == 'POST':
-        print(request.POST)
-
         # HTMX flattens the JSON object into POST keys.
-        tin_key = request.POST.get('tin')
-        name_key = request.POST.get('name')
+        fullname_key = request.POST.get('fullname')
+        sex_key = request.POST.get('sex')         # <-- NEW
         dob_key = request.POST.get('dob')
         birthplace_key = request.POST.get('birthplace')
+        tin_key = request.POST.get('tin')
 
-        print(f"\n\n{tin_key} - {name_key} -{dob_key} - {birthplace_key}\n\n")
+        country = request.POST.get('country_code', 'IT')
 
-        if not all([tin_key, name_key, dob_key, birthplace_key]):
+        print(f"\n\n{tin_key} - {fullname_key} -{dob_key} - {birthplace_key}\n\n")
+
+        if not all([fullname_key, sex_key, dob_key, birthplace_key, tin_key]):
             return HttpResponse("Error: Missing field mappings", status=400)
 
         # Fetch the actual values from the POST data using the dynamic keys
-        name = request.POST.get(name_key, '')
-        dob = request.POST.get(dob_key, '')
-        birthplace = request.POST.get(birthplace_key, '')
-        country = request.POST.get('country_code', 'IT')
+        form_data = {
+            'fullname': request.POST.get(fullname_key, ''),
+            'sex': request.POST.get(sex_key, ''),
+            'dob': request.POST.get(dob_key, ''),
+            'birthplace': request.POST.get(birthplace_key, ''),
+        }
 
-        # Placeholder logic for Italian Codice Fiscale
-        if country == 'IT' and name and dob and birthplace:
-            # MOCK CALCULATION (Replace with your actual CF library later)
-            reversed_name = name.upper().replace(" ", "")[:6]
-            year = dob[2:4]
-            month = dob[5:7]
-            day = dob[8:10]
-            new_tin = f"{reversed_name}{year}{month}{day}{birthplace}X"
-        else:
-            new_tin = "CALCULATION_FAILED"
-
-        # return HttpResponse(f'<input type="text" name="representative_taxcode" id="id_representative_taxcode" value="{new_tin}" maxlength="20">')
+        # Calculate TIN using the service
+        new_tin = _get_calculated_tin(country, form_data)
 
         # Copy the POST data to a mutable dictionary and update the TIN value
-        form_data = request.POST.dict()
-        form_data[tin_key] = new_tin
+        form_data_dict = request.POST.dict()
+        form_data_dict[tin_key] = new_tin
 
-        # Re-instantiate the form with the updated data
-        form = SheetCrafterForm(form_data, country_code=country)
+        # Re-instantiate the form to let Django render the field perfectly
+        form = SheetCrafterForm(form_data_dict, country_code=country, ui_strings=None)
 
         # Let Django render ONLY the specific field widget.
         # This guarantees 100% sync with forms.py (max_length, data-group, classes, etc.)
@@ -62,7 +53,7 @@ def calculate_tax_code_view(request):
 def sheet_crafter_view(request):
     # Detect browser language for the UI
     browser_lang = get_language()
-    #ui_strings = get_ui_strings(browser_lang)
+
 
     # Determine default country for the dropdown (and PDF labels)
     lang_prefix = browser_lang.lower()[:2]
@@ -70,10 +61,11 @@ def sheet_crafter_view(request):
 
     # Handle all GET requests (both initial load and HTMX dropdown change)
     if request.method == 'GET':
+        print("GET")
         # If HTMX changed the dropdown, use it. Otherwise use browser default.
         country = request.GET.get('country_code', default_country)
 
-        # NOW generate ui_strings, passing BOTH the browser lang AND the selected PDF country!
+        # Now generate ui_strings, passing BOTH the browser lang AND the selected PDF country!
         ui_strings = get_ui_strings(browser_lang, country)
 
         # Generate initial data dynamically based on schema
@@ -98,14 +90,17 @@ def sheet_crafter_view(request):
 
     # Handle POST requests (Generate PDF)
     if request.method == 'POST':
+        print("POST")
         # Use default_country calculated at the top of the function as the fallback
         country = request.POST.get('country_code', default_country)
+        print(f"POST_{country}")
 
         # Generate ui_strings for POST too, in case the form fails validation and re-renders
         ui_strings = get_ui_strings(browser_lang, country)
         form = SheetCrafterForm(request.POST, country_code=country, ui_strings=ui_strings)
 
         if form.is_valid():
+            print("POST_1")
             # Extract the request number from the form
             request_number = form.cleaned_data.get('request_number', 'UNKNOWN')
 
@@ -124,9 +119,14 @@ def sheet_crafter_view(request):
             if os.path.exists(filepath):
                 return FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)
             raise Http404("PDF generation failed.")
+        else:
+            print("--- FORM VALIDATION FAILED ---")
+            print(form.errors.as_json())
+            print("-------------------------------")
 
     # Fallback for invalid POST
     # Use default_country for the UI strings here too
+    print("POST Fallback")
     ui_strings = get_ui_strings(browser_lang, default_country)
     context = {
         # Fallback also uses dynamic generation

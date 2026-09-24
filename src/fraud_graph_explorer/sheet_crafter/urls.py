@@ -6,5 +6,5 @@ app_name = 'sheet_crafter'
 
 urlpatterns = [
     path('', views.sheet_crafter_view, name='crafter'),
-    path('tax-codes/', views.calculate_tax_code_view, name='calculate_tax_code'),
+    path('tins/', views.calculate_tin_view, name='calculate_tin'),
 ]

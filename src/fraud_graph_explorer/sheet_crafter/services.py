@@ -1,100 +1,223 @@
 # src/fraud_graph_explorer/sheet_crafter/services.py
 import os
-import uuid
-#from markdown_pdf import MarkdownPdf, Section
+import base64
+import hashlib
+import mimetypes
+import codicefiscale
+from typing import cast, Literal
 from xhtml2pdf import pisa
+from django.conf import settings
+from fraud_graph_explorer.sheet_crafter.seed_data import get_random_profile, get_random_data
 from fraud_graph_explorer.graph_explorer.ingestion_schema import FIELDS, SECTIONS, PDF
-from .seed_data import get_random_profile
+
+
+def _calculate_italian_tin(fullname: str, sex: str, dob: str, birthplace: str) -> str:
+    """
+    Calculates a valid Italian Codice Fiscale using python-codicefiscale.
+    Assumes name format is "First Last"
+    dob format: YYYY-MM-DD
+    birthplace: 4-char code (e.g., H501 for Rome)
+    """
+    if not all([fullname, sex, dob, birthplace]):
+        return "MISSING_DATA"
+
+    def split_full_name(full_name: str) -> tuple[str, str]:
+        """
+        Split a name using the convention: FIRST_NAME LAST_NAME.
+        Supports common compound Italian surnames.
+        """
+        SURNAME_PARTICLES = {
+            "DE", "DEL", "DEI", "DEGLI", "DELLA", "DELLE", "DI", "DA", "DAL",
+            "DALLA", "DALL", "LA", "LE", "LO", "VAN", "VON",
+        }
+
+        parts = full_name.strip().split()
+
+        if len(parts) < 2:
+            raise ValueError("full_name must contain at least FIRST_NAME and LAST_NAME")
+
+        surname_start = len(parts) - 1
+
+        while surname_start > 0 and parts[surname_start - 1].upper() in SURNAME_PARTICLES:
+            surname_start -= 1
+
+        first_name = " ".join(parts[:surname_start])
+        surname = " ".join(parts[surname_start:])
+
+        if not first_name:
+            raise ValueError(f"Could not determine first name from: {full_name!r}")
+
+        return first_name, surname
+
+    try:
+        # Use the intelligent splitter
+        first_name, last_name = split_full_name(fullname)
+
+        # Cast the sex variable to satisfy the Literal type hint
+        gender_val = cast(Literal["m", "M", "f", "F"], sex.upper())
+
+        # Call the library with the EXACT parameter names
+        cf = codicefiscale.encode(
+            lastname=last_name,
+            firstname=first_name,
+            gender=gender_val,
+            birthdate=dob,
+            birthplace=birthplace
+        )
+        return cf or "CALC_FAILED"
+
+    except ValueError as e:
+        # Handle cases where the name couldn't be split
+        print(f"Name split error: {e}")
+        return "INVALID_NAME_FORMAT"
+    except Exception as e:
+        # If the library throws an error (e.g., invalid birthplace code)
+        print(f"Codice Fiscale Error: {e}")
+        return "CALC_ERROR"
+
+def _calculate_french_tin(fullname: str, sex: str, dob: str, birthplace: str) -> str:
+    """
+    Calculates a valid French NIR (Social Security Number).
+    Uses MD5 hash of the fullname to generate a deterministic 3-digit serial number.
+    dob format: YYYY-MM-DD
+    birthplace format: 5 chars (2 Dept + 3 Town) e.g., '75123'
+    """
+    if not all([fullname, sex, dob, birthplace]):
+        return "MISSING_DATA"
+
+    # Sex (1: Male, 2: Female)
+    sex_code = '1' if sex.upper() == 'M' else '2'
+
+    # Year (2 digits)
+    year = dob[2:4]
+
+    # Month (2 digits)
+    month = dob[5:7]
+
+    # Parse the 8-character birthplace string
+    if len(birthplace) != 5 or not birthplace.isdigit():
+        return "INVALID_BIRTHPLACE_FORMAT"
+
+    dept = birthplace[0:2]
+    town_code = birthplace[2:5]
+
+    # DETERMINISTIC SERIAL NUMBER (Hash the fullname to 3 digits)
+    # This ensures different names yield different TINs, but recalculation is stable.
+    name_hash = hashlib.md5(fullname.encode()).hexdigest()
+    serial_int = int(name_hash, 16) % 1000 # Modulo 1000 gives us exactly 3 digits (000-999)
+    serial = f"{serial_int:03d}"
+
+    # Construct the 13-digit NIR
+    nir_13_str = f"{sex_code}{year}{month}{dept}{town_code}{serial}"
+    nir_13 = int(nir_13_str)
+
+    # Control Key (2 digits)
+    control_key = 97 - (nir_13 % 97)
+    control_str = f"{control_key:02d}"
+
+    return f"{nir_13_str}{control_str}"
+
+
+def _get_calculated_tin(country_code: str, data: dict) -> str:
+    """Router function to call the right TIN calculator."""
+    fullname = data.get('fullname', '')
+    sex = data.get('sex', '')
+    dob = data.get('dob', '')
+    birthplace = data.get('birthplace', '')
+
+    if country_code == 'IT':
+        return _calculate_italian_tin(fullname, sex, dob, birthplace)
+    elif country_code == 'FR':
+        return _calculate_french_tin(fullname, sex, dob, birthplace)
+    else:
+        return "CALC_NOT_SUPPORTED"
+
 
 def generate_dynamic_initial_data(country_code: str) -> dict:
     """
     Dynamically generates initial form data based on the FIELDS schema.
     Uses 'calc_fields' to ensure relational consistency for groups.
     """
-    initial_data = {'country_code': country_code}
-    generated_keys = set()  # Tracks fields we already filled via a group
+    initial_data = {}
+    generated_keys = set()  # To track fields already filled via profiles
+    used_fullnames = set()  # To track names in the same form
 
-    # 1. Process Relational Groups (Fields with 'calc_fields')
+    # Process Relational Groups (Fields with 'calc_fields')
     for internal_name, config in FIELDS.items():
         if "calc_fields" in config:
-            # Fetch ONE profile for this whole group
-            profile = get_random_profile(country_code)
+
             field_map = config["calc_fields"]
 
+            # Fetch ONE profile, ensuring the fullname is unique for this PDF
+            # We try up to 10 times to find a unique name (highly likely with 128 combos)
+            # Fallback: if we fail 10 times, we just accept the duplicate to prevent infinite loops
+            attempts = 0
+            while attempts < 10:
+                profile = get_random_profile(country_code)
+                if profile["fullname"] not in used_fullnames:
+                    used_fullnames.add(profile["fullname"])
+                    break
+                attempts += 1
+
+
             # Distribute the profile data to the exact internal names
-            initial_data[field_map["name"]] = profile["name"]
+            initial_data[field_map["fullname"]] = profile["fullname"]
             initial_data[field_map["sex"]] = profile["sex"]
             initial_data[field_map["dob"]] = profile["birthdate"]
-            initial_data[field_map["birthplace"]] = profile.get("birthplace", "XXXX")
-            initial_data[field_map["tin"]] = profile["tin"]
+            initial_data[field_map["birthplace"]] = profile["birthplace"]
 
-            # Mark these as done so they aren't overwritten in step 2
+            # If the country supports algorithmic TINs, calculate it dynamically!
+            if country_code in ['IT', 'FR']:
+                initial_data[field_map["tin"]] = _get_calculated_tin(country_code, {
+                    'fullname': profile["fullname"],
+                    'sex': profile["sex"],
+                    'dob': profile["birthdate"],
+                    'birthplace': profile["birthplace"]
+                    })
+            else:
+                # Fallback to the random TIN from the seed data for DE, ES, GB
+                initial_data[field_map["tin"]] = profile["tin"]
+
+            # Mark these as done so they aren't overwritten in next step
             generated_keys.update(field_map.values())
 
-    # 2. Process Standalone Fields (Fields without 'calc_fields')
-    # Define how to generate standalone fake types
-    def generate_standalone(fake_type):
-        if fake_type == "request_id":
-            return f"{country_code.upper()}-{uuid.uuid4().hex[:6].upper()}"
-        elif fake_type == "location":
-            return "Roma"
-        elif fake_type == "amount":
-            return "35.000"
-        elif fake_type == "company_name":
-            return f"Acme Industries {country_code}"
-        elif fake_type == "vat":
-            return get_random_profile(country_code)['vat']
-        elif fake_type == "email":
-            return "pippo@poppi.it"
-        elif fake_type == "phone":
-            return "+39123456789"
-        return ""
-
+    # Process Standalone Fields
     for internal_name, config in FIELDS.items():
         if internal_name not in generated_keys:
             fake_type = config.get("fake_type")
             if fake_type:
-                initial_data[internal_name] = generate_standalone(fake_type)
+                # Pass **initial_data so get_random_data can read the company_name!
+                initial_data[internal_name] = get_random_data(country_code, fake_type, **initial_data)
+
+    initial_data['country_code'] =country_code
 
     return initial_data
-
-
-
-
-# def generate_dynamic_initial_data(country_code: str) -> dict:
-#     """
-#     Reads the schema and generates initial form data dynamically.
-#     """
-#     profile = get_random_profile(country_code)
-#     initial_data = {'country_code': country_code}
-#
-#     # Map fake_types to the profile data or generation logic
-#     fake_map = {
-#         "request_id": f"REQ-{uuid.uuid4().hex[:6].upper()}",
-#         "company_name": f"Acme Industries {country_code}",
-#         "vat": profile['vat'],
-#         "name": profile['name'],
-#         "birthdate": profile['birthdate'],
-#         "tin": profile['tin'],
-#         "birthplace": profile.get('birthplace', 'XXXX')  # <--- ADD THIS
-#     }
-#
-#     for internal_name, config in FIELDS.items():
-#         fake_type = config.get("fake_type")
-#         if fake_type and fake_type in fake_map:
-#             initial_data[internal_name] = fake_map[fake_type]
-#
-#     return initial_data
-
-
-# src/fraud_graph_explorer/sheet_crafter/services.py
-
 
 
 def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
     """
     Generates a PDF using xhtml2pdf with HTML support and old version CSS support.
     """
+
+    # Calculate path to the image and convert to Base64
+    image_filename = "pdf-head-v4.png"
+    image_path = os.path.join(settings.BASE_DIR, 'static', 'img', image_filename)
+
+    base64_src = ""
+    if os.path.exists(image_path):
+        # Guess the MIME type dynamically (e.g., 'image/png' or 'image/jpeg')
+        mime_type, _ = mimetypes.guess_type(image_path)
+        # Fallback to png if the extension is weird or missing
+        if not mime_type:
+            mime_type = "image/png"
+
+        # Read and encode the file
+        with open(image_path, "rb") as img_file:
+            base64_bytes = base64.b64encode(img_file.read())
+            base64_string = base64_bytes.decode('utf-8')
+
+        # Construct the full src string
+        base64_src = f"data:{mime_type};base64,{base64_string}"
 
     # Start HTML document with embedded CSS
     html_content = f"""
@@ -111,7 +234,9 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
             h1 {{ 
                 font-size: 20px; 
                 text-align: center; 
-                color: #2c3e50; 
+                color: #2c3e50;
+                margin-top: 4px;
+                margin-bottom: 4px;
             }}
             h2 {{ 
                 font-size: 14px; 
@@ -120,12 +245,12 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
                 padding-top: 12px;
                 padding-left: 16px;
                 padding-bottom: 2px;
-                margin-bottom: 0; 
+                margin-bottom: 0;
+                margin-top: 0; 
             }}
             table {{ 
                 width: 100%; 
                 margin-bottom: 20px; 
-                border-spacing: 0;
             }}
             td {{ 
                 border: 1px solid #dddddd; 
@@ -154,8 +279,13 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
     <body>
     """
 
+    # Inject the PDF head using the Base64 string
+    if base64_src:
+        html_content += f'<div class="page-head"><img src="{base64_src}" alt="Bank"></div>\n'
+
     # Main Document Title
     title = f'{PDF["header"][country_code]} ({country_code})'
+
     html_content += f"<h1>{title}</h1>\n"
 
     # Loop through sections and fields
@@ -181,6 +311,7 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
     # Generate the PDF using xhtml2pdf
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
+    # For debug only
     # with open(f"{filepath}.html", "w") as output_file_html:
     #     output_file_html.write(html_content)
 
@@ -190,110 +321,3 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
 
     if pisa_status.err:
         raise Exception("PDF generation failed")
-
-
-# def generate_pdf_sheet_old1(country_code: str, form_data: dict, filepath: str):
-#     """
-#     Generates a PDF using the ingestion schema and the form data.
-#     """
-#     title = f"{PDF['header'][country_code]} ({country_code})"
-#     #md_content = f"# Loan Application Sheet ({country_code})\n\n"
-#     #md_content = f"<h3>{PDF['header'][country_code]} ({country_code})</h3>"
-#     md_content = f"# {title}\n\n"
-#
-#     # fake_data = {
-#     #     "request_number": form_data.get('request_number', ''),
-#     #     "company_name": form_data.get('company_name', ''),
-#     #     "company_vatn_taxc": form_data.get('company_vatn_taxc', ''),
-#     #     "taxcode_legal_representative": form_data.get('taxcode_legal_representative', ''),
-#     #     }
-#
-#     for section in SECTIONS:
-#         section_title = section["labels"].get(country_code, section["labels"]["GB"])
-#         md_content += f"## {section_title}\n\n"
-#
-#         # 1. Start an HTML table with a little inline CSS for clean borders
-#         md_content += '<table style="width: 100%; border-collapse: collapse;">\n'
-#
-#         for field_name in section["fields"]:
-#             field_config = FIELDS.get(field_name)
-#             if not field_config:
-#                 continue
-#
-#             # 1. SKIP HIDDEN FIELDS - Do not print on the PDF
-#             if field_config.get("hidden"):
-#                 continue
-#
-#             label = field_config["labels"].get(country_code, field_config["labels"]["GB"])
-#             # form_data keys map directly to internal_name
-#             value = form_data.get(field_name, "")
-#
-#             # 2. Add standard HTML rows.
-#             # We can make the left column bold and add borders directly in the HTML
-#             md_content += (
-#                 f'<tr>'
-#                 f'<td style="border: 1px solid #ccc; padding: 8px; width: 65%; font-weight: bold;">{label}</td>'
-#                 f'<td style="border: 1px solid #ccc; padding: 8px; width: 35%;">{value}</td>'
-#                 f'</tr>\n'
-#             )
-#
-#         # 3. Close the HTML table
-#         md_content += '</table>\n\n'
-#
-#     md_content += f"<p style='text-align: center; font-size: 0.5rem;'>{PDF['footer'][country_code]} ({country_code})</p>"
-#
-#
-#     # Generate the PDF (rest of the function remains the same)
-#     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-#     pdf = MarkdownPdf() #toc_level=2)
-#     pdf.add_section(Section(md_content))
-#     pdf.meta = {"title": title}
-#     pdf.save(filepath)
-
-
-
-# def generate_pdf_sheet_old(country_code: str, form_data: dict, filepath: str):
-#     """
-#     Generates a PDF using the ingestion schema and the form data.
-#     """
-#     # 1. Add a Level 1 Header at the very top!
-#     md_content = f"# Loan Application Sheet ({country_code})\n\n"
-#
-#     # Map form fields to the internal names expected by the schema
-#     fake_data = {
-#         "request_number": form_data.get('request_number', ''),
-#         "company_name": form_data.get('company_name', ''),
-#         "company_vatn_taxc": form_data.get('company_vatn_taxc', ''),
-#         "taxcode_legal_representative": form_data.get('taxcode_legal_representative', ''),
-#         # We can add legal_rep_name and dob to the schema later if needed,
-#         # but for now we'll just include them as extra rows in the table manually if desired.
-#     }
-#
-#     # Build Markdown using the localized schema
-#     for section in SECTIONS:
-#         # Get the localized section header (e.g., "UNTERNEHMENSPROFIL")
-#         section_title = section["labels"].get(country_code, section["labels"]["GB"])
-#
-#         # These are Level 2 Headers
-#         md_content += f"## {section_title}\n\n"
-#
-#         # Start the two-column markdown table
-#         #md_content += "| Field | Data |\n|---|---|\n"
-#         md_content += "| &nbsp; | &nbsp; |\n|---|---|\n"
-#
-#         for field_name in section["fields"]:
-#             # Get the localized field label (e.g., "UST-IDNR - STEUERNUMMER")
-#             label = FIELDS[field_name]["labels"].get(country_code, FIELDS[field_name]["labels"]["GB"])
-#             value = fake_data.get(field_name, "")
-#             md_content += f"| {label} | {value} |\n"
-#
-#         md_content += "\n"  # Spacing between sections
-#
-#     # Generate the PDF
-#     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-#
-#     # toc_level=2 is now perfectly valid because we have a # and ## in the document
-#     pdf = MarkdownPdf(toc_level=2)
-#     pdf.add_section(Section(md_content))
-#     pdf.meta = {"title": f"Loan Application - {country_code}"}
-#     pdf.save(filepath)
