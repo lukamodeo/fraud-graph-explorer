@@ -1,6 +1,6 @@
+/* src/fraud_graph_explorer/static/css/crafter_style.css */
 
 body {
-    font-family: Helvetica, Arial, sans-serif;
     background: #666;
     padding: 0;
     margin: 0;
@@ -19,6 +19,7 @@ body {
 
 .header h1 {
     margin: 0.5rem;
+    font-size: 1.8rem;
 }
 
 .header p {
@@ -32,35 +33,40 @@ body {
     margin: auto;
 }
 
+
 .ddn-container {
     padding: 16px;
     border: 2px solid #ccc;
     border-radius: 8px;
     background: #fff;
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.2rem;
+    align-items: middle;
 }
 
-.pdf-container {
-    padding: 16px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background: #f9f9f9;
+@media (max-width: 768px) {
+    .ddn-container {
+        grid-template-columns: 1fr;
+    }
+
+    .buttons-group {
+        flex-direction: row;
+        justify-content: center;
+    }
 }
 
 .select-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    flex: 1;
 }
 
-.select-group select {
-    padding: 8px;
-    height: 40px;
-    box-sizing: border-box;
+.buttons-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
+
 
 .action-btn {
     padding: 0 16px;
@@ -75,6 +81,21 @@ label {
     margin-left: 5px;
 }
 
+.country-hint {
+    margin-top: 0.2rem;
+    margin-left: 5px;
+    font-size: small;
+    font-style: italic;
+}
+
+.pdf-container {
+    padding: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+
 .ddn-container select,
 .pdf-container input,
 .pdf-container select {
@@ -84,12 +105,11 @@ label {
     box-sizing: border-box;
     border-radius: 0.5rem;
     font-size: larger;
-    font-family: Tahoma, Arial;
 }
 
 button {
-    margin-top: 20px;
-    padding: 10px 20px;
+    margin-top: 16px;
+    padding: 10px 16px;
     background: #0d6efd;
     color: white;
     border: none;

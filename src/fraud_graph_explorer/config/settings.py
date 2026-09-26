@@ -11,8 +11,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import mimetypes
 from pathlib import Path
-from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -127,12 +127,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'  # Changed to en-gb to match UI dictionary fallback
+
+# Which languages we support
+LANGUAGES = [
+    ('it', 'Italian'),
+    ('de', 'German'),
+    ('fr', 'French'),
+    ('es', 'Spanish'),
+    ('en-gb', 'British English'),
+]
 
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -144,6 +151,11 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# Tell Django that .ttf files are font files, not generic binary files
+mimetypes.add_type("font/ttf", ".ttf", True)
+mimetypes.add_type("font/woff", ".woff", True)
+mimetypes.add_type("font/woff2", ".woff2", True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

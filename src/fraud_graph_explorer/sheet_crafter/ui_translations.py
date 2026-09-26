@@ -25,19 +25,19 @@ UI_STRINGS = {
         "en-gb": "Select a country to automatically generate formally valid synthetic data for that country.<br>Edit the fields to inject anomalies into the data."
     },
     "COUNTRY_LABEL": {
-        "it": "Paese",
-        "de": "Land",
-        "fr": "Pays",
-        "es": "País",
-        "en-gb": "Country"
-    },
-    "CHANGE_TO_AUTOGEN": {
-        "it": "(cambia per auto-generare nuovi dati)",
-        "de": "(ändern, um neue Daten zu generieren)",
-        "fr": "(changer pour générer de nouvelles données)",
-        "es": "(cambiar para autogenerar nuevos datos)",
-        "en-gb": "(change to auto-generate new data)"
-    },
+        "it": "Profilo Paese da simulare:",
+        "de": "Zu simulierendes Länderprofil:",
+        "fr": "Profil Pays à simuler :",
+        "es": "Perfil de País a simular:",
+        "en-gb": "Country profile to simulate:"
+        },
+    "COUNTRY_HINT": {
+        "it": "Aggiorna le regole sui formati VAT, TIN e IBAN da utilizzare, oltre che la lingua di compilazione.",
+        "de": "Aktualisiert die anzuwendenden Formatregeln für VAT, TIN und IBAN sowie die Eingabesprache.",
+        "fr": "Met à jour les règles de format VAT, TIN et IBAN à utiliser, ainsi que la langue de saisie.",
+        "es": "Actualiza las reglas de formato de VAT, TIN e IBAN a utilizar, así como el idioma de introducción de datos.",
+        "en-gb": "Updates the VAT, TIN, and IBAN format rules to apply, as well as the data-entry language."
+        },
     "BTN_RANDOMIZE": {
         "it": "Genera Nuovi Dati",
         "de": "Neue Daten Generieren",
@@ -227,11 +227,11 @@ UI_STRINGS = {
         "en-gb": "Recalculate"
     },
     "COUNTRY_NAMES": {
-        "it": [('IT', 'Italia'), ('DE', 'Germania'), ('FR', 'Francia'), ('ES', 'Spagna'), ('GB', 'Regno Unito')],
-        "de": [('IT', 'Italien'), ('DE', 'Deutschland'), ('FR', 'Frankreich'), ('ES', 'Spanien'), ('GB', 'Vereinigtes Königreich')],
-        "fr": [('IT', 'Italie'), ('DE', 'Allemagne'), ('FR', 'France'), ('ES', 'Espagne'), ('GB', 'Royaume-Uni')],
-        "es": [('IT', 'Italia'), ('DE', 'Alemania'), ('FR', 'Francia'), ('ES', 'España'), ('GB', 'Reino Unido')],
-        "en-gb": [('IT', 'Italy'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'), ('GB', 'United Kingdom')]
+        "it": [('IT', '🇮🇹 Italia'), ('DE', '🇩🇪 Germania'), ('FR', '🇫🇷 Francia'), ('ES', '🇪🇸 Spagna'), ('GB', '🇬🇧 Regno Unito')],
+        "de": [('IT', '🇮🇹 Italien'), ('DE', '🇩🇪 Deutschland'), ('FR', '🇫🇷 Frankreich'), ('ES', '🇪🇸 Spanien'), ('GB', '🇬🇧 Vereinigtes Königreich')],
+        "fr": [('IT', '🇮🇹 Italie'), ('DE', '🇩🇪 Allemagne'), ('FR', '🇫🇷 France'), ('ES', '🇪🇸 Espagne'), ('GB', '🇬🇧 Royaume-Uni')],
+        "es": [('IT', '🇮🇹 Italia'), ('DE', '🇩🇪 Alemania'), ('FR', '🇫🇷 Francia'), ('ES', '🇪🇸 España'), ('GB', '🇬🇧 Reino Unido')],
+        "en-gb": [('IT', '🇮🇹 Italy'), ('DE', '🇩🇪 Germany'), ('FR', '🇫🇷 France'), ('ES', '🇪🇸 Spain'), ('GB', '🇬🇧 United Kingdom')]
     }
 }
 

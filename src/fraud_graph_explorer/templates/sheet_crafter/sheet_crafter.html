@@ -12,8 +12,34 @@
         <!-- HTMX must be in the head! -->
         <script src="https://unpkg.com/htmx.org@1.9.10"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        {# Check if the browser is NOT Firefox #}
+        {% if 'Firefox' not in request.META.HTTP_USER_AGENT %}
+        <style>
+            @font-face {
+                font-family: 'Noto Flags';
+                src: url("{% static 'fonts/NotoColorEmoji-flagsonly.ttf' %}") format('truetype');
+                unicode-range: U+1F1E6-1F1FF;
+                font-display: swap;
+            }
+            body {
+                font-family: Helvetica, Arial, sans-serif !important;
+            }
+            .select-group select {
+                font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, Helvetica, Arial, sans-serif !important;
+            }
+        </style>
+        {% else %}
+        <style>
+            body {
+                font-family: Helvetica, Arial, sans-serif !important;
+            }
+            .select-group select {
+                font-family: system-ui, Helvetica, Arial, sans-serif !important;
+            }
+        </style>
+        {% endif %}
+        <!-- The order matter: external css after loading fonts  -->
         <link rel="stylesheet" href="{% static 'css/crafter_style.css' %}">
-
     </head>
     <body>
 

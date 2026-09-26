@@ -5,7 +5,9 @@
     <div class="ddn-container">
         <div class="select-group">
             <!--suppress XmlInvalidId -->
-            <label for="{{ form.country_code.id_for_label }}">{{ ui.COUNTRY_LABEL }} {{ ui.CHANGE_TO_AUTOGEN }}:</label>
+            <label for="{{ form.country_code.id_for_label }}">
+                {{ ui.COUNTRY_LABEL }}
+            </label>
              <!-- Manually write the select tag so we can put HTMX here -->
             <select name="country_code"
                     id="id_country_code"
@@ -20,18 +22,23 @@
                     </option>
                 {% endfor %}
             </select>
+            <span class="country-hint">
+                {{ ui.COUNTRY_HINT|safe }}
+            </span>
         </div>
-        <button type="button"
-                class="action-btn"
-                hx-get="."
-                hx-target="#form-container"
-                hx-include="[name='country_code']">
-            <i class="bi bi-dice-5"></i> {{ ui.BTN_RANDOMIZE }}
-        </button>
-        <button type="submit"
-                class="action-btn">
-            <i class="bi bi-file-earmark-pdf"></i> {{ ui.BTN_SAVE }}
-        </button>
+        <div class="buttons-group">
+            <button type="button"
+                    class="action-btn"
+                    hx-get="."
+                    hx-target="#form-container"
+                    hx-include="[name='country_code']">
+                <i class="bi bi-dice-5"></i> {{ ui.BTN_RANDOMIZE }}
+            </button>
+            <button type="submit"
+                    class="action-btn">
+                <i class="bi bi-file-earmark-pdf"></i> {{ ui.BTN_SAVE }}
+            </button>
+        </div>
     </div>
 
     <br>
