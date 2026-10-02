@@ -5,6 +5,7 @@ import uuid
 import random
 import unicodedata
 
+from fraud_graph_explorer.domain_schema import INTL_PHONE_PREFIX
 
 SEED_PROFILES = {
     'IT': {
@@ -1221,6 +1222,8 @@ SEED_COMPANY_NAMES = {
     },
 }
 
+# Generate 128 Public IPs (TEST-NET-2 block: 198.51.100.1 to 198.51.100.128)
+SEED_IPS = [f"198.51.100.{i}" for i in range(1, 129)]
 
 def _slugify_company(name: str) -> str:
     """Converts 'Étoile Services S.A.' to 'etoileservicessa' for email domains."""
@@ -1281,15 +1284,11 @@ def get_random_data(country_code: str, fake_type: str, **kwargs) -> str:
         return f"{random.randint(9, 50)}0.000"
 
     elif fake_type == "company_name":
-        # return f"Acme Industries {country_code}"
         parts = SEED_COMPANY_NAMES[cc]
-
         prefix = random.choice(parts['prefix'])
         suffix = random.choice(parts['suffix'])
         legal = random.choice(parts['legal'])
-
         return f"{prefix} {suffix} {legal}"
-
 
     elif fake_type == "iban":
         ibans = SEED_IBANS.get(cc, SEED_IBANS['GB'])
@@ -1299,15 +1298,12 @@ def get_random_data(country_code: str, fake_type: str, **kwargs) -> str:
         vats = SEED_VATS.get(cc, SEED_VATS['GB'])
         return random.choice(vats)
 
+    elif fake_type == "ip":
+        return random.choice(SEED_IPS)
+
     elif fake_type == "phone":
-        prefixes = {
-            'IT': '+39',
-            'DE': '+49',
-            'FR': '+33',
-            'ES': '+34',
-            'GB': '+44'
-        }
-        prefix = prefixes.get(cc, '+44')
+        # Use the centralized prefix
+        prefix = INTL_PHONE_PREFIX.get(cc, INTL_PHONE_PREFIX["GB"])
         return f"{prefix} {random.randint(100, 999)}{random.randint(1000000, 9999999)}"
 
     elif fake_type == "email":

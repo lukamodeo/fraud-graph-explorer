@@ -1,7 +1,7 @@
 # src/fraud_graph_explorer/sheet_crafter/forms.py
 import json
 from django import forms
-from fraud_graph_explorer.graph_explorer.ingestion_schema import FIELDS, SECTIONS
+from fraud_graph_explorer.domain_schema import FIELDS, SECTIONS
 
 class SheetCrafterForm(forms.Form):
 

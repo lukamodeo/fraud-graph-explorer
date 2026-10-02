@@ -1,13 +1,13 @@
 # src/fraud_graph_explorer/sheet_crafter/views.py
 
 import os
+import tempfile
 from django.shortcuts import render
 from django.http import FileResponse, Http404, HttpResponse
 from django.utils.translation import get_language               # <== Used just to read browser setting
 from .forms import SheetCrafterForm
 from .services import generate_pdf_sheet, generate_dynamic_initial_data, _get_calculated_tin
 from .ui_translations import get_ui_strings
-
 
 
 def calculate_tin_view(request):
@@ -100,24 +100,25 @@ def sheet_crafter_view(request):
         form = SheetCrafterForm(request.POST, country_code=country, ui_strings=ui_strings)
 
         if form.is_valid():
-            print("POST_1")
             # Extract the request number from the form
             request_number = form.cleaned_data.get('request_number', 'UNKNOWN')
 
-            # Sanitize it slightly to ensure it's a valid filename
+            # Sanitize it to ensure it's a valid filename
             # (Removes spaces or special characters, allows dashes/underscores)
             safe_filename = "".join(c for c in request_number if c.isalnum() or c in ('-', '_')).rstrip()
-
-            # Use it for the filename
             filename = f"{safe_filename}.pdf"
-            filepath = os.path.join('media', 'pdfs', country, filename)
+
+            # Create a temporary file path in the OS temp folder
+            temp_dir = tempfile.gettempdir()
+            filepath = os.path.join(temp_dir, filename)
 
             # Generate it
             generate_pdf_sheet(country, form.cleaned_data, filepath)
 
             # Serve the file to the user for download
             if os.path.exists(filepath):
-                return FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)
+                response = FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)
+                return response
             raise Http404("PDF generation failed.")
         else:
             print("--- FORM VALIDATION FAILED ---")

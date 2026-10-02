@@ -11,12 +11,22 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 import mimetypes
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# This points to: fraud-graph-explorer/src/fraud_graph_explorer/
+# (Standard Django BASE_DIR, useful for finding things INSIDE the package)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# This points to: fraud-graph-explorer/
+# (The true project root, useful for finding things OUTSIDE the package, like media/ or pyproject.toml)
+PROJECT_ROOT = BASE_DIR.parent.parent
+
+# Media files (PDFs)
+MEDIA_URL = '/media/'
+# Safely join the project root to the 'media' folder name
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -32,9 +42,11 @@ ALLOWED_HOSTS = []
 
 # Enable translation system (required for get_language() to work)
 USE_I18N = True
+
 # Default language if browser doesn't match
 LANGUAGE_CODE = 'en-gb'
-# 3. Supported languages (which browser languages to accept)
+
+# Supported languages (which browser languages to accept)
 LANGUAGES = [
     ('it', 'Italian'),
     ('de', 'German'),
@@ -42,10 +54,6 @@ LANGUAGES = [
     ('es', 'Spanish'),
     ('en-gb', 'British English'),
 ]
-# # Where translation files live
-# LOCALE_PATHS = [
-#     BASE_DIR / 'locale',
-# ]
 
 
 # Application definition
@@ -79,7 +87,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Point Django to the new centralized templates folder
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': False,  # Set to False since we are using DIRS explicitly
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',

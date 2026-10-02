@@ -1,4 +1,5 @@
 # src/fraud_graph_explorer/sheet_crafter/services.py
+
 import os
 import base64
 import hashlib
@@ -7,8 +8,8 @@ import codicefiscale
 from typing import cast, Literal
 from xhtml2pdf import pisa
 from django.conf import settings
-from fraud_graph_explorer.sheet_crafter.seed_data import get_random_profile, get_random_data
-from fraud_graph_explorer.graph_explorer.ingestion_schema import FIELDS, SECTIONS, PDF
+from fraud_graph_explorer.domain_schema import split_italian_full_name, FIELDS, SECTIONS, PDF
+from .seed_data import get_random_profile, get_random_data
 
 
 def _calculate_italian_tin(fullname: str, sex: str, dob: str, birthplace: str) -> str:
@@ -21,37 +22,9 @@ def _calculate_italian_tin(fullname: str, sex: str, dob: str, birthplace: str) -
     if not all([fullname, sex, dob, birthplace]):
         return "MISSING_DATA"
 
-    def split_full_name(full_name: str) -> tuple[str, str]:
-        """
-        Split a name using the convention: FIRST_NAME LAST_NAME.
-        Supports common compound Italian surnames.
-        """
-        SURNAME_PARTICLES = {
-            "DE", "DEL", "DEI", "DEGLI", "DELLA", "DELLE", "DI", "DA", "DAL",
-            "DALLA", "DALL", "LA", "LE", "LO", "VAN", "VON",
-        }
-
-        parts = full_name.strip().split()
-
-        if len(parts) < 2:
-            raise ValueError("full_name must contain at least FIRST_NAME and LAST_NAME")
-
-        surname_start = len(parts) - 1
-
-        while surname_start > 0 and parts[surname_start - 1].upper() in SURNAME_PARTICLES:
-            surname_start -= 1
-
-        first_name = " ".join(parts[:surname_start])
-        surname = " ".join(parts[surname_start:])
-
-        if not first_name:
-            raise ValueError(f"Could not determine first name from: {full_name!r}")
-
-        return first_name, surname
-
     try:
         # Use the intelligent splitter
-        first_name, last_name = split_full_name(fullname)
+        first_name, last_name = split_italian_full_name(fullname)
 
         # Cast the sex variable to satisfy the Literal type hint
         gender_val = cast(Literal["m", "M", "f", "F"], sex.upper())
@@ -235,7 +208,7 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
                 font-size: 20px; 
                 text-align: center; 
                 color: #2c3e50;
-                margin-top: 4px;
+                margin-top: 12px;
                 margin-bottom: 4px;
             }}
             h2 {{ 
@@ -254,13 +227,13 @@ def generate_pdf_sheet(country_code: str, form_data: dict, filepath: str):
             }}
             td {{ 
                 border: 1px solid #dddddd; 
-                padding-top: 8px;
+                padding-top: 6px;
                 padding-left: 8px;
-                padding-bottom: 4px;
+                padding-bottom: 2px;
                 vertical-align: top; 
             }}
             td.label {{ 
-                width: 40%; 
+                width: 55%; 
                 font-weight: bold; 
                 background-color: #f9f9f9; 
             }}

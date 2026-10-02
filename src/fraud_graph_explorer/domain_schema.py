@@ -1,10 +1,40 @@
-# src/fraud_graph_explorer/graph_explorer/ingestion_schema.py
+# src/fraud_graph_explorer/graph_explorer/domain_schema.py
+
+from django.db import models
+
+# Centralized Enums
+class CountryCodes(models.TextChoices):
+    ITALY = 'IT', 'Italy'
+    GERMANY = 'DE', 'Germany'
+    FRANCE = 'FR', 'France'
+    SPAIN = 'ES', 'Spain'
+    UK = 'GB', 'United Kingdom'
+
+class EntityTypes(models.TextChoices):
+    VAT = 'VAT', 'VAT Number'
+    TIN = 'TIN', 'Tax ID Number'
+    FULLNAME = 'FULLNAME', 'Full Name'
+    IBAN = 'IBAN', 'IBAN Code'
+    EMAIL = 'EMAIL', 'Email Address'
+    PHONE = 'PHONE', 'Phone Number'
+    COMPANY = 'COMPANY', 'Company Name'
+    LOCATION = 'LOCATION', 'Location'
+
+# Centralized Country Constants
+INTL_PHONE_PREFIX = {
+    'IT': '+39',
+    'DE': '+49',
+    'FR': '+33',
+    'ES': '+34',
+    'GB': '+44'
+}
 
 # Define the business logic (language-agnostic)
 FIELDS = {
     "request_number": {
         "type": "string",
         "tags": ["Sheet"],
+        "required": True,
         "max_length": 50,
         "fake_type": "id",
         "labels": {
@@ -31,6 +61,9 @@ FIELDS = {
     "request_amount":{
         "type": "decimal",
         "tags": ["Sheet"],
+        "required": True,
+        "validations": ["numeric"],
+        "rules": ["positive"],
         "max_length": 12,
         "fake_type": "amount",
         "labels": {
@@ -41,9 +74,25 @@ FIELDS = {
             "GB": "REQUESTED AMOUNT"
         }
     },
+    "request_ip": {
+        "type": "keyword",
+        "tags": ["IP"],
+        "validations": ["ip"],
+        "rules": ["blacklist"],
+        "max_length": 15,
+        "fake_type": "ip",
+        "labels": {
+            "IT": "IP DI PROVENIENZA DELLA RICHIESTA TELEMATICA",
+            "DE": "QUELL-IP-ADRESSE DES ELEKTRONISCHEN ANTRAGS",
+            "FR": "ADRESSE IP D’ORIGINE DE LA DEMANDE ÉLECTRONIQUE",
+            "ES": "DIRECCIÓN IP DE ORIGEN DE LA SOLICITUD ELECTRÓNICA",
+            "GB": "SOURCE IP ADDRESS OF THE ELECTRONIC REQUEST",
+        }
+    },
     "company_name": {
         "type": "string",
         "tags": ["Sheet", "COMPANY"],
+        "required": True,
         "max_length": 100,
         "fake_type": "company_name",
         "labels": {
@@ -55,8 +104,11 @@ FIELDS = {
         }
     },
     "company_vat": {
-        "type": "string",
+        "type": "keyword",
         "tags": ["Sheet", "VAT"],
+        "required": True,
+        "validations": ["vat"],
+        "rules": ["blacklist"],
         "max_length": 30,
         "fake_type": "vat",
         "hint_key": "HINT_VAT",
@@ -82,8 +134,10 @@ FIELDS = {
         }
     },
     "company_iban": {
-        "type": "string",
+        "type": "keyword",
         "tags": ["IBAN"],
+        "validations": ["iban"],
+        "rules": ["blacklist"],
         "max_length": 34,
         "fake_type": "iban",
         "labels": {
@@ -97,6 +151,7 @@ FIELDS = {
     "representative_fullname": {
         "type": "string",
         "tags": ["FULLNAME"],
+        "rules": ["duplicate"],
         "max_length": 100,
         "fake_type": "profile",
         "sex_field": "representative_sex",
@@ -111,22 +166,19 @@ FIELDS = {
         }
     },
     "representative_sex": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 1,
         "fake_type": "profile",
         "hidden": True,
     },
     "representative_dob": {
-        "type": "string",
-        "tags": [],
+        "type": "date",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
     },
     "representative_birthplace": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
@@ -134,6 +186,8 @@ FIELDS = {
     "representative_tin": {
         "type": "keyword",
         "tags": ["TIN"],
+        "validations": ["tin"],
+        "rules": ["blacklist", "duplicate", "tin_name_check"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",
@@ -155,7 +209,8 @@ FIELDS = {
     },
     "representative_email": {
         "type": "string",
-        "tags": ["email"],
+        "tags": ["EMAIL"],
+        "validations": ["email"],
         "max_length": 50,
         "fake_type": "email",
         "labels": {
@@ -169,6 +224,7 @@ FIELDS = {
     "representative_phone": {
         "type": "string",
         "tags": ["PHONE"],
+        "validations": ["phone"],
         "max_length": 20,
         "fake_type": "phone",
         "labels": {
@@ -182,6 +238,7 @@ FIELDS = {
     "guarantor_1_fullname": {
         "type": "string",
         "tags": ["FULLNAME"],
+        "rules": ["duplicate"],
         "max_length": 100,
         "fake_type": "profile",
         "sex_field": "guarantor_1_sex",
@@ -196,22 +253,19 @@ FIELDS = {
         }
     },
     "guarantor_1_sex": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 1,
         "fake_type": "profile",
         "hidden": True,
     },
     "guarantor_1_dob": {
-        "type": "string",
-        "tags": [],
+        "type": "date",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
     },
     "guarantor_1_birthplace": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
@@ -219,6 +273,8 @@ FIELDS = {
     "guarantor_1_tin": {
         "type": "keyword",
         "tags": ["TIN"],
+        "validations": ["tin"],
+        "rules": ["blacklist", "duplicate", "tin_name_check"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",
@@ -241,6 +297,7 @@ FIELDS = {
     "guarantor_2_fullname": {
         "type": "string",
         "tags": ["FULLNAME"],
+        "rules": ["duplicate"],
         "max_length": 100,
         "fake_type": "profile",
         "sex_field": "guarantor_2_sex",
@@ -255,22 +312,19 @@ FIELDS = {
         }
     },
     "guarantor_2_sex": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 1,
         "fake_type": "profile",
         "hidden": True,
     },
     "guarantor_2_dob": {
-        "type": "string",
-        "tags": [],
+        "type": "date",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
     },
     "guarantor_2_birthplace": {
-        "type": "string",
-        "tags": [],
+        "type": "keyword",
         "max_length": 10,
         "fake_type": "profile",
         "hidden": True,
@@ -278,6 +332,8 @@ FIELDS = {
     "guarantor_2_tin": {
         "type": "keyword",
         "tags": ["TIN"],
+        "validations": ["tin"],
+        "rules": ["blacklist", "duplicate", "tin_name_check"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",
@@ -331,6 +387,7 @@ SECTIONS = [
             "request_number",
             "request_branch_location",
             "request_amount",
+            "request_ip",
         ]
     },
     {
@@ -346,7 +403,7 @@ SECTIONS = [
             "company_name",
             "company_vat",
             "company_location",
-            "company_iban"
+            "company_iban",
         ]
     },
     {
@@ -391,3 +448,74 @@ SECTIONS = [
         ]
     }
 ]
+
+
+def _build_reverse_lookup_map():
+    """
+    Creates a dictionary like:
+    {"PARTITA IVA": {"internal_name": "company_vat", "tags": ["Sheet", "VAT"], "validations": ["vat"], ...}, ...}
+    for all languages.
+    """
+    lookup = {}
+    for internal_name, config in FIELDS.items():
+        for lang, label in config.get("labels", {}).items():
+            # Clean label to match PDF extraction (trim spaces)
+            clean_label = label.strip()
+            lookup[clean_label] = {
+                "internal_name": internal_name,
+                "tags": config.get("tags", []),
+                "validations": config.get("validations", []),
+                "rules": config.get("rules", []),
+                "required": config.get("required", False),
+                "type": config.get("type", "string")
+            }
+    return lookup
+
+REVERSE_LOOKUP = _build_reverse_lookup_map()
+
+
+def _build_section_lookup():
+    """Maps localized section headers (e.g., 'DATI DEI SOGGETTI GARANTI') -> 'guarantors'"""
+    lookup = {}
+    for section in SECTIONS:
+        for lang, label in section.get("labels", {}).items():
+            clean_label = label.strip()
+            lookup[clean_label] = section["internal_name"]
+    return lookup
+
+# Maps "DATI DEI SOGGETTI GARANTI" -> "guarantors"
+SECTION_LOOKUP = _build_section_lookup()
+
+# Maps "guarantors" -> {"fields": ["guarantor_1_fullname", "guarantor_1_tin", ...]}
+SECTIONS_BY_INTERNAL = {s["internal_name"]: s for s in SECTIONS}
+
+
+def split_italian_full_name(full_name: str) -> tuple[str, str]:
+    """
+    Split a name using the convention: FIRST_NAME LAST_NAME.
+    Supports common compound Italian surnames.
+    """
+    SURNAME_PARTICLES = {
+        "DE", "DEL", "DEI", "DEGLI", "DELLA", "DELLE", "DI", "DA", "DAL",
+        "DALLA", "DALL", "LA", "LE", "LO", "VAN", "VON",
+    }
+
+    parts = full_name.strip().split()
+
+    if len(parts) < 2:
+        raise ValueError("full_name must contain at least FIRST_NAME and LAST_NAME")
+
+    surname_start = len(parts) - 1
+
+    while surname_start > 0 and parts[surname_start - 1].upper() in SURNAME_PARTICLES:
+        surname_start -= 1
+
+    first_name = " ".join(parts[:surname_start])
+    surname = " ".join(parts[surname_start:])
+
+    if not first_name:
+        raise ValueError(f"Could not determine first name from: {full_name!r}")
+
+    return first_name, surname
+
+
