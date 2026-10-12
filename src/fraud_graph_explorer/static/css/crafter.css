@@ -110,7 +110,7 @@ label {
 button {
     margin-top: 16px;
     padding: 10px 16px;
-    background: #0d6efd;
+    background: #007bff; /* 0d6efd; */
     color: white;
     border: none;
     border-radius: 0.375rem;
@@ -167,12 +167,12 @@ form h3 {
     z-index: 2;
 }
 .tooltip-icon {
-    color: #888;
+    color: #369;
     cursor: help;
 }
 .recalc-icon {
     right: 10px;
-    color: #007bff;
+    color: #396;
     cursor: pointer;
 }
 .tooltip-text {
@@ -267,7 +267,7 @@ form h3 {
     box-sizing: border-box;
     border-radius: 0.5rem;
     font-size: large;
-    font-family: Tahoma, Arial;
+    /*font-family: Tahoma, Arial;*/
 }
 
 

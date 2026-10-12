@@ -1,0 +1,40 @@
+<!-- src/fraud_graph_explorer/templates/graph_explorer/_sheet_detail.html -->
+
+<div style="margin-bottom: 15px;">
+    <strong>{{ app.request_number }}</strong> ({{ app.country_code }})
+    <a href="{{ app.pdf_file.url }}" target="_blank" style="float: right; text-decoration: none;">📄 Download PDF</a>
+</div>
+
+{% if resolved_errors %}
+    <div style="background: #fadbd8; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+        <strong>Validation Errors:</strong>
+        <ul>
+            {% for err in resolved_errors %}
+                <li><strong>[{{ err.type }}]</strong> {{ err.reason }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% if resolved_warnings %}
+    <div style="background: #fef9e7; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+        <strong>Rule Warnings:</strong>
+        <ul>
+            {% for warn in resolved_warnings %}
+                <li><strong>[{{ warn.type }}]</strong> {{ warn.reason }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<table>
+    {% for section in detail_sections %}
+        <tr><td colspan="2" style="background: #34495e; color: white; font-weight: bold;">{{ section.title }}</td></tr>
+        {% for row in section.rows %}
+            <tr>
+                <td style="width: 40%; font-weight: bold;">{{ row.label }}</td>
+                <td>{{ row.value }}</td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+</table>

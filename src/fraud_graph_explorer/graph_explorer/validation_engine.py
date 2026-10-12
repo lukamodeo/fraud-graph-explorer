@@ -217,7 +217,6 @@ def check_tin(raw_value, norm_value, config, all_data, **kwargs):
 
     # Extract country_code from kwargs (passed by services.py)
     country_code = kwargs.get("country_code")
-    print(f"00 - {country_code}")
     validator = TIN_VALIDATORS.get(country_code.upper())
 
     if validator and not validator.is_valid(norm_value):

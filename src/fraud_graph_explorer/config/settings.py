@@ -42,6 +42,7 @@ ALLOWED_HOSTS = []
 
 # Enable translation system (required for get_language() to work)
 USE_I18N = True
+USE_L10N = True
 
 # Default language if browser doesn't match
 LANGUAGE_CODE = 'en-gb'

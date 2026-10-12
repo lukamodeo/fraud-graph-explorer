@@ -91,7 +91,7 @@ def _calculate_french_tin(fullname: str, sex: str, dob: str, birthplace: str) ->
     return f"{nir_13_str}{control_str}"
 
 
-def _get_calculated_tin(country_code: str, data: dict) -> str:
+def get_calculated_tin(country_code: str, data: dict) -> str:
     """Router function to call the right TIN calculator."""
     fullname = data.get('fullname', '')
     sex = data.get('sex', '')
@@ -141,7 +141,7 @@ def generate_dynamic_initial_data(country_code: str) -> dict:
 
             # If the country supports algorithmic TINs, calculate it dynamically!
             if country_code in ['IT', 'FR']:
-                initial_data[field_map["tin"]] = _get_calculated_tin(country_code, {
+                initial_data[field_map["tin"]] = get_calculated_tin(country_code, {
                     'fullname': profile["fullname"],
                     'sex': profile["sex"],
                     'dob': profile["birthdate"],

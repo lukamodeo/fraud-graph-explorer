@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.http import FileResponse, Http404, HttpResponse
 from django.utils.translation import get_language               # <== Used just to read browser setting
 from .forms import SheetCrafterForm
-from .services import generate_pdf_sheet, generate_dynamic_initial_data, _get_calculated_tin
+from .services import generate_pdf_sheet, generate_dynamic_initial_data, get_calculated_tin
 from .ui_translations import get_ui_strings
 
 
@@ -35,7 +35,7 @@ def calculate_tin_view(request):
         }
 
         # Calculate TIN using the service
-        new_tin = _get_calculated_tin(country, form_data)
+        new_tin = get_calculated_tin(country, form_data)
 
         # Copy the POST data to a mutable dictionary and update the TIN value
         form_data_dict = request.POST.dict()
@@ -54,10 +54,10 @@ def sheet_crafter_view(request):
     # Detect browser language for the UI
     browser_lang = get_language()
 
-
+    # TODO no hard coded lang codes
     # Determine default country for the dropdown (and PDF labels)
-    lang_prefix = browser_lang.lower()[:2]
-    default_country = lang_prefix.upper() if lang_prefix.upper() in ['IT', 'DE', 'FR', 'ES'] else 'GB'
+    lang_code = browser_lang.lower()[:2]
+    default_country = lang_code.upper() if lang_code.upper() in ['IT', 'DE', 'FR', 'ES'] else 'GB'
 
     # Handle all GET requests (both initial load and HTMX dropdown change)
     if request.method == 'GET':
@@ -74,11 +74,11 @@ def sheet_crafter_view(request):
         # Pass country_code to form for PDF labels, pass ui_strings to template
         form = SheetCrafterForm(initial=initial_data, country_code=country, ui_strings=ui_strings)
 
-        # Reuse lang_prefix for the HTML lang attribute
+        # Reuse lang_code for the HTML lang attribute
         context = {
             'form': form,
             'ui': ui_strings,
-            'active_lang': lang_prefix,
+            'active_lang': lang_code,
         }
 
         # If it's an HTMX request, return ONLY the form partial
@@ -133,6 +133,6 @@ def sheet_crafter_view(request):
         # Fallback also uses dynamic generation
         'form': SheetCrafterForm(initial=generate_dynamic_initial_data(default_country), country_code=default_country, ui_strings=ui_strings),
         'ui': ui_strings,
-        'active_lang': lang_prefix
+        'active_lang': lang_code
     }
     return render(request, 'sheet_crafter/sheet_crafter.html', context)

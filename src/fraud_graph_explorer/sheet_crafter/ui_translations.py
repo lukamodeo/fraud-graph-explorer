@@ -1,4 +1,5 @@
 # src/fraud_graph_explorer/sheet_crafter/ui_translations.py
+
 from typing import Dict
 
 # "Enum" keys mapped to localized strings
@@ -20,7 +21,7 @@ UI_STRINGS = {
     "INSTRUCTIONS": {
         "it": "Seleziona un paese per auto-generare dati formalmente validi per quel paese.<br>Modifica i campi per iniettare anomalie nei dati.",
         "de": "Wählen Sie ein Land aus, um automatisch synthetische, für dieses Land formal gültige Daten zu generieren.<br>Bearbeiten Sie die Felder, um Anomalien in die Daten einzufügen.",
-        "fr": "Sélectionnez un pays pour générer automatiquement des données synthétiques formellement valides pour ce pays.<br>Modifiez les champs pour introduire des anomalies dans les données.",
+        "fr": "Choisir un pays pour générer automatiquement des données synthétiques formellement valides pour ce pays.<br>Modifiez les champs pour introduire des anomalies dans les données.",
         "es": "Seleccione un país para generar automáticamente datos sintéticos formalmente válidos para ese país.<br>Modifique los campos para introducir anomalías en los datos.",
         "en-gb": "Select a country to automatically generate formally valid synthetic data for that country.<br>Edit the fields to inject anomalies into the data."
     },

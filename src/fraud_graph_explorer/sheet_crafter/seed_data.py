@@ -1299,11 +1299,17 @@ def get_random_data(country_code: str, fake_type: str, **kwargs) -> str:
         return random.choice(vats)
 
     elif fake_type == "ip":
+        # Pull IP addresses from a GLOBAL pool to simulate cross-border fraud!
         return random.choice(SEED_IPS)
 
     elif fake_type == "phone":
-        # Use the centralized prefix
-        prefix = INTL_PHONE_PREFIX.get(cc, INTL_PHONE_PREFIX["GB"])
+        # prefix = INTL_PHONE_PREFIX.get(cc, INTL_PHONE_PREFIX["GB"])
+
+        # Pull phone numbers from a GLOBAL pool to simulate cross-border fraud!
+        # Pick a random country code from the available prefixes
+        random_cc = random.choice(list(INTL_PHONE_PREFIX.keys()))
+        prefix = INTL_PHONE_PREFIX.get(random_cc, INTL_PHONE_PREFIX["GB"])
+        # Generate the number
         return f"{prefix} {random.randint(100, 999)}{random.randint(1000000, 9999999)}"
 
     elif fake_type == "email":

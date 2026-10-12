@@ -8,7 +8,7 @@ from django.core.files.base import ContentFile
 
 from .models import Application, Entity, UsesIdentifier, Blacklist
 from .validation_engine import ValidationRegistry, RuleRegistry
-from fraud_graph_explorer.domain_schema import FIELDS, SECTION_LOOKUP, SECTIONS_BY_INTERNAL, INTL_PHONE_PREFIX
+from fraud_graph_explorer.domain_schema import FIELDS, SECTION_LOOKUP, SECTIONS_BY_INTERNAL, INTL_PHONE_PREFIX, SECTION_COUNTRY_LOOKUP
 
 
 def normalize_value(raw_value: str, config: dict, country_code: str):
@@ -80,7 +80,7 @@ def normalize_value(raw_value: str, config: dict, country_code: str):
 
     return norm_value
 
-def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
+def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: bool = False):
     """
     Parses a PDF from memory, normalizes data, runs validation/rules,
     and creates Graph nodes/edges.
@@ -93,6 +93,16 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
     try:
         # Read PDF directly from bytes in memory
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+
+            # --- AUTO-DETECT COUNTRY FROM SECTIONS ---
+            # Scan the first page for any known localized section headers
+            first_page_text = pdf.pages[0].extract_text() or ""
+            for header, detected_cc in SECTION_COUNTRY_LOOKUP.items():
+                if header in first_page_text:
+                    country_code = detected_cc
+                    break
+            # ---------------------------------------------
+
             for page in pdf.pages:
                 text = page.extract_text()
                 if not text:
@@ -108,14 +118,14 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
                     if not line:
                         continue
 
-                    # A. Check for Section Change
+                    # Check for Section Change
                     if line in SECTION_LOOKUP:
                         current_section = SECTION_LOOKUP[line]
                         expected_fields_queue = list(SECTIONS_BY_INTERNAL[current_section].get("fields", []))
                         print(f"\n[STATE] Found Section: {current_section}. Expected fields: {expected_fields_queue}")
                         continue
 
-                    # B. Check for Field
+                    # Check for Field
                     if current_section and expected_fields_queue:
                         for internal_name in expected_fields_queue:
                             config = FIELDS.get(internal_name)
@@ -143,7 +153,38 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
 
     except Exception as e:
         print(f"Error parsing PDF: {e}")
-        return None
+        return None, "parse_error", None
+
+    # ==========================================
+    # ABORT IF NOT A VALID APPLICATION SHEET
+    # ==========================================
+    # If the state machine didn't find any fields, it's not a loan application!
+    # Also check if it has the core required field (request_number)
+    if not extracted_data or "request_number" not in [item[0] for item in extracted_data] :
+        print("Ingestion aborted: No recognizable fields found in PDF or missing core 'request_number' field.")
+        return None, "invalid_sheet", None
+
+
+    # ==========================================
+    # PRE-INGESTION DUPLICATE CHECK
+    # ==========================================
+    # Look for the request_number in our extracted_data list of tuples
+    req_number_config = FIELDS.get("request_number", {})
+    is_unique = req_number_config.get("unique_id", False)
+
+    if is_unique:
+        for internal_name, raw_value, config in extracted_data:
+            if internal_name == "request_number":
+                # Check if an application with this request number already exists
+                existing_app = Application.objects.filter(request_number=raw_value).first()
+                if existing_app:
+                    if not overwrite:
+                        print(f"Duplicate detected: {raw_value}")
+                        return None, "duplicate", existing_app # Return the existing app!
+                    else:
+                        # User confirmed overwrite! Delete old record.
+                        existing_app.delete()
+                break
 
     # ==========================================
     # STEP 2: Normalization (Context-Aware)
@@ -266,23 +307,23 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
         tags = config.get("tags", [])
         raw_val = raw_data.get(internal_name, "")
 
-        # A. Save to Application model if "Sheet" tag is present
+        # Save to Application model if "Sheet" tag is present
         if "Sheet" in tags and hasattr(app, internal_name):
             setattr(app, internal_name, norm_value)
 
-        # B. Create Graph Entities (Identifier Vertices) for other tags
+        # Create Graph Entities (Identifier Vertices) for other tags
         entity_types = [t for t in tags if t != "Sheet"]
         for e_type in entity_types:
             if not norm_value:
                 continue
 
-            # 1. Create/Get Entity using the NORMALIZED value (for perfect graph linking)
+            # Create/Get Entity using the NORMALIZED value (for perfect graph linking)
             entity, _ = Entity.objects.get_or_create(
                 entity_type=e_type,
                 value=norm_value
             )
 
-            # 2. Create Edge using the RAW value and specific source_field (for forensic evidence)
+            # Create Edge using the RAW value and specific source_field (for forensic evidence)
             UsesIdentifier.objects.get_or_create(
                 application=app,
                 entity=entity,
@@ -298,4 +339,4 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str):
     # Final save to persist any updated Sheet attributes
     app.save()
 
-    return app
+    return app, None, None

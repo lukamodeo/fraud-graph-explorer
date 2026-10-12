@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Fraud Graph Explorer</title>
+
+        <!-- Local HTMX 2.0.10 - must be loaded in the head! -->
+        <script src="{% static 'vendor/js/htmx.min.js' %}"></script>
+
+        <!-- Local Bootstrap CSS 5.3.8 -->
+        <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap.min.css' %}">
+
+
+        <!-- Local Bootstrap Icons 1.13.1 -->
+        <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap-icons.min.css' %}">
+
+        {# Check if the browser is NOT Firefox #}
+        {% if 'Firefox' not in request.META.HTTP_USER_AGENT %}
+        <style>
+            @font-face {
+                font-family: 'Noto Flags';
+                src: url("{% static 'fonts/NotoColorEmoji-flagsonly.ttf' %}") format('truetype');
+                unicode-range: U+1F1E6-1F1FF;
+                font-display: swap;
+            }
+            body {
+                font-family: Helvetica, Arial, sans-serif !important;
+            }
+            .country-flags {
+                font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, Helvetica, Arial, sans-serif !important;
+            }
+        </style>
+        {% else %}
+        <style>
+            body {
+                font-family: Helvetica, Arial, sans-serif !important;
+            }
+            .select-group select {
+                font-family: system-ui, Helvetica, Arial, sans-serif !important;
+            }
+        </style>
+        {% endif %}
+        <!-- The order matter: Custom CSS after loading fonts  -->
+        <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}"/>
+
+        <!-- ADD Vis.js Network CSS -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/vis-network/styles/vis-network.min.css"/>
+
+        {% block extra_head %}{% endblock %}
+    </head>
+
+    <body>
+        <nav class="text-bg-dark py-0 px-3 mb-0" style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>Fraud Graph Explorer</strong>
+            <div>
+                <a href="{% url 'sheet_crafter:crafter' %}" style="color: yellow; margin-right: 15px;">Sheet Crafter</a>
+                <a href="{% url 'graph_explorer:dashboard' %}" style="color: yellow;">Graph Explorer</a>
+            </div>
+        </nav>
+
+        <!-- Main content goes here -->
+        {% block content %}{% endblock %}
+
+        <!-- Local Vis.js Network JS before body close -->
+        <script src="{% static 'vendor/js/vis-network.min.js' %}"></script>
+
+        <!-- Local Bootstrap JS 5.3.8 -->
+        <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
+
+
+        {% block scripts %}{% endblock %}
+    </body>
+
+</html>

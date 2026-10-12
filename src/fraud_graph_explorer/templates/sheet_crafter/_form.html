@@ -32,11 +32,11 @@
                     hx-get="."
                     hx-target="#form-container"
                     hx-include="[name='country_code']">
-                <i class="bi bi-dice-5"></i> {{ ui.BTN_RANDOMIZE }}
+                <i class="bi bi-repeat" style="font-size: larger;"></i>&nbsp;{{ ui.BTN_RANDOMIZE }}
             </button>
             <button type="submit"
                     class="action-btn">
-                <i class="bi bi-file-earmark-pdf"></i> {{ ui.BTN_SAVE }}
+                <i class="bi bi-floppy"></i>&nbsp;&nbsp;{{ ui.BTN_SAVE }}
             </button>
         </div>
     </div>
@@ -69,7 +69,7 @@
                             <div class="input-group">
                                 {{ field }}
                                 <span class="tooltip-icon">
-                                    <i class="bi bi-info-circle"></i>
+                                    <i class="bi bi-info-circle-fill"></i>
                                     <span class="tooltip-text">
                                         {{ ui.HINT_VAT|safe }}
                                     </span>
@@ -80,7 +80,7 @@
                             <div class="input-group-tin">
                                  {{ field }}
                                 <span class="tooltip-icon">
-                                    <i class="bi bi-info-circle"></i>
+                                    <i class="bi bi-info-circle-fill"></i>
                                     <span class="tooltip-text">
                                         {{ ui.HINT_TIN|safe }}
                                     </span>
@@ -92,7 +92,7 @@
                                       hx-target="#{{ field.id_for_label }}"
                                       hx-vals='{{ field.field.calc_fields|safe }}'
                                       hx-swap="outerHTML">
-                                    <i class="bi bi-arrow-repeat"></i>
+                                    <i class="bi bi-calculator-fill"></i>
                                     <span class="tooltip-text">
                                         {{ ui.HINT_RECALC|safe }}
                                     </span>

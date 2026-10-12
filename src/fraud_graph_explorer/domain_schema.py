@@ -10,15 +10,32 @@ class CountryCodes(models.TextChoices):
     SPAIN = 'ES', 'Spain'
     UK = 'GB', 'United Kingdom'
 
+
 class EntityTypes(models.TextChoices):
     VAT = 'VAT', 'VAT Number'
     TIN = 'TIN', 'Tax ID Number'
     FULLNAME = 'FULLNAME', 'Full Name'
     IBAN = 'IBAN', 'IBAN Code'
+    IP = 'IP', 'IPv4 Address'
     EMAIL = 'EMAIL', 'Email Address'
     PHONE = 'PHONE', 'Phone Number'
     COMPANY = 'COMPANY', 'Company Name'
     LOCATION = 'LOCATION', 'Location'
+
+
+# Centralized Visual Metadata for Vis.js and the Legend
+ENTITY_GRAPH_META = {
+    EntityTypes.VAT.value: {'bs_icon': '\uf2da', 'css_icon': 'bi-credit-card-2-front', 'color': '#d4ae18', 'label_key': 'LEGEND_VAT'},
+    EntityTypes.TIN.value: {'bs_icon': '\uf8c9', 'css_icon': 'bi-person-vcard', 'color': '#a09e16', 'label_key': 'LEGEND_TIN'},
+    EntityTypes.IBAN.value: {'bs_icon': '\uf62e', 'css_icon': 'bi-bank', 'color': '#27ae60', 'label_key': 'LEGEND_IBAN'},
+    EntityTypes.IP.value: {'bs_icon': '\uf3ef', 'css_icon': 'bi-globe2', 'color': '#7f8c8d', 'label_key': 'LEGEND_IP'},
+    EntityTypes.COMPANY.value: {'bs_icon': '\uf87d', 'css_icon': 'bi-buildings', 'color': '#f39c12', 'label_key': 'LEGEND_COMPANY'},
+    EntityTypes.LOCATION.value: {'bs_icon': '\uf3e8', 'css_icon': 'bi-geo-alt', 'color': '#ff2222', 'label_key': 'LEGEND_LOCATION'},
+    EntityTypes.FULLNAME.value: {'bs_icon': '\uf4d4', 'css_icon': 'bi-person-bounding-box', 'color': '#2146b5', 'label_key': 'LEGEND_FULLNAME'},
+    EntityTypes.EMAIL.value: {'bs_icon': '\uf84c', 'css_icon': 'bi-envelope-at', 'color': '#f1c40f', 'label_key': 'LEGEND_EMAIL'},
+    EntityTypes.PHONE.value: {'bs_icon': '\uf655', 'css_icon': 'bi-sd-card', 'color': '#a12494f', 'label_key': 'LEGEND_PHONE'},
+}
+
 
 # Centralized Country Constants
 INTL_PHONE_PREFIX = {
@@ -32,8 +49,11 @@ INTL_PHONE_PREFIX = {
 # Define the business logic (language-agnostic)
 FIELDS = {
     "request_number": {
+        "unique_id": True,
         "type": "string",
         "tags": ["Sheet"],
+        "list_view": True,
+        "list_label": "COL_ID",
         "required": True,
         "max_length": 50,
         "fake_type": "id",
@@ -92,6 +112,8 @@ FIELDS = {
     "company_name": {
         "type": "string",
         "tags": ["Sheet", "COMPANY"],
+        "list_view": True,
+        "list_label": "COL_COMP_NAME",
         "required": True,
         "max_length": 100,
         "fake_type": "company_name",
@@ -106,6 +128,8 @@ FIELDS = {
     "company_vat": {
         "type": "keyword",
         "tags": ["Sheet", "VAT"],
+        "list_view": True,
+        "list_label": "COL_COMP_VAT",
         "required": True,
         "validations": ["vat"],
         "rules": ["blacklist"],
@@ -449,6 +473,18 @@ SECTIONS = [
     }
 ]
 
+def build_section_country_lookup():
+    """
+    Maps localized section headers to their country code.
+    e.g., {"DATI DELLA RICHIESTA": "IT", "ANTRAGSDATEN": "DE", ...}
+    """
+    lookup = {}
+    for section in SECTIONS:
+        for lang, label in section.get("labels", {}).items():
+            lookup[label] = lang.upper()
+    return lookup
+
+SECTION_COUNTRY_LOOKUP = build_section_country_lookup()
 
 def _build_reverse_lookup_map():
     """
@@ -488,6 +524,16 @@ SECTION_LOOKUP = _build_section_lookup()
 
 # Maps "guarantors" -> {"fields": ["guarantor_1_fullname", "guarantor_1_tin", ...]}
 SECTIONS_BY_INTERNAL = {s["internal_name"]: s for s in SECTIONS}
+
+def get_country_flag(country_code: str) -> str:
+    """Converts a 2-letter country code (e.g., 'IT') into a Unicode Flag Emoji."""
+    if not country_code or len(country_code) != 2:
+        return ""
+
+    # Regional Indicator Symbol logic (A=65, 🇦=0x1F1E6)
+    offset = ord(country_code[0].upper()) - ord('A')
+    flag = chr(0x1F1E6 + offset) + chr(0x1F1E6 + (ord(country_code[1].upper()) - ord('A')))
+    return flag
 
 
 def split_italian_full_name(full_name: str) -> tuple[str, str]:

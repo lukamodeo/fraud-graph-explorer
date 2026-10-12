@@ -9,9 +9,12 @@
 
         <title>{{ ui.TITLE }}</title>
 
-        <!-- HTMX must be in the head! -->
-        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <!-- Local HTMX 2.0.10 - must be loaded in the head! -->
+        <script src="{% static 'vendor/js/htmx.min.js' %}"></script>
+
+        <!-- Local Bootstrap Icons 1.13.1 -->
+        <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap-icons.min.css' %}">
+
         {# Check if the browser is NOT Firefox #}
         {% if 'Firefox' not in request.META.HTTP_USER_AGENT %}
         <style>
@@ -22,24 +25,25 @@
                 font-display: swap;
             }
             body {
-                font-family: Helvetica, Arial, sans-serif !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
             }
             .select-group select {
-                font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, Helvetica, Arial, sans-serif !important;
+                font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
             }
         </style>
         {% else %}
         <style>
             body {
-                font-family: Helvetica, Arial, sans-serif !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;; !important;
             }
             .select-group select {
-                font-family: system-ui, Helvetica, Arial, sans-serif !important;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
             }
         </style>
         {% endif %}
-        <!-- The order matter: external css after loading fonts  -->
-        <link rel="stylesheet" href="{% static 'css/crafter_style.css' %}">
+        <!-- The order matter: Custom CSS after loading fonts  -->
+        <link rel="stylesheet" type="text/css" href="{% static 'css/crafter.css' %}"/>
+
     </head>
     <body>
 

@@ -1,0 +1,38 @@
+<!-- src/fraud_graph_explorer/templates/graph_explorer/_duplicate_modal.html -->
+
+<div class="modal fade" id="duplicateModal" tabindex="-1" aria-labelledby="duplicateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-warning" id="duplicateModalLabel">{{ ui.DUP_TITLE }}</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ dup_msg|safe }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                        hx-post="{% url 'graph_explorer:ingest_confirm' %}"
+                        hx-vals='{"temp_file_name": "{{ temp_file_name }}", "country_code": "{{ country_code }}", "file_name": "{{ file_name }}"}'
+                        hx-target="#ingest-status"
+                        hx-on::before-request="let m = bootstrap.Modal.getInstance(document.getElementById('duplicateModal')); if(m){ m.hide(); m.dispose(); }">
+                    {{ ui.DUP_BTN_OVERWRITE }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
+                        onclick="document.getElementById('ingest-status').innerHTML = '<span class=\'badge text-bg-warning\'>{{ ui.INGEST_CANCELLED }}</span>'">
+                    {{ ui.DUP_BTN_CANCEL }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Initialize and show the modal immediately when HTMX injects this HTML -->
+<script>
+    var duplicateModalEl = document.getElementById('duplicateModal');
+    if (duplicateModalEl) {
+        var duplicateModal = new bootstrap.Modal(duplicateModalEl);
+        duplicateModal.show();
+    }
+</script>
