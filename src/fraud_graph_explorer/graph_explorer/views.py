@@ -13,6 +13,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Count
 from django.core.paginator import Paginator
+from django.template.loader import render_to_string
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
@@ -39,7 +40,7 @@ def _format_sheet_label(app):
 
     # Build the string cleanly without indentation issues
     label = (
-        f"<code>{flag}</code>\n\n"
+        f"{flag}\n\n"
         f"<b>{req_num}</b>\n"
         f"<i>({branch})</i>\n\n"
         f"<code>{comp_name}</code>\n"
@@ -175,37 +176,9 @@ def delete_application_view(request, sheet_id):
 
     # Return the target URL in a custom event payload
     response = HttpResponse("")
-    response['HX-Trigger'] = json.dumps({
-                                            "deleteSuccess": target_url
-                                            })
+    response['HX-Trigger'] = json.dumps({"deleteSuccess": target_url})
     return response
 
-#
-# @require_POST
-# def delete_application_view_old(request, sheet_id):
-#     """
-#     Deletes an Application, its edges, and cleans up orphaned entities.
-#     """
-#     # 1. Get the application
-#     app = get_object_or_404(Application, sheet_id=sheet_id)
-#
-#     # 2. Delete the physical PDF file from the hard drive (if it exists)
-#     if app.pdf_file:
-#         app.pdf_file.delete(save=False)
-#
-#     # 3. Delete the Application.
-#     # Because UsesIdentifier has on_delete=models.CASCADE, the edges are deleted automatically.
-#     app.delete()
-#
-#     # 4. Clean up orphaned Entity nodes (Entities not linked to ANY application)
-#     # This keeps your graph database pristine!
-#     Entity.objects.annotate(num_apps=Count('applications')).filter(num_apps=0).delete()
-#
-#     # 5. Return empty response and trigger list refresh
-#     response = HttpResponse("")
-#     response['HX-Trigger'] = 'refreshList'
-#     return response
-#
 
 def dashboard_view(request):
     # Filtering & Pagination Logic
@@ -335,47 +308,6 @@ def dashboard_view(request):
     return render(request, 'graph_explorer/dashboard.html', context)
 
 
-# def dashboard_view_old(request):
-#     browser_lang = get_language()
-#     ui_strings = get_ui_strings(browser_lang)
-#
-#     legend_items = []
-#     js_groups = {}
-#
-#     # Build dynamic data for HTML Legend and JS Vis.js groups
-#     for entity_type, meta in ENTITY_GRAPH_META.items():
-#         label = ui_strings.get(meta['label_key'], entity_type)
-#         legend_items.append({
-#             'type': entity_type,
-#             'css_icon': meta['css_icon'],
-#             'color': meta['color'],
-#             'label': label
-#         })
-#
-#         # Build the Vis.js group configuration dynamically
-#         js_groups[entity_type] = {
-#             'shape': 'circularImage',
-#             'image': f'/explorer/api/icon/{entity_type}/',
-#             'size': 20,
-#             'font': {'color': '#2c3e50', 'background': '#ffffff'}
-#         }
-#
-#     # 1. Read initial filters from URL to populate the form on page load/refresh
-#     context = {
-#         'legend_items': legend_items,
-#         'js_groups': json.dumps(js_groups),
-#         'ui': ui_strings,
-#         'country_flags': {code.value: get_country_flag(code.value) for code in CountryCodes}, # Still needed for the main table column
-#         # Pass URL parameters to template
-#         'query': request.GET.get('q', ''),
-#         'country_filter': request.GET.get('country', ''),
-#         'status_filter': request.GET.get('status', ''),
-#         'start_date': request.GET.get('start_date', ''),
-#         'end_date': request.GET.get('end_date', '')
-#     }
-#     return render(request, 'graph_explorer/dashboard.html', context)
-
-
 def ingest_pdf_view(request):
     # Get UI strings for translation
     browser_lang = get_language()
@@ -396,7 +328,7 @@ def ingest_pdf_view(request):
             msg = ui.get("INGEST_SUCCESS", "Ingested: {req_num}").format(req_num=app.request_number)
             response = HttpResponse(f'<span class="badge text-bg-success">{msg}</span>')
             response['HX-Trigger'] = json.dumps({
-                "refreshList": True,
+                #"refreshList": True,
                 "selectNewApp": str(app.sheet_id)
             })
             return response
@@ -414,17 +346,27 @@ def ingest_pdf_view(request):
                 old_file=existing_app.file_name
             )
 
-            return render(
-                request=request,
+            context={
+                'ui': ui,
+                'temp_file_name': temp_file_name,
+                'country_code': country,
+                'file_name': pdf_file.name,
+                'dup_msg': msg
+            }
+
+            # Render the modal HTML
+            modal_html = render_to_string(
+                request=request,    # ADD request so the csrf token is available in the template
                 template_name='graph_explorer/_duplicate_modal.html',
-                context={
-                    'ui': ui,
-                    'temp_file_name': temp_file_name, # Pass the temp filename
-                    'country_code': country,
-                    'file_name': pdf_file.name,
-                    'dup_msg': msg
-                }
+                context=context
             )
+
+            # Return OOB swaps: Clear status badge area, inject modal into #modal-container
+            response_html = f'''
+            <div hx-swap-oob="true" id="ingest-status"></div>
+            <div hx-swap-oob="true" id="modal-container">{modal_html}</div>
+            '''
+            return HttpResponse(response_html)
 
         elif error_code == "invalid_sheet":
             msg = ui.get("INGEST_ERR_INVALID_SHEET", "Failed")
@@ -473,7 +415,7 @@ def ingest_confirm_view(request):
             # Tell the browser to trigger the events on overwrite success
             response = HttpResponse(f'<span class="badge text-bg-success">{msg}</span>')
             response['HX-Trigger'] = json.dumps({
-                "refreshList": True,
+                #"refreshList": True,
                 "selectNewApp": str(app.sheet_id)
             })
             return response
@@ -482,101 +424,6 @@ def ingest_confirm_view(request):
             return HttpResponse(f'<span class="badge text-bg-danger">{msg}</span>')
 
     return HttpResponse("Method not allowed", status=405)
-
-
-# def sheet_list_view(request):
-#     queryset = Application.objects.all().order_by('-acquisition_date')
-#
-#     # Search logic (wildcards)
-#     query = request.GET.get('q', '').strip()
-#     country = request.GET.get('country', '')
-#     status = request.GET.get('status', '')
-#     start_date = request.GET.get('start_date', '').strip()
-#     end_date = request.GET.get('end_date', '').strip()
-#
-#     active_filters = []
-#
-#     if query:
-#         # 2. Safely handle wildcards using Regex
-#         # Escape all regex special chars (like ., +, ?) EXCEPT our *
-#         safe_query = re.escape(query).replace(r'\*', '.*')
-#         q_objects = Q(request_number__iregex=safe_query)
-#         q_objects |= Q(company_name__iregex=safe_query)
-#         q_objects |= Q(company_vat__iregex=safe_query)
-#         q_objects |= Q(entities__value__iregex=safe_query)
-#         queryset = queryset.filter(q_objects).distinct()
-#         active_filters.append({"key": "q", "value": query})
-#
-#     if country:
-#         queryset = queryset.filter(country_code=country)
-#         active_filters.append({"key": "country", "value": country})
-#
-#     if status:
-#         if status == 'ok':
-#             queryset = queryset.filter(has_validation_errors=False, has_rule_warnings=False)
-#         elif status == 'err':
-#             queryset = queryset.filter(has_validation_errors=True)
-#         elif status == 'warn':
-#             queryset = queryset.filter(has_rule_warnings=True)
-#         elif status == 'err_or_warn':
-#             queryset = queryset.filter(Q(has_validation_errors=True) | Q(has_rule_warnings=True))
-#         active_filters.append({"key": "status", "value": status})
-#
-#     if start_date:
-#         queryset = queryset.filter(acquisition_date__date__gte=start_date)
-#         active_filters.append({"key": "start_date", "value": start_date})
-#     if end_date:
-#         queryset = queryset.filter(acquisition_date__date__lte=end_date)
-#         active_filters.append({"key": "end_date", "value": end_date})
-#
-#     paginator = Paginator(queryset, 10)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-#
-#     # Get UI strings from graph_explorer
-#     browser_lang = get_language()
-#     ui_strings = get_ui_strings(browser_lang)
-#
-#     # Build a map for country badges: {"IT": "Italia", "DE": "Germania", ...}
-#     country_names_map = dict(ui_strings.get("COUNTRY_NAMES", []))
-#
-#     # NEW: Format the pagination string with current page and total pages
-#     pag_template = ui_strings.get("PAG_PAGE_OF", "Page {current} of {total}")
-#     ui_strings["PAG_PAGE_OF"] = pag_template.format(
-#         current=page_obj.number,
-#         total=page_obj.paginator.num_pages
-#     )
-#
-#     # Build dynamic list columns from schema
-#     list_columns = []
-#     for internal_name, config in FIELDS.items():
-#         if config.get("list_view"):
-#             list_label_key = config.get("list_label", internal_name)
-#             # Look up the translated string in the UI dictionary
-#             label = ui_strings.get(list_label_key, internal_name)
-#             list_columns.append({"key": internal_name, "label": label})
-#
-#     # Build a dynamic dictionary of flags: {'IT': '🇮🇹', 'DE': '🇩🇪', ...}
-#     country_flags = {code.value: get_country_flag(code.value) for code in CountryCodes}
-#
-#     # Pass the active_filters list to the template
-#     return render(
-#         request=request,
-#         template_name='graph_explorer/_sheet_list.html',
-#         context={
-#             'page_obj': page_obj,
-#             'query': query,
-#             'country_filter': country,
-#             'status_filter': status,
-#             'start_date': start_date,
-#             'end_date': end_date,
-#             'country_flags': country_flags,
-#             'country_names_map': country_names_map,
-#             'list_columns': list_columns,
-#             'ui': ui_strings,
-#             'active_filters': active_filters
-#         }
-#     )
 
 
 def sheet_detail_view(request, sheet_id):

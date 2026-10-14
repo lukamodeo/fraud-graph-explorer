@@ -79,6 +79,7 @@ function selectAppForCards(row) {
     row.classList.add('selected');
 }
 
+
 // Remove Filter Logic
 // Remove a specific filter by its name attribute
 function removeFilter(filterName) {
@@ -155,23 +156,6 @@ function resetLegendCheckboxes() {
     });
 }
 
-
-// Show selected filename when user picks a PDF
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('pdf-upload');
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const filenameSpan = document.getElementById('pdf-filename');
-            if (this.files && this.files.length > 0) {
-                filenameSpan.textContent = this.files[0].name;
-                filenameSpan.style.color = '#2c3e50';
-                filenameSpan.style.fontStyle = 'normal';
-            } else {
-                filenameSpan.textContent = 'No file chosen';
-            }
-        });
-    }
-});
 
 // Function to hide/show node groups from the Legend checkboxes
 function toggleGroup(groupName, isChecked) {
@@ -279,7 +263,7 @@ function loadLinkedDetail(sheetId) {
 
 
 async function loadGraphData(sheetId) {
-    const container = document.getElementById('vis-network');
+    const container = document.getElementById('vis-canvas');
     if (!container) return;
 
     // CALL RESET CHECKBOXES HERE
@@ -294,7 +278,7 @@ async function loadGraphData(sheetId) {
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
-        // 1. PRELOAD ALL ENTITY IMAGES TO FIX VIS.JS Z-INDEX BUG
+        // PRELOAD ALL ENTITY IMAGES TO FIX VIS.JS Z-INDEX BUG
         if (window.ENTITY_GRAPH_GROUPS) {
             const preloadPromises = Object.values(window.ENTITY_GRAPH_GROUPS).map(g => {
                 if (g.shape === 'circularImage' && g.image) {
@@ -311,10 +295,10 @@ async function loadGraphData(sheetId) {
             await Promise.all(preloadPromises);
         }
 
-        // 2. Manage Physics Toggle state
+        // Manage Physics Toggle state
         if (data.nodes.length > 0) {
-            physicsToggle.disabled = false; // Enable switch
-            physicsToggle.checked = true;   // Default to ON
+            physicsToggle.disabled = false;
+            physicsToggle.checked = true;   // Explicitly set to ON when loading new data
         } else {
             physicsToggle.disabled = true;  // Disable if empty
             physicsToggle.checked = false;
@@ -334,6 +318,7 @@ async function loadGraphData(sheetId) {
                         multi: 'html',
                         color: '#ffffff',
                         size: 14,
+                        face: '"Noto Flags", Arial', //"'Noto Flags', Helvetica, Arial, sans-serif",
                         bold: {
                             color: '#ffff00',
                             size: 16,
@@ -356,7 +341,13 @@ async function loadGraphData(sheetId) {
                         hover: { border: '#c0392b', background: '#e74c3c' },
                         highlight: { border: '#e74c3c', background: '#c0392b' }
                     },
-                    font: { color: '#ffffff', highlight: { color: '#000' }, multi: 'html', size: 14 },
+                    font: {
+                        multi: 'html',
+                        color: '#ffffff',
+                        size: 14,
+                        face: '"Noto Flags", Arial', //"'Noto Flags', Helvetica, Arial, sans-serif",
+                        highlight: { color: '#ff0' },
+                    },
                     shape: 'box',
                     borderWidth: 2,
                     margin: 12,
@@ -384,10 +375,10 @@ async function loadGraphData(sheetId) {
                     avoidOverlap: 1
                 },
                 solver: 'forceAtlas2Based',
-                enabled: true, // Always start enabled
+                enabled: true,
                 stabilization: {
                     enabled: true,
-                    iterations: 200,
+                    iterations: 150,
                     updateInterval: 25
                 }
             },
@@ -396,6 +387,7 @@ async function loadGraphData(sheetId) {
                 zoomView: true,
                 zoomSpeed: 0.5,
                 dragView: true,
+                dragNodes: true,
                 navigationButtons: true,
                 keyboard: true
             }
@@ -405,66 +397,116 @@ async function loadGraphData(sheetId) {
         const nodesDataset = new vis.DataSet(data.nodes);
         const edgesDataset = new vis.DataSet(data.edges);
 
+        // Define what happens when stabilization finishes
+        function onStabilized() {
+            network.setOptions({ physics: false });
+            network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+            physicsToggle.checked = false;
+        }
+
+
+        // Helper function to get the localized empty state HTML
+        function getEmptyLinkedHtml() {
+            return '<p class="text-muted">' + (window.UI_LINKED_EMPTY || 'Select a node.') + '</p>';
+        }
+
         if (network === null) {
             network = new vis.Network(container, { nodes: nodesDataset, edges: edgesDataset }, options);
 
-            // AUTO-CENTER: Fit the view exactly to the nodes once physics is done
-            network.once("stabilizationIterationsDone", function() {
-                network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } });
-            });
+            network.once("stabilizationIterationsDone", onStabilized);
 
-
-            // Event Listeners for Analyst Interaction
-            network.on("click", function(params) {
+            // Event Listeners for Analyst Interaction (Only bound once)
+            // Populate/Clear details when a node is selected
+            network.on("selectNode", function(params) {
                 if (params.nodes.length > 0) {
                     const nodeId = params.nodes[0];
+                    const pane = document.getElementById('linked-detail-pane');
+
                     if (nodeId.startsWith('sheet_')) {
-                        // Single click a Sheet -> Load details in Tab 3 Right Pane
-                        const clickedSheetId = nodeId.replace('sheet_', '');
-                        loadLinkedDetail(clickedSheetId);
+                        const selectedSheetId = nodeId.replace('sheet_', '');
+
+                        // If it's the Root Sheet, clear the right pane (it's already in the left pane)
+                        if (selectedSheetId === window.currentRootSheet) {
+                            if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                        } else {
+                            // It's a Linked Sheet, load its details
+                            loadLinkedDetail(selectedSheetId);
+                        }
+                    } else {
+                        // Selected an entity (like VAT), so clear the sheet details
+                        if (pane) pane.innerHTML = getEmptyLinkedHtml();
                     }
                 }
             });
 
+            // Populate/Clear details when a node drag ends
+            network.on("dragEnd", function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const pane = document.getElementById('linked-detail-pane');
+
+                    if (nodeId.startsWith('sheet_')) {
+                        const draggedSheetId = nodeId.replace('sheet_', '');
+
+                        // If it's the Root Sheet, clear the right pane
+                        if (draggedSheetId === window.currentRootSheet) {
+                            if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                        } else {
+                            // It's a Linked Sheet, load its details
+                            loadLinkedDetail(draggedSheetId);
+                        }
+                    } else {
+                        // Dragged an entity, so clear the sheet details
+                        if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                    }
+                }
+            });
+
+            // Empty details when a node is deselected (e.g., clicking empty canvas)
+            network.on("deselectNode", function(params) {
+                const pane = document.getElementById('linked-detail-pane');
+                if (pane) pane.innerHTML = getEmptyLinkedHtml();
+            });
+
+            // Double-click to make new root (Excluding the Root Sheet itself)
             network.on("doubleClick", function(params) {
                 if (params.nodes.length > 0) {
                     const nodeId = params.nodes[0];
                     if (nodeId.startsWith('sheet_')) {
                         // Double click a Sheet -> Make it the new Root!
                         const newRootSheetId = nodeId.replace('sheet_', '');
-                        window.currentRootSheet = newRootSheetId;
-
-                        // Also update the Root Details Pane in Tab 3
-                        loadApplication(newRootSheetId, 'tab2', null);
-
-                        // Reload the graph with the new root
-                        loadGraphData(newRootSheetId);
+                        // FIX: Exclude the Root Sheet!
+                        // If they double-click the root, do nothing (don't reload the same graph)
+                        if (newRootSheetId !== window.currentRootSheet) {
+                            window.currentRootSheet = newRootSheetId;
+                            loadApplication(newRootSheetId, 'tab2', null);
+                            // Reload the graph with the new root
+                            loadGraphData(newRootSheetId);
+                        }
                     }
                 }
             });
 
         } else {
-            // If network already exists, just update the data
+            // Update data and explicitly re-enable physics for the new nodes
+            //network.setOptions(options);
+            network.setOptions({ physics: true });
             network.setData({ nodes: nodesDataset, edges: edgesDataset });
 
-            // Re-enable physics if it was turned off, so the new graph can settle
-            network.setOptions({ physics: true });
-
-            // AUTO-CENTER: Also trigger fit when new data is loaded via double-click
-            network.once("stabilizationIterationsDone", function() {
-                network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } });
-            });
-
-            // Fallback fit just in case stabilization finishes too fast
-            setTimeout(() => { network.fit({ animation: true }); }, 500);
+            // 2. EXPLICITLY FORCE STABILIZATION!
+            // This guarantees 'stabilizationIterationsDone' fires, even for tiny graphs.
+            network.stabilize();
+            network.once("stabilizationIterationsDone", onStabilized);
         }
 
-        window.currentNetwork = network; // Store globally for redraws
+        // Store globally for redraws
+        window.currentNetwork = network;
 
     } catch (error) {
         console.error('Error fetching graph data:', error);
         container.innerHTML = '<p style="color:red; text-align:center; margin-top:50px;">Failed to load graph data.</p>';
-        physicsToggle.disabled = true; // Disable on error
+        physicsToggle.disabled = true;
+        physicsToggle.checked = false;
     }
 }
 

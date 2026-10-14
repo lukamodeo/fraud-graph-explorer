@@ -88,11 +88,11 @@ UI_STRINGS = {
         },
     "FILTER_PLACEHOLDER": {
         "it": "es. Mario*, IT123*",
-        "de": "z.B. Mario*, IT123*",
-        "fr": "ex. Mario*, IT123*",
-        "es": "ej. Mario*, IT123*",
-        "en-gb": "e.g., Mario*, IT123*"
-        },
+        "de": "z.B. Lukas*, DE123*",
+        "fr": "ex. Pierre*, FR12*",
+        "es": "ej. Juan*, A123*",
+        "en-gb": "e.g. John*, GB123*"
+    },
     "FILTER_COUNTRY": {
         "it": "Paese",
         "de": "Land",
@@ -311,47 +311,102 @@ UI_STRINGS = {
         "en-gb": "Overwritten: {req_num}"
         },
     "INGEST_CANCELLED": {
-        "it": "Operazione annullata.",
-        "de": "Vorgang abgebrochen.",
-        "fr": "Opération annulée.",
-        "es": "Operación cancelada.",
-        "en-gb": "Operation Cancelled."
+        "it": "Operazione annullata",
+        "de": "Vorgang abgebrochen",
+        "fr": "Opération annulée",
+        "es": "Operación cancelada",
+        "en-gb": "Operation Cancelled"
         },
     "INGEST_ERR_DUPLICATE": {
-        "it": "Saltato: {req_num} già inserito.",
-        "de": "Übersprungen: {req_num} bereits erfasst.",
-        "fr": "Ignoré : {req_num} déjà intégré.",
-        "es": "Omitido: {req_num} ya ingestado.",
-        "en-gb": "Skipped: {req_num} already ingested."
+        "it": "Saltato: {req_num} già inserito",
+        "de": "Übersprungen: {req_num} bereits erfasst",
+        "fr": "Ignoré : {req_num} déjà intégré",
+        "es": "Omitido: {req_num} ya ingestado",
+        "en-gb": "Skipped: {req_num} already ingested"
     },
     "INGEST_ERR_INVALID_SHEET": {
-        "it": "Fallito: Il PDF non contiene una Domanda di Prestito valida.",
-        "de": "Fehlgeschlagen: PDF enthält keinen gültigen Kreditantrag.",
-        "fr": "Échec : Le PDF ne contient pas de demande de prêt valide.",
-        "es": "Fallido: El PDF no contiene una solicitud de préstamo válida.",
-        "en-gb": "Failed: PDF does not contain a valid Loan Application Sheet."
+        "it": "Fallito: non è una Domanda di Prestito valida",
+        "de": "Fehlgeschlagen: Kein gültiger Kreditantrag",
+        "fr": "Échec : il n'est pas une demande de prêt valide",
+        "es": "Error: no es una solicitud de préstamo válida",
+        "en-gb": "Failed: not a valid loan application",
     },
     "INGEST_ERR_PARSE_ERROR": {
-        "it": "Fallito: PDF corrotto, crittografato o illeggibile.",
-        "de": "Fehlgeschlagen: PDF ist beschädigt, verschlüsselt oder unlesbar.",
-        "fr": "Échec : PDF corrompu, chiffré ou illisible.",
-        "es": "Fallido: PDF corrupto, cifrado o ilegible.",
-        "en-gb": "Failed: PDF is corrupted, encrypted, or unreadable."
+        "it": "Fallito: PDF corrotto o crittografato",
+        "de": "Fehlgeschlagen: PDF beschädigt oder verschlüsselt",
+        "fr": "Échec : le PDF est corrompu ou chiffré",
+        "es": "Error: el PDF está dañado o cifrado",
+        "en-gb": "Failed: PDF is corrupted or encrypted",
     },
     "INGEST_ERR_UNKNOWN": {
-        "it": "Inserimento fallito. Controllare i log del server.",
-        "de": "Einfügen fehlgeschlagen. Bitte überprüfen Sie die Serverprotokolle.",
-        "fr": "Échec de l’insertion. Veuillez consulter les journaux du serveur.",
-        "es": "Error al insertar. Compruebe los registros del servidor.",
-        "en-gb": "Insertion failed. Check the server logs."
-    },
+        "it": "Inserimento fallito. Controllare i log",
+        "de": "Einfügen fehlgeschlagen. Bitte überprüfen Sie die Protokolle",
+        "fr": "Échec de l’insertion. Veuillez consulter les journaux",
+        "es": "Error al insertar. Compruebe los registros",
+        "en-gb": "Insertion failed. Check the logs"
+        },
     "INGEST_ERR_NO_FILE": {
-        "it": "Nessun file caricato.",
-        "de": "Keine Datei hochgeladen.",
-        "fr": "Aucun fichier téléchargé.",
-        "es": "Ningún archivo subido.",
-        "en-gb": "No file uploaded."
+        "it": "Nessun file caricato",
+        "de": "Keine Datei hochgeladen",
+        "fr": "Aucun fichier téléchargé",
+        "es": "Ningún archivo subido",
+        "en-gb": "No file uploaded"
     },
+    "LEGEND_TITLE": {
+        "it": "Legenda & Filtri",
+        "de": "Legende & Filter",
+        "fr": "Légende & Filtres",
+        "es": "Leyenda & Filtros",
+        "en-gb": "Legend & Filters"
+        },
+    "LEGEND_HELP_TEXT": {
+        "it": """
+            Fai doppio clic su una domanda collegata per renderla il nuovo centro dell'indagine.|
+            Seleziona una domanda collegata per caricarne i dettagli per il confronto.|   
+            Attiva/disattiva il motore Fisico per disporre meglio i nodi.|
+            Nascondi le entità per ridurre il disordine visivo: le domande collegate senza connessioni visibili saranno nascoste automaticamente.
+            """,
+
+        "de": """
+            Doppelklicke auf einen verknüpften Antrag, um ihn zum neuen Zentrum der Untersuchung zu machen.|
+            Wähle einen verknüpften Antrag aus, um seine Details zum Vergleich zu laden.|
+            Aktiviere oder deaktiviere die Physik-Engine, um die Knoten besser anzuordnen.|
+            Blende Entitäten aus, um die visuelle Unübersichtlichkeit zu reduzieren: Verknüpfte Anträge ohne sichtbare Verbindungen werden automatisch ausgeblendet.
+            """,
+        "fr": """
+            Double-cliquez sur une demande liée pour en faire le nouveau centre de l’enquête.|
+            Sélectionnez une demande liée pour charger ses détails en vue de la comparaison.|
+            Activez ou désactivez le moteur physique pour mieux disposer les nœuds.|
+            Masquez les entités pour réduire l’encombrement visuel : les demandes liées sans connexions visibles seront automatiquement masquées.
+            """,
+        "es": """
+            Haz doble clic en una solicitud vinculada para convertirla en el nuevo centro de la investigación.|
+            Selecciona una solicitud vinculada para cargar sus detalles y compararlos.|
+            Activa o desactiva el motor físico para distribuir mejor los nodos.|
+            Oculta las entidades para reducir el desorden visual: las solicitudes vinculadas sin conexiones visibles se ocultarán automáticamente.
+            """,
+
+        "en-gb": """
+            Double-click a linked application to make it the new centre of the investigation.|
+            Select a linked application to load its details for comparison.|
+            Toggle the physics engine on or off to arrange the nodes more effectively.|
+            Hide entities to reduce visual clutter: linked applications with no visible connections will be hidden automatically.
+            """
+        },
+    "LEGEND_PHYSICS": {
+        "it": "Motore Fisico",
+        "de": "Physik-Engine",
+        "fr": "Moteur Physique",
+        "es": "Motor de Física",
+        "en-gb": "Physics Engine"
+        },
+    "LEGEND_RESET": {
+        "it": "Ripristina Vista Grafo",
+        "de": "Graphenansicht Zurücksetzen",
+        "fr": "Réinitialiser la Vue du Graphe",
+        "es": "Restablecer Vista del Grafo",
+        "en-gb": "Reset Graph View"
+        },
     # VAT: Combined string, browser language term placed first
     "LEGEND_VAT": {
         "it": "P.IVA / USt-IdNr. / N° TVA / NIF / VAT R.No.",
@@ -527,6 +582,13 @@ UI_STRINGS = {
         "fr": "N° TVA (P.IVA/USt-IdNr./NIF/VAT N.)",
         "es": "NIF (P.IVA/USt-IdNr./N°TVA/VAT N.)",
         "en-gb": "VAT N. (P.IVA/USt-IdNr./N°TVA/NIF)"
+    },
+    "LINKED_PANE_EMPTY": {
+        "it": "Seleziona un nodo nel Graph Explorer per ispezionarlo.",
+        "de": "Wählen Sie einen Knoten im Graph Explorer aus, um ihn zu inspizieren.",
+        "fr": "Sélectionnez un nœud dans l'Graph Explorer pour l'inspecter.",
+        "es": "Seleccione un nodo en el Graph Explorer para inspeccionarlo.",
+        "en-gb": "Select a node in the Graph Explorer to inspect it."
     },
     # The Validations and Rules message strings
     "TYPE_SYSTEM": {

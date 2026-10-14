@@ -84,7 +84,9 @@
 #buttonAccordion::after {
     margin-left: 10px;
 }
-
+#buttonAccordion:focus {
+    box-shadow: none !important;
+}
 #filterClearBtn {
     line-height: 1.3;
 }
@@ -118,6 +120,8 @@
     touch-action: none;
     pointer-events: all;
     flex: 1;
+    /* ADD: Prevent any layout shifting */
+    box-sizing: border-box;
 }
 
 

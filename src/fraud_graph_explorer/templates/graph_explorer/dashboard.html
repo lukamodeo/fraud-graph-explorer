@@ -4,6 +4,8 @@
 
 {% load static %}
 
+{% load graph_explorer_tags %}
+
 {% block content %}
 
 <div class="dashboard-container d-flex flex-column pt-3 p-2 overflow-hidden">
@@ -75,13 +77,13 @@
                         <div class="fw-bold">
                             <h3 class="accordion-header ms-1">{{ ui.LIST_TITLE }}</h3>
                         </div>
-                        <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-3 pe-2 bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
+                        <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
                             <strong>{{ ui.FILTER_TITLE }}</strong>
                         </button>
                     </div>
 
-                    <div id="collapseFilter" class="accordion-collapse collapse" data-bs-parent="#filterAccordion">
-                        <div class="accordion-body bg-white">
+                    <div id="collapseFilter" class="bg-light accordion-collapse collapse" data-bs-parent="#filterAccordion">
+                        <div class="accordion-body bg-white border-top border-3 border-info rounded-start-pill me-1">
                             <!-- FILTER FORM -->
                             <form id="filter-form" class="d-flex gap-3 align-items-center flex-wrap"
                                   hx-get="{% url 'graph_explorer:dashboard' %}"
@@ -162,22 +164,26 @@
     </div>
 
     <!-- Tab 2: Graph Explorer -->
-    <div id="tab2" class="dashboard-tab d-none flex-row h-100  flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
+    <div id="tab2" class="dashboard-tab d-none flex-row h-100 flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
 
         <!-- Vis.js Graph (3/4 width) -->
-        <div id="graph-container" class="bg-light border rounded d-flex flex-column min-height-0 min-width-0 overflow-hidden" style="flex: 3;">
+        <div id="graph-container" class="bg-light border rounded d-flex flex-column h-100 min-height-0 min-width-0 overflow-hidden" style="flex: 3;">
             <!-- Added flex: 1 and explicit height 100% -->
-            <div id="vis-canvas"></div>
+            <div id="vis-canvas" class="h-100 w-100"></div>
         </div>
 
         <!-- Sidebar (1/4 width) -->
         <div id="graph-sidebar" class="bg-light border rounded p-3 d-flex flex-column min-height-0 min-width-0" style="flex: 1;">
 
-            <h5 class="mt-0 mb-2">Legend & Filters</h5>
+            <h4 class="mt-0 mb-1">{{ ui.LEGEND_TITLE }}</h4>
 
-            <p class="text-muted small mb-3">Hide entities to reduce clutter. Linked sheets with no visible connections will hide automatically.</p>
+            <ul class="text-muted small mb-2 lh-sm ps-2">
+                {% for item in ui.LEGEND_HELP_TEXT|split:"|" %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
 
-            <div id="graph-legend" class="d-flex flex-column gap-0 mt-1 mb-1 overflow-y-auto">
+            <div id="graph-legend" class="d-flex flex-column gap-0 mt-1 mb-3 overflow-y-auto">
 
                 <!-- DYNAMIC LEGEND WITH TOGGLE SWITCHES -->
                 {% for item in legend_items %}
@@ -201,9 +207,9 @@
                         <input type="checkbox" id="toggle-physics" checked onclick="togglePhysics(this.checked)" disabled>
                         <span class="slider"></span>
                     </span>
-                    <i class="bi bi-magnet-fill ms-2 me-1 fs-3" style="color: #34495e;"></i> Physics Engine
+                    <i class="bi bi-magnet-fill ms-2 me-1 fs-3" style="color: #34495e;"></i> {{ ui.LEGEND_PHYSICS }}
                 </label>
-                <button onclick="network.fit({ animation: true })" class="btn btn-primary w-100">Reset View</button>
+                <button onclick="network.fit({ animation: true })" class="btn btn-primary w-100">{{ ui.LEGEND_RESET }}</button>
             </div>
         </div>
     </div>
@@ -224,8 +230,9 @@
         <!-- Linked Sheet Details (1/2 width) -->
         <div id="linked-detail-pane-container" class="bg-light border rounded p-3 d-flex flex-column flex-fill min-height-0 min-width-0">
             <h3 class="mt-0 mb-3">Linked Sheet Details</h3>
+            <!-- Use dynamic variable here -->
             <div id="linked-detail-pane" class="flex-fill overflow-y-auto min-height-0">
-                <p class="text-muted">Click a node in the Graph Explorer to inspect it.</p>
+                <p class="text-muted">{{ ui.LINKED_PANE_EMPTY }}</p>
             </div>
         </div>
     </div>
@@ -275,9 +282,13 @@
     </div>
 </div>
 
+<!-- Dedicated container for HTMX-injected modals -->
+<div id="modal-container"></div>
+
 <!-- INJECT JSON CONFIG INTO JAVASCRIPT -->
 <script>
     window.ENTITY_GRAPH_GROUPS = {{ js_groups|safe }};
+    window.UI_LINKED_EMPTY = "{{ ui.LINKED_PANE_EMPTY|escapejs }}";
 </script>
 
 {% endblock %}
