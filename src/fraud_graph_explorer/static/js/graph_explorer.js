@@ -46,8 +46,9 @@ function confirmDelete() {
 }
 // Listen for the delete success event
 document.body.addEventListener('deleteSuccess', function(evt) {
-    // Extract the URL Django generated for us
+    // Django sends both the new list URL and the deleted sheet_id
     const targetUrl = evt.detail.value;
+    const deletedSheetId = evt.detail.sheet_id;
 
     // Update the browser URL so F5/Refresh works perfectly
     history.pushState({}, '', targetUrl);
@@ -68,7 +69,73 @@ document.body.addEventListener('deleteSuccess', function(evt) {
         target: '#applications-list',
         swap: 'innerHTML'
     });
+
+    // Reset graph + detail panes if the deleted sheet was being shown
+    if (deletedSheetId) {
+        if (window.currentRootSheet === deletedSheetId) {
+            // Deleted sheet was the ROOT → reset everything (root + linked + graph + cards)
+            resetRootSheetView();
+        } else if (window.currentLinkedSheet === deletedSheetId) {
+            // Deleted sheet was only the LINKED side → clear just that pane
+            resetLinkedPane();
+        }
+    }
 });
+
+/**
+ * Return the pre-rendered empty-state HTML for the detail panes.
+ * The markup + translated message live in <template id="empty-state">
+ * inside dashboard.html, which itself delegates to _empty_state.html
+ * so the initial render and all JS-driven resets share one source of truth.
+ */
+function getEmptyStateHtml() {
+    const tpl = document.getElementById('empty-state');
+    if (!tpl) {
+        // Defensive fallback — should never happen
+        return '<p class="text-muted fst-italic">—</p>';
+    }
+    return tpl.innerHTML;
+}
+
+
+function resetRootSheetView() {
+    // Clear the Vis.js graph
+    if (network) {
+        network.body.data.nodes.clear();
+        network.body.data.edges.clear();
+        network.redraw();
+    }
+    window.currentRootSheet = null;
+    window.currentLinkedSheet = null;
+
+    const emptyHtml = getEmptyStateHtml();
+    const rootPane   = document.getElementById('root-detail-pane');
+    const linkedPane = document.getElementById('linked-detail-pane');
+    if (rootPane)   rootPane.innerHTML   = emptyHtml;
+    if (linkedPane) linkedPane.innerHTML = emptyHtml;
+
+    // Clear the cards panel (errors/warnings)
+    const cardsPanel = document.getElementById('ingest-status');
+    if (cardsPanel) cardsPanel.innerHTML = '';
+
+    // If user is on Tab 2 or Tab 3, jump back to Tab 1
+    const activeTab = document.querySelector('.nav-link.active');
+    if (activeTab && (activeTab.dataset.tab === 'tab2' || activeTab.dataset.tab === 'tab3')) {
+        openTab('tab1');
+    }
+}
+
+
+function resetLinkedPane() {
+    const emptyHtml = getEmptyStateHtml();
+    const linkedPane = document.getElementById('linked-detail-pane');
+    if (linkedPane) linkedPane.innerHTML = emptyHtml;
+
+    window.currentLinkedSheet = null;
+
+    // If user is currently on Tab 3, stay there — they can pick another linked sheet
+    // from the graph in Tab 2. No tab switch needed here.
+}
 
 
 // Function to highlight row and load cards
@@ -128,12 +195,16 @@ if (appList) {
                     target: '#ingest-status',
                     swap: 'none'
                 });
+
+                // Preload graph + detail panel for the new sheet
+                preloadApplication(pendingSelectSheetId);
             }
             // Clear the pending ID so it doesn't trigger again on normal pagination
             pendingSelectSheetId = null;
         }
     });
 }
+
 
 // Toggle Physics Engine on/off
 function togglePhysics(isChecked) {
@@ -230,32 +301,47 @@ function openTab(tabId) {
 
     // Trigger Vis.js redraw if opening Graph Tab
     if (tabId === 'tab2' && network !== null) {
-        setTimeout(() => network.redraw(), 100);
+        setTimeout(() => {
+            network.redraw();   // recompute canvas dimensions
+            network.fit();      // recenter camera on all nodes
+        }, 100);
     }
 }
 
-// Unified function to load an application from the Dashboard list
+// Inner: fetch only — no highlight, no tab switch
+function preloadApplication(sheetId) {
+    // Load Root Details into Tab 3 pane (will be visible when user opens Tab 3)
+    htmx.ajax('GET', `/explorer/detail/${sheetId}/`, {
+        target: '#root-detail-pane',
+        swap: 'innerHTML'
+    });
+
+    // Track the new root sheet + clear stale linked-sheet reference
+    window.currentRootSheet = sheetId;
+    window.currentLinkedSheet = null;   // previous linked sheet is no longer valid
+
+    // Prepare Graph Data for Tab 2 (will be re-fit when user opens Tab 2)
+    loadGraphData(sheetId);
+}
+// Outer: highlight row + switch tab + preload
 function loadApplication(sheetId, targetTab, btn) {
-    // 1. Highlight the selected row
+    // Highlight the selected row
     document.querySelectorAll('tr.selected').forEach(el => el.classList.remove('selected'));
     if (btn) {
         btn.closest('tr').classList.add('selected');
     }
 
-    // 2. Switch to the requested tab (Graph or Details)
+    // Switch to the requested tab (Graph or Details)
     openTab(targetTab);
 
-    // 3. Load Root Details into Tab 3 pane using HTMX Ajax
-    const detailUrl = `/explorer/detail/${sheetId}/`;
-    htmx.ajax('GET', detailUrl, { target: '#root-detail-pane', swap: 'innerHTML' });
-
-    // 4. Prepare Graph Data for Tab 2
-    window.currentRootSheet = sheetId; // Store globally for Vis.js
-    loadGraphData(sheetId);
+    // Preload graph + detail
+    preloadApplication(sheetId);
 }
+
 
 // Function to load the right pane (Linked Sheet) when a Vis.js node is clicked
 function loadLinkedDetail(sheetId) {
+    window.currentLinkedSheet = sheetId;   // track for delete-sync
     const detailUrl = `/explorer/detail/${sheetId}/`;
     htmx.ajax('GET', detailUrl, { target: '#linked-detail-pane', swap: 'innerHTML' });
 }
@@ -308,6 +394,9 @@ async function loadGraphData(sheetId) {
         const options = {
             groups: {
                 'Root_Sheet': {
+                    chosen: {
+                        label: false,
+                    },
                     color: {
                         border: '#8e44ad',
                         background: '#9b59b6',
@@ -318,15 +407,30 @@ async function loadGraphData(sheetId) {
                         multi: 'html',
                         color: '#ffffff',
                         size: 14,
-                        face: '"Noto Flags", Arial', //"'Noto Flags', Helvetica, Arial, sans-serif",
+                        face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                        vadjust: 0,
                         bold: {
                             color: '#ffff00',
-                            size: 16,
+                            vadjust: 0,
                             mod: 'bold'
                         },
                         ital: {
-                            color: '#ffff00',
+                            color: '#ffffff',
+                            vadjust: 0,
                             mod: 'italic'
+                        },
+                        boldital: {
+                            color: '#ffffff',
+                            size: 24,
+                            face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                            vadjust: 0,
+                            mod: 'bold italic'
+                        },
+                        mono: {
+                            size: 16,
+                            color: '#ffff00',
+                            vadjust: 0,
+                            mod: ''
                         }
                     },
                     shape: 'box',
@@ -335,18 +439,48 @@ async function loadGraphData(sheetId) {
                     widthConstraint: { minimum: 100, maximum: 300 }
                  },
                 'Linked_Sheet': {
+                    chosen: {
+                        label: false,
+                    },
                     color: {
-                        border: '#c0392b',
-                        background: '#e74c3c',
-                        hover: { border: '#c0392b', background: '#e74c3c' },
-                        highlight: { border: '#e74c3c', background: '#c0392b' }
+//                        border: '#c0392b',
+//                        background: '#e74c3c',
+//                        hover: { border: '#c0392b', background: '#e74c3c' },
+//                        highlight: { border: '#e74c3c', background: '#c0392b' }
+                        border: '#0087c7',
+                        background: '#0099cc',
+                        hover: { border: '#0087c7', background: '#0099cc' },
+                        highlight: { border: '#0099cc', background: '#0087c7' }
                     },
                     font: {
                         multi: 'html',
                         color: '#ffffff',
                         size: 14,
-                        face: '"Noto Flags", Arial', //"'Noto Flags', Helvetica, Arial, sans-serif",
-                        highlight: { color: '#ff0' },
+                        face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                        vadjust: 0,
+                        bold: {
+                            color: '#ffff00',
+                            vadjust: 0,
+                            mod: 'bold'
+                        },
+                        ital: {
+                            color: '#ffffff',
+                            vadjust: 0,
+                            mod: 'italic'
+                        },
+                        boldital: {
+                            color: '#ffffff',
+                            size: 24,
+                            face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                            vadjust: 0,
+                            mod: 'bold italic'
+                        },
+                        mono: {
+                            size: 16,
+                            color: '#ffff00',
+                            vadjust: 0,
+                            mod: ''
+                        }
                     },
                     shape: 'box',
                     borderWidth: 2,
@@ -405,11 +539,6 @@ async function loadGraphData(sheetId) {
         }
 
 
-        // Helper function to get the localized empty state HTML
-        function getEmptyLinkedHtml() {
-            return '<p class="text-muted">' + (window.UI_LINKED_EMPTY || 'Select a node.') + '</p>';
-        }
-
         if (network === null) {
             network = new vis.Network(container, { nodes: nodesDataset, edges: edgesDataset }, options);
 
@@ -427,14 +556,14 @@ async function loadGraphData(sheetId) {
 
                         // If it's the Root Sheet, clear the right pane (it's already in the left pane)
                         if (selectedSheetId === window.currentRootSheet) {
-                            if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                            if (pane) pane.innerHTML = getEmptyStateHtml();
                         } else {
                             // It's a Linked Sheet, load its details
                             loadLinkedDetail(selectedSheetId);
                         }
                     } else {
                         // Selected an entity (like VAT), so clear the sheet details
-                        if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                        if (pane) pane.innerHTML = getEmptyStateHtml();
                     }
                 }
             });
@@ -450,14 +579,14 @@ async function loadGraphData(sheetId) {
 
                         // If it's the Root Sheet, clear the right pane
                         if (draggedSheetId === window.currentRootSheet) {
-                            if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                            if (pane) pane.innerHTML = getEmptyStateHtml();
                         } else {
                             // It's a Linked Sheet, load its details
                             loadLinkedDetail(draggedSheetId);
                         }
                     } else {
                         // Dragged an entity, so clear the sheet details
-                        if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                        if (pane) pane.innerHTML = getEmptyStateHtml();
                     }
                 }
             });
@@ -465,7 +594,7 @@ async function loadGraphData(sheetId) {
             // Empty details when a node is deselected (e.g., clicking empty canvas)
             network.on("deselectNode", function(params) {
                 const pane = document.getElementById('linked-detail-pane');
-                if (pane) pane.innerHTML = getEmptyLinkedHtml();
+                if (pane) pane.innerHTML = getEmptyStateHtml();
             });
 
             // Double-click to make new root (Excluding the Root Sheet itself)

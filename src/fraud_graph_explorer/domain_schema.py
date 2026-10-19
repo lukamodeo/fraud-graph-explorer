@@ -525,6 +525,19 @@ SECTION_LOOKUP = _build_section_lookup()
 # Maps "guarantors" -> {"fields": ["guarantor_1_fullname", "guarantor_1_tin", ...]}
 SECTIONS_BY_INTERNAL = {s["internal_name"]: s for s in SECTIONS}
 
+def _build_section_by_field():
+    """
+    Reverse lookup: field_internal_name -> section dict.
+    e.g. {'representative_tin': <legal_representative section dict>, ...}
+    """
+    lookup = {}
+    for section in SECTIONS:
+        for field_internal_name in section["fields"]:
+            lookup[field_internal_name] = section
+    return lookup
+
+SECTION_BY_FIELD = _build_section_by_field()
+
 def get_country_flag(country_code: str) -> str:
     """Converts a 2-letter country code (e.g., 'IT') into a Unicode Flag Emoji."""
     if not country_code or len(country_code) != 2:

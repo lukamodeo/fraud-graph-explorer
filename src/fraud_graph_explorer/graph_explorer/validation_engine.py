@@ -9,8 +9,8 @@ from stdnum import vatin, iban
 from stdnum.it import codicefiscale as it_tin
 from stdnum.de import idnr as de_tin
 from stdnum.fr import nir as fr_tin
-from stdnum.es import dni  as es_tin
-from stdnum.gb import utr  as gb_tin
+from stdnum.es import dni as es_tin
+from stdnum.gb import utr as gb_tin
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 

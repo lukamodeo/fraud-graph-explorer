@@ -11,41 +11,50 @@ from urllib.parse import urlparse, parse_qs, urlencode
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Exists, OuterRef, Subquery
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
+from .alerts import resolve_alerts
 from .models import Application, Entity, UsesIdentifier
-from .services import ingest_pdf
+from .services import ingest_pdf, annotate_has_links
 from .ui_translations import get_ui_strings
 from fraud_graph_explorer.domain_schema import FIELDS, SECTIONS, ENTITY_GRAPH_META, CountryCodes, get_country_flag
 
 
 # HELPER FUNCTIONS
-def _format_sheet_label(app):
+def _format_sheet_label(app, ui_strings):
     """
     Builds a multi-line HTML label for a Vis.js Sheet node.
-    Includes the Country Flag on top, Request Info, and Company Info.
+    Includes the Country Flag on top, Request Info, and Company Info with Short Localized Labels.
     """
     flag = get_country_flag(app.country_code)
 
+    # Fetch short labels from UI dictionary
+    req_label = ui_strings.get("GRAPH_LBL_REQ", "Loan Application")
+    branch_label = ui_strings.get("GRAPH_LBL_BRANCH", "Branch")
+    #comp_name_label = ui_strings.get("GRAPH_LBL_COMPANY", "Company")
+    comp_loc_label = ui_strings.get("GRAPH_LBL_LOC", "Registered Office")
+    comp_vat_label = ui_strings.get("GRAPH_LBL_VAT", "VAT R.No.")
+
     # Safely get values, fallback to empty string if missing
     req_num = app.request_number or "N/A"
-    branch = app.request_branch_location or ""
+    branch = app.request_branch_location or "N/A"
     comp_name = app.company_name or "N/A"
-    comp_loc = app.company_location or ""
+    comp_loc = app.company_location or "N/A"
     comp_vat = app.company_vat or "N/A"
 
     # Build the string cleanly without indentation issues
     label = (
-        f"{flag}\n\n"
-        f"<b>{req_num}</b>\n"
-        f"<i>({branch})</i>\n\n"
+        f"<b><i>{flag}</i></b>\n"
+        f"<i>{req_label}</i>\n\n"
+        f"<b>{req_num}</b> - <i>{branch_label}:</i> {branch}\n\n"
         f"<code>{comp_name}</code>\n"
-        f"({comp_loc})\n\n"
-        f"<code>{comp_vat}</code>"
+        f"(<i>{comp_loc_label}</i>:  {comp_loc})\n\n"
+        f"<i>{comp_vat_label}</i>\n"
+        f"<code>{comp_vat}</code>\n"
     )
     return label
 
@@ -175,13 +184,18 @@ def delete_application_view(request, sheet_id):
         target_url = f"/explorer/?{query_string}" if query_string else "/explorer/"
 
     # Return the target URL in a custom event payload
-    response = HttpResponse("")
-    response['HX-Trigger'] = json.dumps({"deleteSuccess": target_url})
+    response = HttpResponse('')
+    response['HX-Trigger'] = json.dumps({
+        'deleteSuccess': {
+            'value':    target_url,         # existing
+            'sheet_id': str(sheet_id),      # string, since UUIDs aren't JSON-native
+        }
+    })
     return response
 
 
 def dashboard_view(request):
-    # Filtering & Pagination Logic
+    # Base Queryset - Filtering & Pagination Logic
     queryset = Application.objects.all().order_by('-acquisition_date')
 
     # Search logic (wildcards)
@@ -233,6 +247,8 @@ def dashboard_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    page_items = annotate_has_links(page_obj.object_list)
+
     # Get UI strings from graph_explorer
     browser_lang = get_language()
     ui_strings = get_ui_strings(browser_lang)
@@ -261,6 +277,7 @@ def dashboard_view(request):
 
     context = {
         'page_obj': page_obj,
+        'page_items': page_items,
         'query': query,
         'country_filter': country,
         'status_filter': status,
@@ -473,9 +490,11 @@ def sheet_detail_view(request, sheet_id):
         template_name='graph_explorer/_sheet_detail.html',
         context={
             'app': app,
+            'country_flag': get_country_flag(app.country_code),
             'detail_sections': detail_sections,
-            'resolved_errors': resolved_errors,
-            'resolved_warnings': resolved_warnings
+            'resolved_errors': resolve_alerts(app.validation_errors, ui_strings, app.country_code),
+            'resolved_warnings': resolve_alerts(app.rule_warnings, ui_strings, app.country_code),
+            'ui': ui_strings
         }
     )
 
@@ -483,19 +502,23 @@ def sheet_detail_view(request, sheet_id):
 def app_cards_view(request, sheet_id):
     """Returns the Validation and Warning cards for a specific application."""
     app = get_object_or_404(Application, sheet_id=sheet_id)
+
+    # Get 2D UI Strings for THIS specific application's country
     browser_lang = get_language()
-    ui = get_ui_strings(browser_lang)
+    ui_strings = get_ui_strings(browser_lang, app.country_code)
 
     # Format the "Selected" string here in Python
-    selected_template = ui.get("CARD_SELECTED", "Selected: {req_num}")
-    ui["CARD_SELECTED"] = selected_template.format(req_num=app.request_number)
+    selected_template = ui_strings.get("CARD_SELECTED", "Selected: {req_num}")
+    ui_strings["CARD_SELECTED"] = selected_template.format(req_num=app.request_number)
 
     return render(
         request=request,
         template_name='graph_explorer/_app_cards.html',
         context={
             'app': app,
-            'ui': ui,
+            'ui': ui_strings,
+            'resolved_errors':   resolve_alerts(app.validation_errors, ui_strings, app.country_code),
+            'resolved_warnings': resolve_alerts(app.rule_warnings, ui_strings, app.country_code),
             'oob': True
         }
     )
@@ -533,11 +556,19 @@ def graph_data_view(request, sheet_id):
             edges.append({"from": from_id, "to": to_id, "arrows": arrows, "title": title})
             edge_map.add(edge_tuple)
 
+    # Fetch UI strings
+    browser_lang = get_language()
+    ui_strings = get_ui_strings(browser_lang)
+
     # Add Root Sheet Node (Multi-line label using \n)
     root_node_id = f"sheet_{root_app.sheet_id}"
-    root_label = _format_sheet_label(root_app)
-    #return `<i>Procedimento</i>\n<i>num.:</i> <b>${proc}</b> - <i>sede:</i> <b>${sede}</b>\n\n<code>${impresa}</code>\n\n<i>P.IVA:</i> <code>${piva}</code>`; //\n<i>C.F. Rappr.:</i> <b>${rappresentante}</b>`;
-    add_node(root_node_id, root_label, "Root_Sheet", f"Root: {root_app.company_name}")
+    root_label = _format_sheet_label(root_app, ui_strings)
+
+    root_title = ui_strings.get("GRAPH_ROOT_TITLE", "")
+    linked_title = ui_strings.get("GRAPH_LINKED_TITLE", "")
+    linked_via = ui_strings.get("GRAPH_LINKED_VIA", "")
+
+    add_node(root_node_id, root_label, "Root_Sheet", root_title)
 
     # Get 1st hop edges (to get source_field) and entities
     root_edges = UsesIdentifier.objects.filter(application=root_app).select_related('entity')
@@ -555,8 +586,6 @@ def graph_data_view(request, sheet_id):
         # Add Entity Node
         ent_node_id = f"ent_{entity.id}"
 
-
-
         # Truncate label for the canvas
         if len(entity.value) > 20:
             display_label = entity.value[:17] + "..."
@@ -569,22 +598,22 @@ def graph_data_view(request, sheet_id):
         group_name = entity.entity_type.upper()
         add_node(ent_node_id, display_label, group_name, node_title)
 
-        # Edge: Root Sheet -> Shared Entity
         root_context = _get_translated_field_context(u_edge.source_field, root_app.country_code)
-        add_edge(root_node_id, ent_node_id, f"Linked via:\n{root_context}", arrows="")
+        # Edge: Root Sheet -> Shared Entity
+        add_edge(root_node_id, ent_node_id, f"{linked_via}:\n{root_context}", arrows="")
 
         # Add connected sheets (Multi-line label using \n)
         for conn_app in connected_apps:
             app_node_id = f"sheet_{conn_app.sheet_id}"
-            conn_label = _format_sheet_label(conn_app)
-            add_node(app_node_id, conn_label, "Linked_Sheet", f"Linked: {conn_app.company_name}")
+            conn_label = _format_sheet_label(conn_app, ui_strings)
+
+            add_node(app_node_id, conn_label, "Linked_Sheet", linked_title)
 
             # Get the source field from the linked sheet's edge
             conn_u_edge = UsesIdentifier.objects.filter(application=conn_app, entity=entity).first()
-
             conn_context = _get_translated_field_context(conn_u_edge.source_field, conn_app.country_code) if conn_u_edge else "Unknown"
 
             # Edge: Shared Entity -> Connected Sheet (Keep arrows="to" so it points to the Linked Sheet)
-            add_edge(ent_node_id, app_node_id, f"Linked via:\n{conn_context}", arrows="to")
+            add_edge(ent_node_id, app_node_id, f"{linked_via}:\n{conn_context}", arrows="to")
 
     return JsonResponse({"nodes": nodes,"edges": edges})

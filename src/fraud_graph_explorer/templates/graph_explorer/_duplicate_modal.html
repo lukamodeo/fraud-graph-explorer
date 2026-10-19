@@ -3,8 +3,8 @@
 <div class="modal fade" id="duplicateModal" tabindex="-1" aria-labelledby="duplicateModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5 text-warning" id="duplicateModalLabel">{{ ui.DUP_TITLE }}</h1>
+            <div class="modal-header py-2 text-bg-warning">
+                <h1 class="modal-title fs-5 fw-bold" id="duplicateModalLabel">{{ ui.DUP_TITLE }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -13,7 +13,7 @@
             <div class="modal-footer">
                 <!-- 1. Hide the modal cleanly BEFORE the request (Your correct fix) -->
                 <!-- 2. Clear the container AFTER the request so no duplicate IDs are left behind -->
-                <button type="button" class="btn btn-danger"
+                <button type="button" class="btn btn-warning"
                         hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                         hx-post="{% url 'graph_explorer:ingest_confirm' %}"
                         hx-vals='{"temp_file_name": "{{ temp_file_name }}", "country_code": "{{ country_code }}", "file_name": "{{ file_name }}"}'

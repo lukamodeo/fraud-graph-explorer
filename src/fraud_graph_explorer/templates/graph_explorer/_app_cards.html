@@ -1,41 +1,47 @@
+<!-- src/fraud_graph_explorer/templates/graph_explorer/_app_cards.html -->
+
 {% load graph_explorer_tags %}
 
 <!-- The Entire Errors Card (OOB Swap) -->
 <div id="errors-card" class="card overflow-hidden min-width-0 {% if app and app.validation_errors %}border-danger{% else %}border-success{% endif %}" {% if oob %}hx-swap-oob="true"{% endif %}>
-    <div class="card-header d-flex justify-content-between align-items-center {% if app and app.validation_errors %}text-bg-danger{% else %}text-bg-success{% endif %}">
-        <span>{{ ui.CARD_VAL_ERRORS }}</span>
-        <!-- Display req_num on the right -->
-        <span class="fw-normal small opacity-75">{% if app %}{{ app.request_number }}{% endif %}</span>
+    <div class="card-header d-flex justify-content-between align-items-center py-1 {% if app and app.validation_errors %}text-bg-danger{% else %}text-bg-success{% endif %}">
+        {% if app and app.validation_errors %}
+        <i class="bi bi-exclamation-triangle fs-5"></i>
+        {% else %}
+        <i class="bi bi-check-circle fs-5"></i>
+        {% endif %}
+
+        <span class="position-absolute start-50 translate-middle-x">
+            {{ ui.CARD_VAL_ERRORS }}
+        </span>
+
+        <span class="fw-bold small opacity-75">
+            {% if app %}{{ ui.CARD_SELECTED }}{% endif %}
+        </span>
     </div>
     <div class="card-body overflow-y-auto">
-        {% if app and app.validation_errors %}
-            <ul class="mb-0">
-                {% for err in app.validation_errors %}
-                    <li><strong>[{{ ui|get_item:err.type_key }}]</strong> {{ ui|get_item:err.reason_key }} ({{ err.field }})</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted mt-3 mb-0 text-center fs-5 fst-italic">{% if app %}{{ ui.CARD_NO_ERR }}{% else %}{{ ui.CARD_NO_DATA }}{% endif %}</p>
-        {% endif %}
+        {% include "graph_explorer/_alerts_list.html" with alerts=resolved_errors ui=ui type_alerts="errors" %}
     </div>
 </div>
 
 <!-- The Entire Warnings Card (OOB Swap) -->
 <div id="warnings-card" class="card overflow-hidden min-width-0 {% if app and app.rule_warnings %}border-warning{% else %}border-success{% endif %}" {% if oob %}hx-swap-oob="true"{% endif %}>
-    <div class="card-header d-flex justify-content-between align-items-center {% if app and app.rule_warnings %}text-bg-warning{% else %}text-bg-success{% endif %} ">
-        <span>{{ ui.CARD_RULE_WARNINGS }}</span>
-        <!-- Display req_num on the right -->
-        <span class="fw-normal small opacity-75">{% if app %}{{ app.request_number }}{% endif %}</span>
+    <div class="card-header d-flex justify-content-between align-items-center py-1 {% if app and app.rule_warnings %}text-bg-warning{% else %}text-bg-success{% endif %} ">
+        {% if app and app.rule_warnings %}
+        <i class="bi bi-exclamation-triangle fs-5"></i>
+        {% else %}
+        <i class="bi bi-check-circle fs-5"></i>
+        {% endif %}
+
+        <span class="position-absolute start-50 translate-middle-x">
+            {{ ui.CARD_RULE_WARNINGS }}
+        </span>
+
+        <span class="fw-bold small opacity-75">
+            {% if app %}{{ ui.CARD_SELECTED }}{% endif %}
+        </span>
     </div>
     <div class="card-body overflow-y-auto">
-        {% if app and app.rule_warnings %}
-            <ul class="mb-0">
-                {% for warn in app.rule_warnings %}
-                    <li><strong>[{{ ui|get_item:warn.type_key }}]</strong> {{ ui|get_item:warn.reason_key }} ({{ warn.field }})</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted mt-3 mb-0 text-center fs-5 fst-italic">{% if app %}{{ ui.CARD_NO_WARN }}{% else %}{{ ui.CARD_NO_DATA }}{% endif %}</p>
-        {% endif %}
+        {% include "graph_explorer/_alerts_list.html" with alerts=resolved_warnings ui=ui type_alerts="warnings" %}
     </div>
 </div>

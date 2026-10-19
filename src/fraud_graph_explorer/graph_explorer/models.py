@@ -26,6 +26,8 @@ class Blacklist(models.Model):
     reason = models.CharField(max_length=255, blank=True, null=True, help_text="Why is this blacklisted?")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = models.Manager()  # explicitly add manager
+
     class Meta:
         unique_together = ('entity_type', 'value')
 

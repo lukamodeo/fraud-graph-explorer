@@ -1,40 +1,90 @@
 <!-- src/fraud_graph_explorer/templates/graph_explorer/_sheet_detail.html -->
 
-<div style="margin-bottom: 15px;">
-    <strong>{{ app.request_number }}</strong> ({{ app.country_code }})
-    <a href="{{ app.pdf_file.url }}" target="_blank" style="float: right; text-decoration: none;">📄 Download PDF</a>
+<div class="d-flex flex-column h-100">
+
+    <!-- 1. Header (Fixed at top) -->
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
+        <div class="ms-2">
+            <span class="fs-4 me-1 country-flags">{{ country_flag|default:app.country_code }}</span> <strong>{{ app.request_number }}</strong>
+        </div>
+        <div>
+            <span class="fs-4">{{ app.company_name }}</span>
+        </div>
+        <a href="{{ app.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-download"></i> {{ ui.DETAIL_BTN_PDF }}
+        </a>
+    </div>
+
+    <!-- 2. Reconstructed PDF Table (Scrollable, takes remaining space) -->
+    <div class="flex-fill overflow-y-auto min-height-0 mb-3">
+        <table class="table table-sm table-bordered border-secondary mb-0">
+            {% for section in detail_sections %}
+                <tr>
+                    <td colspan="2" class="table-active fw-bold text-center">
+                        {{ section.title }}
+                    </td>
+                </tr>
+                {% for row in section.rows %}
+                    <tr>
+                        <td class="fw-bold text-end text-muted" style="width: 40%;">
+                            {{ row.label }}
+                        </td>
+                        <td>
+                            {{ row.value }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 3. Errors Accordion (Pinned to bottom) -->
+    <div class="accordion flex-shrink-0 mb-1" id="errAccordion-{{ app.sheet_id }}">
+        <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+                {% if resolved_errors %}
+                <button class="accordion-button collapsed pt-1 pb-2 px-3 rounded-pill small text-bg-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseErr-{{ app.sheet_id }}">
+                    <i class="bi bi-exclamation-triangle fs-5 me-2"></i>
+                    <strong>{{ ui.CARD_VAL_ERRORS }} ({{ resolved_errors|length }})</strong>
+                    <i class="bi bi-caret-down-fill my-auto ms-auto me-0 my-auto accordion-button-icon"></i>
+                </button>
+                {% else %}
+                <button class="accordion-button collapsed pt-1 pb-2 px-3 rounded-pill small text-bg-success" type="button" disabled style="cursor: not-allowed; opacity: 0.8;">
+                    <i class="bi bi-check-circle fs-5 me-2"></i>
+                    <strong>{{ ui.CARD_VAL_ERRORS }} (0)</strong>
+                </button>
+                {% endif %}
+            </h2>
+            <div id="collapseErr-{{ app.sheet_id }}" class="accordion-collapse collapse" data-bs-parent="#errAccordion-{{ app.sheet_id }}">
+                <div class="accordion-body py-2 px-1 border border-danger rounded-2 rounded-top-0">
+                    {% include "graph_explorer/_alerts_list.html" with alerts=resolved_errors ui=ui %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Warnings Accordion (Pinned to bottom) -->
+    <div class="accordion flex-shrink-0" id="warnAccordion-{{ app.sheet_id }}">
+        <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+                {% if resolved_warnings %}
+                <button class="accordion-button collapsed pt-1 pb-2 px-3 rounded-pill small text-bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWarn-{{ app.sheet_id }}">
+                    <i class="bi bi-exclamation-triangle fs-5 me-2"></i>
+                    <strong>{{ ui.CARD_RULE_WARNINGS }} ({{ resolved_warnings|length }})</strong>
+                    <i class="bi bi-caret-down-fill my-auto ms-auto me-0 my-auto accordion-button-icon"></i>
+                </button>
+                {% else %}
+                <button class="accordion-button collapsed pt-1 pb-2 px-3 rounded-pill small text-bg-success" type="button" disabled style="cursor: not-allowed; opacity: 0.8;">
+                    <i class="bi bi-check-circle fs-5 me-2"></i>
+                    <strong>{{ ui.CARD_RULE_WARNINGS }} (0)</strong>
+                </button>
+                {% endif %}
+            </h2>
+            <div id="collapseWarn-{{ app.sheet_id }}" class="accordion-collapse collapse" data-bs-parent="#warnAccordion-{{ app.sheet_id }}">
+                <div class="accordion-body py-2 px-1 border border-warning rounded-2 rounded-top-0">
+                    {% include "graph_explorer/_alerts_list.html" with alerts=resolved_warnings ui=ui %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-{% if resolved_errors %}
-    <div style="background: #fadbd8; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-        <strong>Validation Errors:</strong>
-        <ul>
-            {% for err in resolved_errors %}
-                <li><strong>[{{ err.type }}]</strong> {{ err.reason }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-
-{% if resolved_warnings %}
-    <div style="background: #fef9e7; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-        <strong>Rule Warnings:</strong>
-        <ul>
-            {% for warn in resolved_warnings %}
-                <li><strong>[{{ warn.type }}]</strong> {{ warn.reason }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-
-<table>
-    {% for section in detail_sections %}
-        <tr><td colspan="2" style="background: #34495e; color: white; font-weight: bold;">{{ section.title }}</td></tr>
-        {% for row in section.rows %}
-            <tr>
-                <td style="width: 40%; font-weight: bold;">{{ row.label }}</td>
-                <td>{{ row.value }}</td>
-            </tr>
-        {% endfor %}
-    {% endfor %}
-</table>

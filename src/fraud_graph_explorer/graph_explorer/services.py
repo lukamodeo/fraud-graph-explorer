@@ -11,7 +11,8 @@ from .validation_engine import ValidationRegistry, RuleRegistry
 from fraud_graph_explorer.domain_schema import FIELDS, SECTION_LOOKUP, SECTIONS_BY_INTERNAL, INTL_PHONE_PREFIX, SECTION_COUNTRY_LOOKUP
 
 
-def normalize_value(raw_value: str, config: dict, country_code: str):
+
+def _normalize_value(raw_value: str, config: dict, country_code: str):
     """
     Helper function to normalize extracted values based on their tags and type.
     Returns the normalized value, or None if a Decimal fails to parse.
@@ -195,7 +196,7 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
     for internal_name, raw_value, config in extracted_data:
         raw_data[internal_name] = raw_value
 
-        norm_value = normalize_value(raw_value, config, country_code)
+        norm_value = _normalize_value(raw_value, config, country_code)
 
         normalized_data[internal_name] = norm_value
 
@@ -340,3 +341,56 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
     app.save()
 
     return app, None, None
+
+def annotate_has_links(apps_qs):
+    """
+    Attach a `has_links` boolean attribute to each Application in `apps_qs`,
+    indicating whether at least one OTHER application shares an Entity via
+    UsesIdentifier edges (either on this page or elsewhere in the DB).
+
+    Uses a Python-side computation rather than ORM annotation, because
+    Django's compiler mishandles the double OuterRef('pk') correlation
+    needed for this particular self-join through UsesIdentifier.
+
+    Returns a list of Application instances (queryset is force-evaluated).
+    """
+    apps = list(apps_qs)
+    if not apps:
+        return apps
+
+    app_pks = [app.pk for app in apps]
+
+    # Query 1: (app_pk, entity_pk) edges for the apps on this page
+    my_edges = (
+        UsesIdentifier.objects
+        .filter(application_id__in=app_pks)
+        .values_list('application_id', 'entity_id')
+    )
+
+    # Query 2: any OTHER edge pointing to one of those same entities
+    app_to_entities = {}
+    for app_pk, entity_pk in my_edges:
+        app_to_entities.setdefault(app_pk, set()).add(entity_pk)
+
+    all_my_entity_ids = set().union(*app_to_entities.values()) if app_to_entities else set()
+    other_linked_entity_ids = set(
+        UsesIdentifier.objects
+        .filter(entity_id__in=all_my_entity_ids)
+        .exclude(application_id__in=app_pks)
+        .values_list('entity_id', flat=True)
+    ) if all_my_entity_ids else set()
+
+    # Intra-page links: two apps on this page sharing an entity
+    intra_page_linked = set()
+    for app_pk, ents in app_to_entities.items():
+        for other_app_pk, other_ents in app_to_entities.items():
+            if app_pk != other_app_pk and ents & other_ents:
+                intra_page_linked.add(app_pk)
+
+    for app in apps:
+        app.has_links = (
+            app.pk in intra_page_linked
+            or bool(app_to_entities.get(app.pk, set()) & other_linked_entity_ids)
+        )
+
+    return apps

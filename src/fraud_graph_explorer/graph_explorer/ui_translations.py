@@ -122,25 +122,25 @@ UI_STRINGS = {
         "en-gb": "OK"
         },
     "FILTER_STATUS_ERR": {
-        "it": "Con errori",
+        "it": "Con Errori",
         "de": "Mit Fehlern",
         "fr": "Avec erreurs",
         "es": "Con errores",
         "en-gb": "With errors"
         },
     "FILTER_STATUS_WARN": {
-        "it": "Con avvisi",
+        "it": "Con Segnalazioni",
         "de": "Mit Warnungen",
-        "fr": "Avec avertissements",
-        "es": "Con advertencias",
-        "en-gb": "With warnings"
-        },
+        "fr": "Avec alertes",
+        "es": "Con alertas",
+        "en-gb": "With Alerts"
+    },
     "FILTER_STATUS_ERR_OR_WARN": {
-        "it": "Con errori o avvisi",
+        "it": "Con errori o segnalazioni",
         "de": "Mit Fehlern oder Warnungen",
-        "fr": "Avec erreurs ou avertissements",
-        "es": "Con errores o advertencias",
-        "en-gb": "With errors or warnings"
+        "fr": "Avec erreurs ou alertes",
+        "es": "Con errores o alertas",
+        "en-gb": "With errors or alerts"
         },
     "FILTER_START_DATE": {
         "it": "Dal",
@@ -171,12 +171,12 @@ UI_STRINGS = {
         "en-gb": "Validation errors"
         },
     "CARD_RULE_WARNINGS": {
-        "it": "Avvisi",
+        "it": "Segnalazioni",
         "de": "Warnungen",
-        "fr": "Avertissements",
-        "es": "Advertencias",
-        "en-gb": "Warnings"
-    },
+        "fr": "Alertes",
+        "es": "Alertas",
+        "en-gb": "Alerts"
+        },
     "CARD_NO_ERR": {
         "it": "Nessun errore di validazione",
         "de": "Keine Validierungsfehler",
@@ -185,14 +185,14 @@ UI_STRINGS = {
         "en-gb": "No validation errors"
         },
     "CARD_NO_WARN": {
-        "it": "Nessun avviso",
+        "it": "Nessuna segnalazione",
         "de": "Keine Warnungen",
-        "fr": "Aucun avertissement",
-        "es": "Sin advertencias",
-        "en-gb": "No warnings"
+        "fr": "Aucune alerte",
+        "es": "Sin alertas",
+        "en-gb": "No alerts"
         },
     "CARD_NO_DATA": {
-        "it": "Nessuna Domanda di Prestito selezionata",
+        "it": "Nessuna domanda di prestito selezionata",
         "de": "Kein Kreditantrag ausgewählt",
         "fr": "Aucune demande de prêt sélectionnée",
         "es": "No se ha seleccionado ninguna solicitud de préstamo",
@@ -352,6 +352,62 @@ UI_STRINGS = {
         "es": "Ningún archivo subido",
         "en-gb": "No file uploaded"
     },
+    "GRAPH_ROOT_TITLE": {
+        "it": "Domanda al centro dell'indagine",
+        "de": "Antrag im Zentrum der Untersuchung",
+        "fr": "Demande au centre de l’enquête",
+        "es": "Solicitud en el centro de la investigación",
+        "en-gb": "Application at the Centre of the Investigation"
+        },
+    "GRAPH_LINKED_TITLE": {
+        "it": "Domanda collegata",
+        "de": "Verknüpfter Antrag",
+        "fr": "Demande liée",
+        "es": "Solicitud vinculada",
+        "en-gb": "Linked Application"
+        },
+    "GRAPH_LINKED_VIA": {
+        "it": "Presente in",
+        "de": "Enthalten in",
+        "fr": "Présente dans",
+        "es": "Presente en",
+        "en-gb": "Present in"
+        },
+    "GRAPH_LBL_REQ": {
+        "it": "Domanda di Prestito",
+        "de": "Kreditantrag",
+        "fr": "Demande de prêt",
+        "es": "Solicitud de préstamo",
+        "en-gb": "Loan Application"
+        },
+    "GRAPH_LBL_BRANCH": {
+        "it": "Filiale",
+        "de": "Filiale",
+        "fr": "Agence",
+        "es": "Sucursal",
+        "en-gb": "Branch"
+        },
+    "GRAPH_LBL_COMPANY": {
+        "it": "Azienda",
+        "de": "Unternehmen",
+        "fr": "Entreprise",
+        "es": "Empresa",
+        "en-gb": "Company"
+        },
+    "GRAPH_LBL_LOC": {
+        "it": "Sede legale",
+        "de": "Firmensitz",
+        "fr": "Siège social",
+        "es": "Domicilio social",
+        "en-gb": "Registered Office"
+        },
+    "GRAPH_LBL_VAT": {
+        "it": "P.IVA",
+        "de": "USt-IdNr.",
+        "fr": "N° TVA",
+        "es": "NIF",
+        "en-gb": "VAT R.No."
+        },
     "LEGEND_TITLE": {
         "it": "Legenda & Filtri",
         "de": "Legende & Filter",
@@ -406,6 +462,62 @@ UI_STRINGS = {
         "fr": "Réinitialiser la Vue du Graphe",
         "es": "Restablecer Vista del Grafo",
         "en-gb": "Reset Graph View"
+        },
+    "DETAIL_ROOT_TITLE": {
+        "it": "Domanda al centro dell'indagine",
+        "de": "Antrag im Zentrum der Untersuchung",
+        "fr": "Demande au centre de l’enquête",
+        "es": "Solicitud en el centro de la investigación",
+        "en-gb": "Application at the Centre of the Investigation"
+        },
+    "DETAIL_LINKED_TITLE": {
+        "it": "Domanda collegata",
+        "de": "Verknüpfter Antrag",
+        "fr": "Demande liée",
+        "es": "Solicitud vinculada",
+        "en-gb": "Linked Application"
+        },
+    "DETAIL_ROOT_HELP_TEXT": {
+        "it": "Seleziona una domanda dall'elenco facendo click sulle azioni: Grafo oppure Dettagli", #TODO
+        "de": "Klicke bei einem Antrag in der Liste auf „Graph erkunden“ oder „Details“",
+        "fr": "Cliquez sur « Exploration du graphe » ou « Détails » pour une demande dans la liste",
+        "es": "Haz clic en «Exploración grafo» o «Detalles» en una solicitud de la lista",
+        "en-gb": "Click 'Graph Explorer' or 'Details' on an application in the list"
+        },
+    "DETAIL_LINKED_HELP_TEXT": {
+        "it": "Seleziona una domanda collegata sul Grafo",
+        "de": "Wähle einen verknüpften Antrag im Graphen aus",
+        "fr": "Sélectionnez une demande liée dans le graphe",
+        "es": "Selecciona una solicitud vinculada en el grafo",
+        "en-gb": "Select a linked application in the graph"
+        },
+    "DETAIL_PANE_EMPTY": {
+        "it": "Nessuna domanda di prestito selezionata",
+        "de": "Kein Kreditantrag ausgewählt",
+        "fr": "Aucune demande de prêt sélectionnée",
+        "es": "No se ha seleccionado ninguna solicitud de préstamo",
+        "en-gb": "No loan application selected"
+        },
+    "DETAIL_NO_ERR": {
+        "it": "Nessun errore di validazione rilevato.",
+        "de": "Keine Validierungsfehler erkannt.",
+        "fr": "Aucune erreur de validation détectée.",
+        "es": "No se detectaron errores de validación.",
+        "en-gb": "No validation errors detected."
+        },
+    "DETAIL_NO_WARN": {
+        "it": "Nessuna segnalazione rilevata.",
+        "de": "Keine Warnungen erkannt.",
+        "fr": "Aucune alerte détectée.",
+        "es": "No se detectaron alertas.",
+        "en-gb": "No alerts detected."
+        },
+    "DETAIL_BTN_PDF": {
+        "it": "Scarica PDF",
+        "de": "PDF Herunterladen",
+        "fr": "Télécharger PDF",
+        "es": "Descargar PDF",
+        "en-gb": "Download PDF"
         },
     # VAT: Combined string, browser language term placed first
     "LEGEND_VAT": {
@@ -473,7 +585,7 @@ UI_STRINGS = {
         "en-gb": "Phone"
         },
     "NO_DATA": {
-        "it": "Nessuna Domanda di Prestito trovata",
+        "it": "Nessuna domanda di prestito trovata",
         "de": "Kein Kreditantrag gefunden",
         "fr": "Aucune demande de prêt trouvée",
         "es": "No se ha encontrado ninguna solicitud de préstamo",
@@ -494,12 +606,26 @@ UI_STRINGS = {
         "en-gb": "Errors"
     },
     "BDG_WARN": {
-        "it": "Avvisi",
+        "it": "Segnalazioni",
         "de": "Warnungen",
-        "fr": "Avertissements",
-        "es": "Advertencias",
-        "en-gb": "Warnings"
+        "fr": "Alertes",
+        "es": "Alertas",
+        "en-gb": "Alerts"
     },
+    "HAS_LINKS": {
+        "it": "Presenta collegamenti con altre domande", #TODO
+        "de": "",
+        "fr": "",
+        "es": "",
+        "en-gb": ""
+    },
+    "HAS_NO_LINKS": {
+        "it": "Nessun collegamento con altre domande",  # TODO
+        "de": "",
+        "fr": "",
+        "es": "",
+        "en-gb": ""
+        },
     "ACT_EXPLORE": {
         "it": "Esplora Grafo",
         "de": "Graph Erkunden",
@@ -535,6 +661,13 @@ UI_STRINGS = {
         "es": "País",
         "en-gb": "Country"
     },
+    "COL_LINKED": {
+        "it": "Collegamenti", #TODO
+        "de": "Verknüpft",
+        "fr": "Liée",
+        "es": "Vinculada",
+        "en-gb": "Linked"
+        },
     "COL_ACQ_DATE": {
         "it": "Data Acquisizione",
         "de": "Erfassungsdatum",
@@ -583,28 +716,23 @@ UI_STRINGS = {
         "es": "NIF (P.IVA/USt-IdNr./N°TVA/VAT N.)",
         "en-gb": "VAT N. (P.IVA/USt-IdNr./N°TVA/NIF)"
     },
-    "LINKED_PANE_EMPTY": {
-        "it": "Seleziona un nodo nel Graph Explorer per ispezionarlo.",
-        "de": "Wählen Sie einen Knoten im Graph Explorer aus, um ihn zu inspizieren.",
-        "fr": "Sélectionnez un nœud dans l'Graph Explorer pour l'inspecter.",
-        "es": "Seleccione un nodo en el Graph Explorer para inspeccionarlo.",
-        "en-gb": "Select a node in the Graph Explorer to inspect it."
-    },
+
     # The Validations and Rules message strings
     "TYPE_SYSTEM": {
-        "it": "Applicazione",
+        "it": "Errore di sistema",   #TODO
         "de": "Anwendung",
         "fr": "Application",
         "es": "Aplicación",
         "en-gb": "Application"
     },
     "REASON_SYSTEM_ERROR": {
-        "it": "Errore durante l'esecuzione di '{}': {}",
+        "it": "'{}': {}",   #TODO
         "de": "Fehler bei der Ausführung von '{}': {}",
         "fr": "Erreur lors de l'exécution de '{}': {}",
         "es": "Error al ejecutar '{}': {}",
         "en-gb": "Error executing '{}': {}"
     },
+
     "TYPE_REQUIRED": {
         "it": "Campo obbligatorio",
         "de": "Pflichtfeld",
@@ -613,12 +741,13 @@ UI_STRINGS = {
         "en-gb": "Required field"
     },
     "REASON_REQUIRED": {
-        "it": "Campo obbligatorio mancante",
+        "it": "mancante",   #TODO
         "de": "Pflichtfeld fehlt",
         "fr": "Champ obligatoire manquant",
         "es": "Falta un campo obligatorio",
         "en-gb": "Missing required field"
     },
+
     "TYPE_NUMERIC": {
         "it": "Formato numerico",
         "de": "Numerisches Format",
@@ -627,12 +756,13 @@ UI_STRINGS = {
         "en-gb": "Numeric Format"
     },
     "REASON_NUMERIC_INVALID": {
-        "it": "Il valore non è un numero valido",
+        "it": "non è un numero valido", #TODO
         "de": "Der Wert ist keine gültige Zahl",
         "fr": "La valeur n'est pas un nombre valide",
         "es": "El valor no es un número válido",
         "en-gb": "Value is not a valid number"
     },
+
     "TYPE_POSITIVE": {
         "it": "Valore positivo",
         "de": "Positiver Wert",
@@ -641,12 +771,13 @@ UI_STRINGS = {
         "en-gb": "Positive Value"
     },
     "REASON_POSITIVE_INVALID": {
-        "it": "Il valore deve essere maggiore di zero",
+        "it": "deve essere maggiore di zero",   #TODO
         "de": "Der Wert muss größer als null sein",
         "fr": "La valeur doit être supérieure à zéro",
         "es": "El valor debe ser mayor que cero",
         "en-gb": "Value must be greater than zero"
     },
+
     "TYPE_EMAIL": {
         "it": "E-mail",
         "de": "E-Mail",
@@ -655,12 +786,13 @@ UI_STRINGS = {
         "en-gb": "E-mail"
     },
     "REASON_EMAIL_INVALID": {
-        "it": "Indirizzo e-mail non valido",
+        "it": "indirizzo non valido",   #TODO
         "de": "Ungültige E-Mail-Adresse",
         "fr": "Adresse e-mail non valide",
         "es": "Dirección de correo electrónico no válida",
         "en-gb": "Invalid email address"
     },
+
     "TYPE_IBAN": {
         "it": "IBAN",
         "de": "IBAN",
@@ -669,12 +801,15 @@ UI_STRINGS = {
         "en-gb": "IBAN"
     },
     "REASON_IBAN_INVALID": {
-        "it": "Checksum IBAN non valido",
+        "it": "checksum non valido",    #TODO
         "de": "Ungültige IBAN-Prüfsumme",
         "fr": "Clé de contrôle IBAN non valide",
         "es": "Dígito de control del IBAN no válido",
         "en-gb": "Invalid IBAN checksum"
     },
+
+
+
     "TYPE_BLACKLIST": {
         "it": "Blacklist",
         "de": "Sperrliste",
@@ -771,12 +906,13 @@ UI_STRINGS = {
         }
     },
     "REASON_IN_BLACKLIST": {
-        "it": "Identificativo/valore presente nella blacklist",
+        "it": "presente in blacklist",  #TODO
         "de": "Kennung/Wert in der Sperrliste gefunden",
         "fr": "Identifiant/valeur trouvé dans la liste noire",
         "es": "Identificador/valor encontrado en la lista negra",
         "en-gb": "Identifier/value found in blacklist"
     },
+
     "TYPE_DUPLICATE": {
         "it": "Valore duplicato",
         "de": "Doppelter Wert",
@@ -872,13 +1008,14 @@ UI_STRINGS = {
             "GB": "Duplicate UK National Insurance number"
         }
     },
-    "REASON_DUPLICATE": {
-        "it": "Identificativo/valore duplicato trovato nella stessa scheda di richiesta",
+    "REASON_DUPLICATE_VALUE": {
+        "it": "duplicato nella stessa richiesta",   #TODO
         "de": "Doppelter Bezeichner/Wert in derselben Antragsdatei gefunden",
         "fr": "Identifiant/valeur en double trouvé dans la même fiche de demande",
         "es": "Identificador/valor duplicado encontrado en la misma ficha de solicitud",
         "en-gb": "Duplicate identifier/value found in the same application sheet"
     },
+
     "TYPE_MISMATCH": {
         "it": "Incongruenza dati",
         "de": "Dateninkonsistenz",
@@ -886,7 +1023,7 @@ UI_STRINGS = {
         "es": "Incongruencia de datos",
         "en-gb": "Data inconsistency"
     },
-    "TYPE_TIN_MISMATCH": {
+    "TYPE_TIN_NAME_MISMATCH": {
         "it": {
             "IT": "Incongruenza dati anagrafici",
             "DE": "",
@@ -923,9 +1060,9 @@ UI_STRINGS = {
             "GB": ""
         }
     },
-    "REASON_TIN_MISMATCH": {
+    "REASON_TIN_NAME_MISMATCH": {
         "it": {
-            "IT": "Il Codice Fiscale italiano fornito non corrisponde al Nome e Cognome indicati",
+            "IT": "Codice Fiscale italiano non corrisponde a Nome e Cognome",   #TODO
             "DE": "",
             "FR": "",
             "ES": "",

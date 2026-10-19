@@ -1,0 +1,31 @@
+{% if alerts %}
+
+<ol class="list-group list-group-flush small mb-0">
+    {% for alert in alerts %}
+    <li class="list-group-item d-flex align-items-start gap-2 px-2 py-1 border-0">
+        <span class="mt-1 badge text-bg-{{ alert.severity }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
+              style="min-width: 1.75rem;">
+            {{ forloop.counter }}
+        </span>
+        <div class="flex-grow-1 min-width-0">
+            <span class="fw-semibold">{{ alert.type_label }}</span>
+            <span class="text-muted">({{ alert.reason_label }})</span>:
+            <code class="text-break fs-6 fw-semibold">{{ alert.raw_value }}</code>
+            <span class="text-muted">
+                <span class="text-uppercase small fw-semibold">[{{ alert.section_label }} - {{ alert.field_label }}]</span>
+            </span>
+        </div>
+    </li>
+    {% endfor %}
+</ol>
+{% else %}
+<p class="text-muted mt-3 mb-0 text-center fs-5 fst-italic">
+    {% if app and type_alerts == "errors" %}
+        {{ ui.CARD_NO_ERR }}
+    {% elif app and type_alerts == "warnings" %}
+        {{ ui.CARD_NO_WARN }}
+    {% else %}
+        {{ ui.CARD_NO_DATA }}
+    {% endif %}
+</p>
+{% endif %}

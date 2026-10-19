@@ -33,7 +33,7 @@
         {% endfor %}
 
         <!-- Clear All Filters Button (Appears after the badges) -->
-        <button id="filterClearBtn" type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearFilters()">
+        <button id="filterClearBtn" type="button" class="btn btn-info rounded-pill btn-sm ms-2" onclick="clearFilters()">
             <i class="bi bi-funnel"></i> {{ ui.FILTER_BTN_CLEAR }}
         </button>
     {% endif %}
@@ -60,11 +60,12 @@
 
                     <th class="sticky-top">{{ ui.COL_ACQ_DATE }}<i class="bi bi-caret-down-fill small ms-1"></i></th>
                     <th class="sticky-top">{{ ui.COL_STATUS }}</th>
-                    <th class="sticky-top">{{ ui.COL_ACTION }}</th>
+                    <th class="sticky-top text-center" style="width: 120px;">{{ ui.COL_LINKED }}</th>
+                    <th class="sticky-top ps-2">-------- {{ ui.COL_ACTION }} --------</th>
                 </tr>
             </thead>
             <tbody>
-                {% for app in page_obj %}
+                {% for app in page_items %}
                 <tr id="row-{{ app.sheet_id }}"
                     hx-get="{% url 'graph_explorer:app_cards' app.sheet_id %}"
                     hx-target="#ingest-status"
@@ -80,42 +81,56 @@
                     {% endfor %}
 
                     <td class="small text-muted">{{ app.acquisition_date|date:"SHORT_DATETIME_FORMAT" }}</td>
+
                     <td>
                         {% if app.has_validation_errors %}<span class="badge text-bg-danger">{{ ui.BDG_ERR }}</span>{% endif %}
                         {% if app.has_rule_warnings %}<span class="badge text-bg-warning">{{ ui.BDG_WARN }}</span>{% endif %}
                         {% if not app.has_validation_errors and not app.has_rule_warnings %}<span class="badge text-bg-success">{{ ui.BDG_OK }}</span>{% endif %}
                     </td>
+
+                    <td class="fs-5 text-center">
+                      {% if app.has_links %}
+                        <span class="text-danger" title="{{ ui.HAS_LINKS|default:'Has linked sheets' }}">
+                          <i class="bi bi-share-fill"></i>
+                        </span>
+                      {% else %}
+                        <span class="text-success" title="{{ ui.HAS_NO_LINKS|default:'No linked sheets' }}">
+                          <i class="bi bi-check2-square"></i>
+                        </span>
+                      {% endif %}
+                    </td>
+
                     <td onclick="event.stopPropagation();" class="align-middle">
                         <div class="d-flex gap-3 align-items-center fs-5">
                             <!-- Explore (Graph) -->
-                            <a class="text-primary text-decoration-none" role="button"
+                            <a class="btn btn-sm btn-outline-primary" role="button"
                                onclick="loadApplication('{{ app.sheet_id }}', 'tab2', this.parentNode.parentNode.parentNode)"
                                title="{{ ui.ACT_EXPLORE }}">
                                 <i class="bi bi-diagram-3-fill"></i>
                             </a>
 
                             <!-- Details -->
-                            <a class="text-secondary text-decoration-none" role="button"
+                            <a class="btn btn-sm btn-outline-secondary" role="button"
                                onclick="loadApplication('{{ app.sheet_id }}', 'tab3', this.parentNode.parentNode.parentNode)"
                                title="{{ ui.ACT_DETAILS }}">
                                 <i class="bi bi-list-columns"></i>
                             </a>
 
                             <!-- Delete -->
-                            <a class="text-danger text-decoration-none" role="button"
+                            <a class="btn btn-sm btn-outline-danger" role="button"
                                onclick="openDeleteDialog('{{ app.sheet_id }}', '{{ app.request_number }}')"
                                title="{{ ui.ACT_DELETE }}">
-                                <i class="bi bi-file-earmark-x"></i>
+                                <i class="bi bi-trash"></i>
                             </a>
 
                             <!-- Download -->
                             {% if app.pdf_file %}
-                            <a href="{{ app.pdf_file.url }}" target="_blank" class="text-info text-decoration-none" title="{{ ui.ACT_DOWNLOAD }}">
-                                <i class="bi bi-filetype-pdf"></i>
+                            <a href="{{ app.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="{{ ui.ACT_DOWNLOAD }}">
+                                <i class="bi bi-download"></i>
                             </a>
                             {% else %}
                             <a class="text-muted text-decoration-none pe-none" title="{{ ui.ACT_DOWNLOAD }}">
-                                <i class="bi bi-filetype-pdf"></i>
+                                <i class="bi bi-download"></i>
                             </a>
                             {% endif %}
                         </div>
@@ -124,7 +139,7 @@
 
                 {% empty %}
                 <tr>
-                    <td colspan="{{ list_columns|length|add:'4' }}" class="text-center py-5 text-muted">
+                    <td colspan="{{ list_columns|length|add:'5' }}" class="text-center py-5 text-muted">
                         {{ ui.NO_DATA }}
                     </td>
                 </tr>
