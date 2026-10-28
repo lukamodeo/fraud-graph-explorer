@@ -1725,7 +1725,95 @@ UI_STRINGS = {
                 "GB": ""
                 }
             }
-        }
+        },
+
+    "ABOUT_TITLE": {
+        "it":    "Informazioni",
+        "de":    "Über",
+        "fr":    "À propos",
+        "es":    "Acerca de",
+        "en-gb": "About",
+    },
+    "ABOUT_SUBTITLE": {
+        "it":    "Documentazione del progetto renderizzata da README.md",
+        "de":    "Projektdokumentation, gerendert aus README.md",
+        "fr":    "Documentation du projet rendue depuis README.md",
+        "es":    "Documentación del proyecto renderizada desde README.md",
+        "en-gb": "Project documentation rendered from README.md",
+    },
+    "ABOUT_SUMMARY": {
+        "it": (
+            "Un proof of concept basato su Django per la rilevazione di frodi transfrontaliere "
+            "nelle domande di prestito bancario tramite analisi dei collegamenti in 5 paesi "
+            "europei (IT, DE, FR, ES, GB). Il progetto include due applicazioni: Sheet Crafter "
+            "genera PDF sintetici formalmente validi con internazionalizzazione 2D (lingua browser "
+            "+ contesto paese del PDF), mentre Graph Explorer li inserisce tramite una pipeline "
+            "a 5 step (estrazione → normalizzazione → validazione → regole → popolamento del "
+            "grafo) e visualizza le connessioni in un grafo Vis.js interattivo in stile i2 "
+            "Analyst's Notebook. Le funzionalità chiave includono il supporto per identificatori "
+            "misti per paese (es. una TVA francese su una domanda italiana), un registro di "
+            "validazione/regole basato su decorator con checksum python-stdnum, badge di allerta "
+            "per campo con gradienti di severità ed evidenziazione dei valori tra applicazioni "
+            "tramite applyEvidence per indagini forensi."
+        ),
+        "de": (
+            "Ein Django-basierter Proof of Concept zur grenzüberschreitenden Betrugserkennung "
+            "bei Kreditanträgen durch Verknüpfungsanalyse in 5 EU-Ländern (IT, DE, FR, ES, GB). "
+            "Das Projekt enthält zwei Apps: Sheet Crafter erstellt synthetische, formal gültige "
+            "PDFs mit 2D-Internationalisierung (Browser-Sprache + PDF-Ländersprache), während "
+            "Graph Explorer sie über eine 5-stufige Pipeline (Extraktion → Normalisierung → "
+            "Validierung → Regeln → Graph-Befüllung) importiert und die Verbindungen in einem "
+            "interaktiven Vis.js-Graphen im i2 Analyst's Notebook-Stil visualisiert. Zu den "
+            "Hauptfunktionen gehören die Unterstützung gemischter länderspezifischer "
+            "Identifikatoren (z.B. eine französische TVA auf einem italienischen Antrag), eine "
+            "auf Decoratoren basierende Validierungs-/Regel-Registry mit python-stdnum-"
+            "Prüfsummen, pro-Feld-Warnungs-Badges mit Schweregrad-Verläufen und markierte Werte "
+            "zwischen Anträgen via applyEvidence für forensische Untersuchungen."
+        ),
+        "fr": (
+            "Une preuve de concept basée sur Django pour la détection de fraude transfrontalière "
+            "dans les demandes de prêt bancaire par analyse de liens dans 5 pays européens (IT, "
+            "DE, FR, ES, GB). Le projet comprend deux applications : Sheet Crafter génère des "
+            "PDFs synthétiques formellement valides avec internationalisation 2D (langue du "
+            "navigateur + contexte pays du PDF), tandis que Graph Explorer les importe via un "
+            "pipeline en 5 étapes (extraction → normalisation → validation → règles → "
+            "population du graphe) et visualise les connexions dans un graphe Vis.js interactif "
+            "de style i2 Analyst's Notebook. Les fonctionnalités clés incluent la prise en "
+            "charge d'identifiants mixtes par pays (ex. une TVA française sur une demande "
+            "italienne), un registre de validation/règles basé sur des décorateurs avec sommes "
+            "de contrôle python-stdnum, des badges d'alerte par champ avec dégradés de sévérité "
+            "et la mise en évidence des valeurs entre demandes via applyEvidence pour les "
+            "investigations forensiques."
+        ),
+        "es": (
+            "Una prueba de concepto basada en Django para la detección de fraude transfronterizo "
+            "en solicitudes de préstamo bancario mediante análisis de enlaces en 5 países "
+            "europeos (IT, DE, FR, ES, GB). El proyecto incluye dos aplicaciones: Sheet Crafter "
+            "genera PDFs sintéticos formalmente válidos con internacionalización 2D (idioma del "
+            "navegador + contexto país del PDF), mientras que Graph Explorer los ingiere mediante "
+            "un pipeline de 5 pasos (extracción → normalización → validación → reglas → "
+            "población del grafo) y visualiza las conexiones en un grafo Vis.js interactivo de "
+            "estilo i2 Analyst's Notebook. Las características clave incluyen soporte para "
+            "identificadores mixtos por país (ej. un TVA francés en una solicitud italiana), un "
+            "registro de validación/reglas basado en decoradores con sumas de verificación "
+            "python-stdnum, insignias de alerta por campo con degradados de severidad y resaltado "
+            "de valores entre solicitudes vía applyEvidence para investigaciones forenses."
+        ),
+        "en-gb": (
+            "A Django-based proof of concept for cross-border fraud detection in bank loan "
+            "applications via link analysis across 5 EU countries (IT, DE, FR, ES, GB). The "
+            "project ships with two apps: Sheet Crafter generates formally valid synthetic PDFs "
+            "with 2D internationalization (browser UI language + PDF country context), while "
+            "Graph Explorer ingests them through a 5-step pipeline (extraction → normalization → "
+            "validation → rules → graph population) and visualizes the connections in an "
+            "interactive i2 Analyst's Notebook-style Vis.js graph. Key features include "
+            "mixed-country identifier support (e.g., a French TVA on an Italian application), a "
+            "decorator-based validation/rule registry with python-stdnum checksums, per-field "
+            "alert badges with severity gradients, and cross-application value highlighting via "
+            "applyEvidence for forensic investigations."
+        ),
+
+    },
 }
 
 

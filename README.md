@@ -136,28 +136,38 @@ A custom translation system that handles the complex 2D matrix of (browser_lang 
 The project uses a strict Python `src` layout to ensure clean package management.
 
 ```text
-fraud-graph-explorer/                  
-├── pyproject.toml                
-├── .env.example              <-- Template for env vars (committed)
-├── .env                       <-- Real secrets (gitignored)
-├── .gitignore                
-├── src/                          
-    └── fraud_graph_explorer/          
+fraud-graph-explorer/
+├── .env.example                    <-- Template for env vars (committed)
+├── .env                            <-- Real secrets (gitignored)
+├── .gitignore
+├── pyproject.toml
+├── LICENSE
+├── README.md
+└── src/
+    └── fraud_graph_explorer/
         ├── manage                  <-- CLI entry point (installed via pip install -e .)
-        ├── config/                <-- Django Project Settings
-        ├── domain_schema.py       <-- Shared domain knowledge (Fields, Sections, Enums, helper functions)
-        ├── validators/            <-- Shared country-detection helpers
-        │   ├── __init__.py
-        │   ├── uk_nino.py         <-- Custom UK NINo validator (replaces missing stdnum.gb.nino)
-        │   └── country_detection.py  <-- detect_vat_country(), detect_tin_country(), detect_iban_country()
-        ├── sheet_crafter/         <-- App 1: Interactive form, TIN recalculation, HTML-to-PDF
-        ├── graph_explorer/        <-- App 2: PDF ingestion, Validation Engine, Graph DB, Vis.js UI
-        ├── templates/             <-- Centralized HTML templates (incl. _empty_state.html partial)
-        └── static/                <-- CSS, JS, Fonts, and Images
-            ├── css/
-            │   └── style.css       <-- Custom severity-gradient + evidence-highlight CSS
-            └── js/
-                └── graph_explorer.js  <-- applyEvidence(), loadGraphData(), tab-switching, etc.
+        ├── domain_schema.py        <-- Shared domain knowledge (Fields, Sections, Enums, helper functions)
+        ├── db.sqlite3
+        ├── config/                 <-- Django Project Settings
+        ├── graph_explorer/         <-- App 1: PDF ingestion, Validation Engine, Graph DB, Vis.js UI
+        ├── sheet_crafter/          <-- App 2: Interactive form, TIN recalculation, HTML-to-PDF
+        ├── static/                 <-- CSS, JS, Fonts, and Images
+        │   ├── css/
+        │   │   ├── crafter.css
+        │   │   └── dashboard.css   <-- Custom severity-gradient + evidence-highlight CSS
+        │   ├── fonts/
+        │   ├── img/
+        │   ├── js/
+        │   │   ├── graph_explorer.js  <-- applyEvidence(), loadGraphData(), tab-switching, etc.
+        │   │   └── sheet_crafter.js
+        │   └── vendor/
+        │       ├── css/
+        │       └── js/
+        ├── templates/              <-- Centralized HTML templates (incl. _empty_state.html partial)
+        └── validators/             <-- Shared country-detection helpers
+            ├── __init__.py
+            ├── country_detection.py  <-- detect_vat_country(), detect_tin_country(), detect_iban_country()
+            └── uk_nino.py          <-- Custom UK NINo validator (replaces missing stdnum.gb.nino)
 ```
 
 ## 🛣️ Roadmap / Future Improvements
@@ -179,5 +189,5 @@ fraud-graph-explorer/
 *   [ ] Export graph findings to a PDF report.
 *   [ ] Add machine learning anomaly detection based on graph clustering.
 *   [ ] Add phone country detection (via international prefix).
-````
+
 

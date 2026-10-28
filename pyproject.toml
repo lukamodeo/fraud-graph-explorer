@@ -10,11 +10,11 @@ requires-python = ">=3.10"
 dependencies = [
     "django",
     "xhtml2pdf",
+    "markdown2",
     "python-dotenv",
     "python-stdnum",
     "python-codicefiscale",
     "pdfplumber",
-    # add others later: faker, pdfplumber, etc.
 ]
 
 [project.scripts]

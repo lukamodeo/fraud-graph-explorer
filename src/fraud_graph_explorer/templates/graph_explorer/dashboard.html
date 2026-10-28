@@ -197,7 +197,7 @@
 
     </div>
 
-    <!-- Tab 2: Graph Explorer -->
+    <!-- Tab 2: Graph Explorer - do not remove dashboard-tab class: it is used by js -->
     <div id="tab2" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
 
         <!-- Vis.js Graph (3/4 width) -->
@@ -248,7 +248,7 @@
         </div>
     </div>
 
-    <!-- Tab 3: Application Comparison -->
+    <!-- Tab 3: Application Comparison - do not remove dashboard-tab class: it is used by js -->
     <div id="tab3" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
         <!-- Root Sheet Details (1/2 width) -->
         <!-- REMOVED flex-fill, ADDED style="flex: 1 1 0;" -->
@@ -287,22 +287,27 @@
         </div>
     </div>
 
-    <!-- Tab 4: About -->
+    <!-- Tab 4: About - do not remove dashboard-tab class: it is used by js -->
     <div id="tab4" class="dashboard-tab d-none  d-block                 flex-fill border bg-white p-3 rounded-2 overflow-hidden       min-height-0 min-width-0">
 
         <!-- Single pane filling the whole tab -->
-        <div class="bg-light border rounded p-4 d-flex flex-column flex-fill min-height-0 min-width-0 overflow-y-auto">
-            <h1 class="mt-0 mb-3">About Fraud Graph Explorer</h1>
+        <div class="bg-light border rounded py-4 px-0 d-flex flex-column h-100 min-height-0 min-width-0">
 
-            <!-- fs-5 makes the font slightly larger for the intro paragraph -->
-            <p class="fs-5">A Django-based proof of concept designed to detect fraud in bank loan applications through link analysis.</p>
+        <!-- Header (fixed at top) -->
+            <div class="flex-shrink-0 mb-0 pb-2 px-4 border-bottom border-5">
+                <h2 class="mb-2">{{ ui.ABOUT_TITLE|default:'About' }}</h2>
 
-            <hr class="my-4">
+                {# ─── Translated summary (fixed at top, doesn't scroll) ─── #}
+                <p class="fs-5 fst-italic mb-2" style="text-align: justify;">{{ ui.ABOUT_SUMMARY }}</p>
+            </div>
 
-            <!-- text-muted makes the description gray -->
-            <p class="text-muted mb-0">
-                This application allows users to generate synthetic, formally valid loan application sheets (PDF), ingest them, extract identifiers (VAT numbers, Tax Codes, names), and visualize the connections between different applications using an interactive graph.
-            </p>
+            <!-- Scrollable README content -->
+            <div class="flex-fill overflow-y-auto min-height-0 p-4 mt-0 bg-white">
+                <div class="readme-content">
+                    {{ readme_html|safe }}
+                </div>
+            </div>
+
         </div>
 
     </div>

@@ -5,6 +5,7 @@ import re
 import json
 import base64
 import tempfile
+import markdown2
 
 from datetime import datetime as dt
 from decimal import Decimal, InvalidOperation
@@ -59,6 +60,54 @@ def _format_sheet_label(app, ui_strings):
         f"<code>{comp_vat}</code>\n"
     )
     return label
+
+
+def _render_readme_html():
+    """
+    Read README.md from the project root and convert it to HTML.
+
+    Uses markdown2 (more lenient than the standard markdown library):
+      - cuddled-lists: bullet lists can immediately follow a paragraph
+        without a blank line (handles the README's formatting)
+      - fenced-code-blocks: ```bash code blocks render as <pre><code>
+        instead of being interpreted as inline code with "bash" inside
+      - tables: Markdown table syntax
+      - break-on-newline: single newlines become <br> (not joined into
+        a single paragraph)
+      - code-friendly: disables underscore-emphasis (so identifiers like
+        "is_foreign" don't get italicized)
+      - header-ids: adds id attributes to headings (useful for anchor links)
+      - toc: generates a table of contents (optional, can be embedded)
+
+    Cached at module level so the file is only read + converted once
+    per process. Restart runserver to pick up README changes.
+    """
+    if not hasattr(_render_readme_html, '_cache'):
+        readme_path = settings.PROJECT_ROOT / 'README.md'
+        try:
+            with open(readme_path, 'r', encoding='utf-8') as f:
+                md_content = f.read()
+                # Convert Markdown ? HTML with extensions for tables and code blocks
+                _render_readme_html._cache = markdown2.markdown(
+                md_content,
+                extras=[
+                    'cuddled-lists',         # ← fixes the bullet list bug
+                    'fenced-code-blocks',    # ← fixes the ```bash code block bug
+                    'tables',
+                    'break-on-newline',
+                    'code-friendly',
+                    'header-ids',
+                    'cuddled-lists',
+                    'markdown-in-html',
+                    'footnotes',
+                    'cuddled-lists',
+                    ],
+                )
+        except FileNotFoundError:
+            _render_readme_html._cache = '<p class="text-muted">README.md not found.</p>'
+        except Exception as e:
+            _render_readme_html._cache = f'<p class="text-danger">Error rendering README: {e}</p>'
+    return _render_readme_html._cache
 
 
 def _get_translated_field_context(internal_name, country_code):
@@ -325,6 +374,7 @@ def dashboard_view(request):
         'active_filters': active_filters,
         'filtered_applications': queryset.count(),
         'total_applications': Application.objects.count(),
+        'readme_html': _render_readme_html(),  # NEW: rendered README HTML for Tab 4
         }
 
     # If HTMX request, return ONLY the table partial

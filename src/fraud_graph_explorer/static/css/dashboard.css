@@ -299,3 +299,140 @@ input:disabled + .slider {
 .severity-warning-low-text {
     color: #664d03;
 }
+
+/* ─── README content (Tab 4) ─── */
+/* Bootstrap doesn't style rendered Markdown HTML by default, so we
+   add minimal typography rules to make it look reasonable. */
+
+/* Translated summary at top */
+
+/* README content (rendered Markdown) */
+.readme-content {
+    font-size: 1.0rem;
+    line-height: 1.6;
+    color: #212529;
+}
+
+.readme-content h1,
+.readme-content h2,
+.readme-content h3,
+.readme-content h4 {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: #1a1a1a;
+}
+
+.readme-content h1 {
+    font-size: 1.8rem;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.3em;
+}
+
+.readme-content h2 {
+    font-size: 1.6rem;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.2em;
+}
+
+.readme-content h3 {
+    font-size: 1.4rem;
+}
+
+.readme-content h4 {
+    font-size: 1.2rem;
+}
+
+.readme-content p {
+    margin-bottom: 0.8em;
+}
+
+.readme-content ul,
+.readme-content ol {
+    margin-bottom: 0.8em;
+    padding-left: 1.5em;
+}
+
+.readme-content li {
+    margin-bottom: 0.2em;
+}
+
+.readme-content code {
+    background: #f8f9fa;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 1.0em;
+    font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+    color: #d63384;
+}
+
+.readme-content pre {
+    background: #f8f9fa;
+    padding: 0.8em 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 1em;
+    border: 1px solid #e9ecef;
+}
+
+.readme-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 1.0em;
+}
+
+.readme-content blockquote {
+    border-left: 4px solid #dee2e6;
+    padding: 0.5em 1em;
+    margin: 0.5em 0;
+    color: #495057;
+    background: #f8f9fa;
+}
+
+.readme-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+    font-size: 1.0em;
+}
+
+.readme-content th,
+.readme-content td {
+    border: 1px solid #dee2e6;
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+.readme-content th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.readme-content a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.readme-content a:hover {
+    text-decoration: underline;
+}
+
+.readme-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.readme-content hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 1.5em 0;
+}
+
+/* GitHub-style task list checkboxes */
+.readme-content input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+
+
