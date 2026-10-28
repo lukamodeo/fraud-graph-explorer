@@ -1,3 +1,10 @@
+:root {
+    --root-brd-color: #8844aa; /* #8e44ad; */
+    --root-bg-color: #9955bb;  /* #9b59b6; */
+    --linked-brd-color: #0088bb; /* #0087c7; */
+    --linked-bg-color: #0099cc;
+}
+
 /* Flexbox Fix (Bootstrap doesn't have these utility natively) */
 .min-height-0 {
     min-height: 0;
@@ -103,7 +110,7 @@
 }
 /* Ensure hover doesn't override selected */
 #applications-list .table > tbody > tr.selected:hover > * {
-    --tr-selected-hover-bg: #a9cce3;
+    --tr-selected-hover-bg: #aaccee; /* #a9cce3; */
     background-color: var(--tr-selected-hover-bg) !important;
     --bs-table-accent-bg: var(--tr-selected-hover-bg);
 }
@@ -177,21 +184,21 @@ input:disabled + .slider {
 
 /* Sheet details Card Colors to match Vis.js Graph Nodes */
 .card-root {
-    border-color: #8e44ad !important;
+    border-color: var(--root-brd-color) !important;
 }
 
 .card-root .card-title {
-    background-color: #9b59b6;
+    background-color: var(--root-bg-color) !important;
     color: #ffffff;
     min-width: 60%;
 }
 
 .card-linked {
-    border-color: #0087c7 !important;
+    border-color: var(--linked-brd-color) !important;
 }
 
 .card-linked .card-title {
-    background-color: #0099cc;
+    background-color: var(--linked-bg-color) !important;
     color: #ffffff;
     min-width: 60%;
 }
@@ -208,4 +215,87 @@ input:disabled + .slider {
 }
 .accordion-button:not(.collapsed) .accordion-button-icon {
     transform: rotate(180deg);
+}
+
+
+/* ─── Evidence highlighting (for cross-sheet value matching) ─── */
+/* Used by applyEvidence() in graph_explorer.js — when a user clicks
+   a graph node, shared entity values in both detail panes get
+   wrapped in <mark class="evidence-highlight">.
+   Color differs per pane so you can tell at a glance which side
+   a highlight belongs to. */
+.evidence-highlight {
+    font-weight: bold;
+    display: inline;
+}
+.evidence-highlight .evidence-text {
+    color: red;
+}
+.evidence-highlight .evidence-icon {
+    color: darkviolet;
+}
+
+
+/* ─── Severity gradient badges (per alert_type + level) ─── */
+/* Composed as .severity-{alert_type}-{level}                            */
+/* Each uses a custom gradient of the main Bootstrap color family:        */
+/*   - errors use the bs-danger family (red gradient)                    */
+/*   - warnings use the bs-warning family (yellow/amber gradient)        */
+
+.alert-value {
+    color: darkviolet;
+}
+
+.alert-icon::before {
+    font-size: 0.8rem;
+    font-weight: 500 !important;
+}
+
+/* Errors — red family */
+.severity-error-high {
+    background: #b22222;   /* bs-danger-emphasis (dark red) */
+    color: #ffffff;
+}
+.severity-error-medium {
+    background: #dc3545;   /* bs-danger main */
+    color: #ffffff;
+}
+.severity-error-low {
+    background: #f1aeb5;   /* bs-danger-subtle (light red)  ff4400? */
+    color: #842029;        /* dark red text for contrast */
+}
+
+/* Warnings — yellow/amber family */
+.severity-warning-high {
+    background: #bb9900;   /* bs-warning-emphasis (dark amber) */
+    color: #ffffff;
+}
+.severity-warning-medium {
+    background: #ffc107;   /* bs-warning main */
+    color: #664d03;        /* dark amber text for contrast */
+}
+.severity-warning-low {
+    background: #ffee66;   /* bs-warning-subtle (light yellow) */
+    color: #664d03;        /* dark amber text for contrast */
+}
+
+
+/* Icon/text colors (matches the badge bg color for visual link) */
+.severity-error-high-text {
+    color: #842029;
+}
+.severity-error-medium-text {
+    color: #dc3545;
+}
+.severity-error-low-text {
+    color: #842029;   /* dark for readability on light bg */
+}
+.severity-warning-high-text {
+    color: #664d03;
+}
+.severity-warning-medium-text {
+    color: #664d03;   /* dark for readability on yellow bg */
+}
+.severity-warning-low-text {
+    color: #664d03;
 }

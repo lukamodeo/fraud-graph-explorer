@@ -51,6 +51,12 @@ class Application(models.Model):
     has_validation_errors = models.BooleanField(default=False)
     has_rule_warnings = models.BooleanField(default=False)
 
+    # Stores the original raw text from the PDF for any Sheet-typed field.
+    # Used by sheet_detail_view for forensic-grade display
+    # (preserves currency symbols, separators, exact formatting from the source PDF).
+    # The typed columns (request_amount DecimalField, etc.) are still used for filtering and validation.
+    raw_data = models.JSONField(default=dict, blank=True)
+
     # JSON Fields for detailed UI display
     validation_errors = models.JSONField(default=list, blank=True)
     rule_warnings = models.JSONField(default=list, blank=True)
@@ -101,20 +107,57 @@ class Entity(models.Model):
     """
     Represents an Identifier (A connecting Vertex in the graph).
     """
-    value = models.CharField(max_length=255)
-    entity_type = models.CharField(max_length=20, choices=EntityTypes.choices)
+    entity_type = models.CharField(
+        max_length=20,
+        choices=EntityTypes.choices,
+        db_index=True,
+    )
+
+    value = models.CharField(max_length=100, db_index=True)
+
+
+    # ─── Country the identifier's format belongs to ───
+    # For VAT/TIN: populated by detect_vat_country() / detect_tin_country()
+    #              at ingest time (only if valid VAT/TIN).
+    # For other types (FULLNAME, IBAN, IP, EMAIL, PHONE, COMPANY, LOCATION):
+    #              the format doesn't carry country info, so this stays NULL.
+    country_code = models.CharField(
+        max_length=2,
+        db_index=True,
+        null=True,
+        blank=True,
+        help_text=(
+            "ISO 3166-1 alpha-2 code of the country whose format "
+            "validates this identifier value (IT, DE, FR, ES, GB). "
+            "NULL means either: (a) the entity type has no country-aware "
+            "format (FULLNAME, IP, EMAIL, etc.) OR (b) the value is "
+            "invalid for all 5 target countries — see validation_errors."
+        ),
+    )
 
     applications = models.ManyToManyField(Application, through='UsesIdentifier', related_name='entities')
 
     objects = models.Manager()  # explicitly add manager
 
     class Meta:
-        unique_together = ('entity_type', 'value')
+        unique_together = ('entity_type', 'value')   # unchanged
+
+        # ─── CheckConstraint REMOVED ───
+        # The original constraint required country_code NOT NULL for
+        # VAT/TIN entities, but this conflicted with the requirement to
+        # save invalid identifiers for forensic evidence and PDF
+        # reconstruction. NULL now means "country unknown" (invalid
+        # value or non-country-aware type), which is informative on
+        # its own. The ingest pipeline (services.ingest_pdf) populates
+        # country_code at creation time when detection succeeds.
+        # ────────────────────────────────
 
     def __str__(self):
         # noinspection PyUnresolvedReferences
-        return f"{self.get_entity_type_display()}: {self.value}"
-
+        label = self.get_entity_type_display()
+        if self.country_code:
+            return f"{label}: {self.value} ({self.country_code})"
+        return f"{label}: {self.value}"
 
 class UsesIdentifier(models.Model):
     """

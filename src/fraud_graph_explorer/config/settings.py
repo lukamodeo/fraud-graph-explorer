@@ -15,6 +15,8 @@ import os
 import mimetypes
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # This points to: fraud-graph-explorer/src/fraud_graph_explorer/
 # (Standard Django BASE_DIR, useful for finding things INSIDE the package)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,14 +33,21 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9if8p*h2dn_r38o^@x&n2d7nxq&xt*yb5m&a$%1v4f5q15@57c'
+# Load .env file from project root
+load_dotenv(PROJECT_ROOT / '.env')
+
+# Read SECRET_KEY from environment (with a clear error if missing)
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError(
+        "SECRET_KEY is not set. Add 'SECRET_KEY=...' to your .env file "
+        f"at {PROJECT_ROOT / '.env'}"
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = []
-
 
 # Enable translation system (required for get_language() to work)
 USE_I18N = True
@@ -66,6 +75,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'fraud_graph_explorer.sheet_crafter',
     'fraud_graph_explorer.graph_explorer',
 ]

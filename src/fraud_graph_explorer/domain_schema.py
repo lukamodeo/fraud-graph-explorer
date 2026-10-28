@@ -46,7 +46,11 @@ INTL_PHONE_PREFIX = {
     'GB': '+44'
 }
 
-# Define the business logic (language-agnostic)
+# FIELDS — the central schema dict.
+#
+# Tag conventions:
+#   "Sheet" tag = field stored directly on Application model (legacy name).
+#                 Other tags (VAT, TIN, IBAN, etc.) create Entity vertices.
 FIELDS = {
     "request_number": {
         "unique_id": True,
@@ -81,6 +85,8 @@ FIELDS = {
     "request_amount":{
         "type": "decimal",
         "tags": ["Sheet"],
+        "list_view": True,
+        "list_label": "COL_AMOUNT",
         "required": True,
         "validations": ["numeric"],
         "rules": ["positive"],
@@ -132,7 +138,7 @@ FIELDS = {
         "list_label": "COL_COMP_VAT",
         "required": True,
         "validations": ["vat"],
-        "rules": ["blacklist"],
+        "rules": ["blacklist", "foreign_identifier"],
         "max_length": 30,
         "fake_type": "vat",
         "hint_key": "HINT_VAT",
@@ -161,7 +167,7 @@ FIELDS = {
         "type": "keyword",
         "tags": ["IBAN"],
         "validations": ["iban"],
-        "rules": ["blacklist"],
+        "rules": ["blacklist", "foreign_identifier"],
         "max_length": 34,
         "fake_type": "iban",
         "labels": {
@@ -211,7 +217,7 @@ FIELDS = {
         "type": "keyword",
         "tags": ["TIN"],
         "validations": ["tin"],
-        "rules": ["blacklist", "duplicate", "tin_name_check"],
+        "rules": ["blacklist", "duplicate", "tin_name_check", "foreign_identifier"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",
@@ -298,7 +304,7 @@ FIELDS = {
         "type": "keyword",
         "tags": ["TIN"],
         "validations": ["tin"],
-        "rules": ["blacklist", "duplicate", "tin_name_check"],
+        "rules": ["blacklist", "duplicate", "tin_name_check", "foreign_identifier"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",
@@ -357,7 +363,7 @@ FIELDS = {
         "type": "keyword",
         "tags": ["TIN"],
         "validations": ["tin"],
-        "rules": ["blacklist", "duplicate", "tin_name_check"],
+        "rules": ["blacklist", "duplicate", "tin_name_check", "foreign_identifier"],
         "max_length": 20,
         "fake_type": "profile",
         "hint_key": "HINT_TIN",

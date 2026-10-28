@@ -1,11 +1,13 @@
 <!-- src/fraud_graph_explorer/templates/graph_explorer/_sheet_detail.html -->
 
+{% load graph_explorer_tags %}
+
 <div class="d-flex flex-column h-100">
 
-    <!-- 1. Header (Fixed at top) -->
+    <!-- Header (Fixed at top) -->
     <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
-        <div class="ms-2">
-            <span class="fs-4 me-1 country-flags">{{ country_flag|default:app.country_code }}</span> <strong>{{ app.request_number }}</strong>
+        <div class="ms-2 d-flex align-items-center">
+            <span class="fs-4 me-2 country-flags">{{ country_flag|default:app.country_code }}</span><strong>{{ app.request_number }}</strong>
         </div>
         <div>
             <span class="fs-4">{{ app.company_name }}</span>
@@ -15,30 +17,47 @@
         </a>
     </div>
 
-    <!-- 2. Reconstructed PDF Table (Scrollable, takes remaining space) -->
-    <div class="flex-fill overflow-y-auto min-height-0 mb-3">
-        <table class="table table-sm table-bordered border-secondary mb-0">
-            {% for section in detail_sections %}
-                <tr>
-                    <td colspan="2" class="table-active fw-bold text-center">
-                        {{ section.title }}
-                    </td>
-                </tr>
-                {% for row in section.rows %}
-                    <tr>
-                        <td class="fw-bold text-end text-muted" style="width: 40%;">
-                            {{ row.label }}
-                        </td>
-                        <td>
-                            {{ row.value }}
-                        </td>
-                    </tr>
-                {% endfor %}
+    <!-- Reconstructed Data Table (Scrollable, takes remaining space) -->
+    <div class="sheet-detail-table flex-fill overflow-y-auto min-height-0 mb-3 px-2 font-monospace medium lh-2 border-start border-secondary-subtle">
+
+        {% for section in detail_sections %}
+        <div class="mb-3">
+            <div class="fw-bold fst-italic text-start border-bottom border-secondary py-1">
+                {{ section.title }}
+            </div>
+
+            {% for row in section.rows %}
+            <div class="d-flex border-bottom py-1">
+                <div class="border-end text-muted" style="width: 50%; flex-shrink: 0;">
+                    {{ row.label }}
+                </div>
+                <div class="flex-grow-1 fw-bold ps-2" style="word-break: break-word;">
+                    {% if row.value %}
+                        {{ row.value }}
+                        {# Each badge: circle, color by severity, icon (or flag for foreign). #}
+                        {# Tooltip shows reason_label + identifier_country + count.           #}
+                        {% if row.is_foreign %}
+                            <span class="bi country-flags ms-0">{{ row.country_code|country_flag }}</span>
+                        {% endif %}
+                        {% for alert in row.alerts %}
+                            <span class="badge border border-{{ alert.alert_bs_color }} {{ alert.severity_class }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                                  title="{{ alert.reason_label }}{% if alert.count > 1 %}: {{ alert.count }} {{ ui.OCCURRENCES_COUNT }}{% endif %}">
+                                <i class="bi {{ alert.icon }} alert-icon py-0 px-1 m-0"></i>
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted fst-italic fw-normal">
+                            {{ ui.DETAIL_NO_DATA|default:'No data' }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
             {% endfor %}
-        </table>
+        </div>
+        {% endfor %}
     </div>
 
-    <!-- 3. Errors Accordion (Pinned to bottom) -->
+    <!-- Errors Accordion (Pinned to bottom) -->
     <div class="accordion flex-shrink-0 mb-1" id="errAccordion-{{ app.sheet_id }}">
         <div class="accordion-item border-0">
             <h2 class="accordion-header">
@@ -63,7 +82,7 @@
         </div>
     </div>
 
-    <!-- 4. Warnings Accordion (Pinned to bottom) -->
+    <!-- Warnings Accordion (Pinned to bottom) -->
     <div class="accordion flex-shrink-0" id="warnAccordion-{{ app.sheet_id }}">
         <div class="accordion-item border-0">
             <h2 class="accordion-header">

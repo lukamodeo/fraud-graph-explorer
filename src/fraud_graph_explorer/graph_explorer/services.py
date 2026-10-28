@@ -1,16 +1,132 @@
 # src/fraud_graph_explorer/graph_explorer/services.py
 
 import io
+import re
 import ipaddress
 import pdfplumber
+
 from decimal import Decimal, InvalidOperation
 from django.core.files.base import ContentFile
 
 from .models import Application, Entity, UsesIdentifier, Blacklist
 from .validation_engine import ValidationRegistry, RuleRegistry
+from fraud_graph_explorer.validators.country_detection import detect_tin_country, detect_vat_country, detect_iban_country
 from fraud_graph_explorer.domain_schema import FIELDS, SECTION_LOOKUP, SECTIONS_BY_INTERNAL, INTL_PHONE_PREFIX, SECTION_COUNTRY_LOOKUP
 
+# Currency symbols to strip from decimal strings
+_CURRENCY_SYMBOLS = '€$£¥??????'
 
+# Currency names (lowercased) to strip as whole words.
+# Matches "euro", "euros", "EUR", "Pound", "Pounds", "GBP", etc.
+_CURRENCY_NAME_RE = re.compile(
+    r'\b(?:' + '|'.join([
+        r'euros?', r'eur',
+        r'pounds?', r'gbp', r'sterling',
+        r'dollars?', r'usd',
+        r'yens?', r'jpy',
+    ]) + r')\b',
+    re.IGNORECASE
+)
+
+# Quick detection of "both separators present" — used to disambiguate format
+# e.g., "1.234,56" (EU) vs "1,234.56" (British)
+_HAS_BOTH_SEPARATORS = re.compile(r'[.,].*[.,]')
+
+
+def _normalize_decimal(raw_value, country_code):
+    """
+    Parse a decimal string into a Decimal, handling:
+      - Currency symbols (€, £, $, ¥, etc.)
+      - Currency names as literal words ("euro", "pounds", "GBP", etc.)
+      - Country-specific separator conventions:
+          IT/DE/FR/ES: dot=thousands, comma=decimal (e.g., "280.000,00")
+          GB:          comma=thousands, dot=decimal (e.g., "280,000.00")
+      - Whitespace, leading/trailing
+
+    Returns Decimal on success, None on failure (caller treats as invalid).
+    """
+    if not raw_value or not isinstance(raw_value, str):
+        return None
+
+    cleaned = raw_value
+
+    # Step 1: Strip currency symbols (single chars, fast replace)
+    for sym in _CURRENCY_SYMBOLS:
+        cleaned = cleaned.replace(sym, '')
+
+    # Step 2: Strip currency names as whole words (case-insensitive)
+    # Uses regex with word boundaries so "euros" is stripped but
+    # "eurocars" is not.
+    cleaned = _CURRENCY_NAME_RE.sub('', cleaned)
+
+    # Step 3: Strip whitespace
+    cleaned = cleaned.strip()
+
+    if not cleaned:
+        return None
+
+    # Step 4: Detect and convert separators based on country.
+    #
+    # Strategy:
+    # - If BOTH '.' and ',' are present: the LAST one is the decimal sep,
+    #   the OTHER one is the thousands sep. (Works for both EU and GB.)
+    # - If only ONE separator is present: use country_code to disambiguate.
+    #   - GB: '.' is decimal, ',' is thousands
+    #   - EU: ',' is decimal, '.' is thousands
+    # - If NEITHER is present: just a plain integer string, parse directly.
+    has_dot = '.' in cleaned
+    has_comma = ',' in cleaned
+
+    if has_dot and has_comma:
+        # Both present — the one further right is the decimal separator
+        last_dot = cleaned.rfind('.')
+        last_comma = cleaned.rfind(',')
+
+        if last_dot > last_comma:
+            # Dot is decimal (British format) — remove commas (thousands)
+            cleaned = cleaned.replace(',', '')
+            # cleaned already has dot as decimal — nothing else to do
+        else:
+            # Comma is decimal (EU format) — remove dots (thousands),
+            # replace comma with dot
+            cleaned = cleaned.replace('.', '').replace(',', '.')
+    elif has_comma:
+        # Only comma — disambiguate by country
+        if country_code == 'GB':
+            # Comma is thousands separator, no decimal — remove it
+            cleaned = cleaned.replace(',', '')
+        else:
+            # Comma is decimal separator — replace with dot
+            cleaned = cleaned.replace(',', '.')
+    elif has_dot:
+        # Only dot — disambiguate by country
+        if country_code == 'GB':
+            # Dot is decimal separator — leave as-is
+            pass
+        else:
+            # Dot is thousands separator (no decimal in the value) — remove it
+            # But check: if there's exactly one dot followed by 1-2 digits,
+            # it's likely a decimal. Otherwise, it's thousands.
+            # Heuristic: dot followed by exactly 3 digits at end ? thousands
+            #            dot followed by 1-2 digits at end ? decimal
+            #            dot followed by 3 digits NOT at end ? thousands
+            import re as _re
+            if _re.search(r'\.\d{1,2}$', cleaned):
+                # Looks like a decimal (e.g., "280.50")
+                pass
+            elif _re.search(r'\.\d{3}(?!\d)', cleaned):
+                # Looks like thousands (e.g., "1.234" meaning 1234)
+                cleaned = cleaned.replace('.', '')
+            # else: ambiguous, leave as-is and let Decimal parse it
+
+    # Step 5: Strip any remaining whitespace (in case currency name removal left gaps)
+    cleaned = cleaned.replace(' ', '')
+
+    # Step 6: Try parsing as Decimal
+    try:
+        return Decimal(cleaned)
+    except (InvalidOperation, ValueError):
+        return None
 
 def _normalize_value(raw_value: str, config: dict, country_code: str):
     """
@@ -68,16 +184,11 @@ def _normalize_value(raw_value: str, config: dict, country_code: str):
         norm_value = norm_value.title()
 
     # Type-based Normalization (Decimal)
+    # Handles currency symbols, currency name strings, and country-specific
+    # decimal separator conventions. See _normalize_decimal() for details.
     if field_type == "decimal":
-        try:
-            clean_val = norm_value.replace("€", "").strip()
-            if not clean_val:
-                return None
-            # Assume EU format ("280.000" -> 280000.00, "280,50" -> 280.50)
-            clean_val = clean_val.replace(".", "").replace(",", ".")
-            return Decimal(clean_val)
-        except (InvalidOperation, ValueError):
-            return None
+        return _normalize_decimal(norm_value, country_code)
+
 
     return norm_value
 
@@ -238,7 +349,7 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
             validation_errors_list.append({
                 "type_key": "TYPE_REQUIRED",
                 "reason_key": "REASON_REQUIRED",
-                "severity": "critical",
+                "severity": "high",
                 "value": norm_value,
                 "raw_value": raw_val,
                 "field": internal_name,
@@ -299,6 +410,7 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
     app.rule_warnings = rule_warnings_list
     app.has_validation_errors = len(validation_errors_list) > 0
     app.has_rule_warnings = len(rule_warnings_list) > 0
+    app.raw_data = raw_data   # Persist raw PDF text for detail-view display
     # Save the base Application object first so it has a PK for relationships
     app.save()
 
@@ -318,10 +430,34 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
             if not norm_value:
                 continue
 
+            # ─── Detect country_code for VAT/TIN/IBAN entities (Step 6) ───
+            # For VAT/TIN/IBAN: detect which country's format matches the value.
+            #   If detection fails (value invalid for ALL 5 countries), we
+            #   STILL create the Entity — the validation_errors_list already
+            #   recorded the failure, but we need the Entity + Edge for
+            #   forensic evidence (raw_value preserved on the edge) and
+            #   PDF reconstruction in the sheet detail view.
+            # For other types (FULLNAME, IP, EMAIL, PHONE, COMPANY, LOCATION):
+            # country_code stays None — the format carries no country info.
+            if e_type == "VAT":
+                detected = detect_vat_country(norm_value)   # may be None
+            elif e_type == "TIN":
+                detected = detect_tin_country(norm_value)   # may be None
+            elif e_type == "IBAN":
+                detected = detect_iban_country(norm_value)  # may be None
+            else:
+                detected = None
+            # ────────────────────────────────────────────────────────────
+
             # Create/Get Entity using the NORMALIZED value (for perfect graph linking)
+            # country_code is in `defaults` so it's only set on creation,
+            # not on subsequent matches of the same (entity_type, value).
+            # If detected is None (invalid VAT/TIN), country_code stays NULL —
+            # the constraint was removed in Step 6.2 to allow this.
             entity, _ = Entity.objects.get_or_create(
                 entity_type=e_type,
-                value=norm_value
+                value=norm_value,
+                defaults={"country_code": detected}
             )
 
             # Create Edge using the RAW value and specific source_field (for forensic evidence)

@@ -19,7 +19,7 @@
             {% if app %}{{ ui.CARD_SELECTED }}{% endif %}
         </span>
     </div>
-    <div class="card-body overflow-y-auto">
+    <div class="card-body overflow-y-auto px-1">
         {% include "graph_explorer/_alerts_list.html" with alerts=resolved_errors ui=ui type_alerts="errors" %}
     </div>
 </div>
@@ -41,7 +41,7 @@
             {% if app %}{{ ui.CARD_SELECTED }}{% endif %}
         </span>
     </div>
-    <div class="card-body overflow-y-auto">
+    <div class="card-body overflow-y-auto px-1">
         {% include "graph_explorer/_alerts_list.html" with alerts=resolved_warnings ui=ui type_alerts="warnings" %}
     </div>
 </div>

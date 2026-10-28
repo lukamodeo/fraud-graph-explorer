@@ -12,7 +12,7 @@ class SheetCrafterForm(forms.Form):
 
         # Grab the list of tuples directly from the UI dictionary
         ui = ui_strings or {}
-        self.fields['country_code'].choices = ui.get("COUNTRY_NAMES", [])
+        self.fields['country_code'].choices = ui.get("COUNTRY_FLAGS_NAMES", [])
 
         self.fields['country_code'].widget.attrs.update({
             'hx-get': '.',

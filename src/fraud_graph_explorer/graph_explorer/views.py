@@ -6,6 +6,8 @@ import json
 import base64
 import tempfile
 
+from datetime import datetime as dt
+from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse, parse_qs, urlencode
 
 from django.conf import settings
@@ -204,6 +206,8 @@ def dashboard_view(request):
     status = request.GET.get('status', '')
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
+    min_amount = request.GET.get('min_amount', '').strip()
+    max_amount = request.GET.get('max_amount', '').strip()
 
     active_filters = []
 
@@ -231,17 +235,42 @@ def dashboard_view(request):
             queryset = queryset.filter(has_rule_warnings=True)
         elif status == 'err_or_warn':
             queryset = queryset.filter(Q(has_validation_errors=True) | Q(has_rule_warnings=True))
-        active_filters.append({
-                                  "key": "status",
-                                  "value": status
-                                  })
+        active_filters.append({"key": "status", "value": status})
 
     if start_date:
-        queryset = queryset.filter(acquisition_date__date__gte=start_date)
-        active_filters.append({"key": "start_date", "value": start_date})
+        try:
+            start_date_obj = dt.strptime(start_date, '%Y-%m-%d').date()
+            queryset = queryset.filter(acquisition_date__date__gte=start_date_obj)
+            active_filters.append({"key": "start_date", "value": start_date_obj})
+        except ValueError:
+            pass    # Invalid date string — skip the filter, don't crash the list page
+
     if end_date:
-        queryset = queryset.filter(acquisition_date__date__lte=end_date)
-        active_filters.append({"key": "end_date", "value": end_date})
+        try:
+            end_date_obj = dt.strptime(end_date, '%Y-%m-%d').date()
+            queryset = queryset.filter(acquisition_date__date__lte=end_date_obj)
+            active_filters.append({"key": "end_date", "value": end_date_obj})
+        except ValueError:
+            pass    # Invalid date string — skip the filter, don't crash the list page
+
+    # Amount range filter
+    # Coerce to Decimal; if invalid (e.g., user typed "abc"),
+    # silently skip the filter rather than 500'ing the whole list page.
+    if min_amount:
+        try:
+            min_amount_obj = Decimal(min_amount)
+            queryset = queryset.filter(request_amount__gte=min_amount_obj)
+            active_filters.append({"key": "min_amount", "value": min_amount_obj})
+        except InvalidOperation:
+            pass    # Invalid input — skip the filter, no active_filter entry
+
+    if max_amount:
+        try:
+            max_amount_obj = Decimal(max_amount)
+            queryset = queryset.filter(request_amount__lte=max_amount_obj)
+            active_filters.append({"key": "max_amount", "value": max_amount_obj})
+        except InvalidOperation:
+            pass    # Invalid input — skip the filter, no active_filter entry
 
     paginator = Paginator(queryset, 10)
     page_number = request.GET.get('page')
@@ -269,7 +298,11 @@ def dashboard_view(request):
         if config.get("list_view"):
             list_label_key = config.get("list_label", internal_name)
             label = ui_strings.get(list_label_key, internal_name)
-            list_columns.append({"key": internal_name, "label": label})
+            list_columns.append({
+                "key": internal_name,
+                "label": label,
+                "type": config.get("type", "string"),
+            })
 
     # Build a dynamic dictionary of flags: {'IT': '🇮🇹', 'DE': '🇩🇪', ...}
     country_flags = {code.value: get_country_flag(code.value) for code in CountryCodes}
@@ -283,11 +316,15 @@ def dashboard_view(request):
         'status_filter': status,
         'start_date': start_date,
         'end_date': end_date,
+        'min_amount': min_amount,
+        'max_amount': max_amount,
         'country_flags': country_flags,
         'country_names_map': country_names_map,
         'list_columns': list_columns,
         'ui': ui_strings,
-        'active_filters': active_filters
+        'active_filters': active_filters,
+        'filtered_applications': queryset.count(),
+        'total_applications': Application.objects.count(),
         }
 
     # If HTMX request, return ONLY the table partial
@@ -448,23 +485,38 @@ def sheet_detail_view(request, sheet_id):
 
     # Get 2D UI Strings for THIS specific application's country
     browser_lang = get_language()
+
+
     ui_strings = get_ui_strings(browser_lang, app.country_code)
 
-    # Resolve JSON error/warning keys into final translated strings
-    resolved_errors = []
-    for err in app.validation_errors:
-        reason = ui_strings.get(err.get("reason_key", ""), err.get("reason_key", ""))
-        resolved_errors.append({"type": ui_strings.get(err.get("type_key", ""), ""), "reason": reason})
+    # ─── NEW: Resolve errors + warnings ONCE, up front ───
+    # These are the comprehensive resolver outputs (with icon, count,
+    # identifier_country, field_name, section_label, etc.) used by:
+    #   1. The accordions at the bottom of the detail pane
+    #   2. The per-field badge loop in the scrollable table (via field_to_alerts)
+    resolved_errors = resolve_alerts(app.validation_errors, ui_strings, app.country_code, alert_type="error")
+    resolved_warnings = resolve_alerts(app.rule_warnings, ui_strings, app.country_code, alert_type="warning")
 
-    resolved_warnings = []
-    for warn in app.rule_warnings:
-        reason = ui_strings.get(warn.get("reason_key", ""), warn.get("reason_key", ""))
-        resolved_warnings.append({"type": ui_strings.get(warn.get("type_key", ""), ""), "reason": reason})
+    # ─── NEW: Build field_to_alerts dict ───
+    # Maps each field's internal_name (e.g., 'representative_tin') to the list
+    # of resolved alerts that target that specific field. The template iterates
+    # row.alerts to render one badge per alert next to the field's value.
+    #
+    # Alerts without a field_name (rare — only happens for legacy alerts that
+    # weren't created through the registry's run() method) are silently skipped.
+    field_to_alerts = {}
+    for alert in resolved_errors + resolved_warnings:
+        field_name = alert.get('field_name', '')
+        if field_name:
+            field_to_alerts.setdefault(field_name, []).append(alert)
+    # ───────────────────────────────────────────────────────────
 
     # Reconstruct the PDF layout from DB for the detail pane
     detail_sections = []
-    edges = app.usesidentifier_set.all()
-    edge_dict = {edge.source_field: edge.entity.value for edge in edges}
+
+    # select_related('entity') avoids N+1 queries when accessing country_code
+    edges = app.usesidentifier_set.all().select_related('entity')
+    edge_dict = {edge.source_field: edge for edge in edges}
 
     cc = app.country_code
     for section in SECTIONS:
@@ -477,12 +529,49 @@ def sheet_detail_view(request, sheet_id):
             if config.get("hidden"): continue
 
             label = config.get("labels", {}).get(cc, internal_name)
-            # Get value from Sheet column or Edge
-            value = getattr(app, internal_name, None) or edge_dict.get(internal_name, "")
+            # # Get value from Sheet column or Edge
+            # value = getattr(app, internal_name, None) or edge_dict.get(internal_name, "")
+
+             # Look up the edge (not just the value) so we can read country_code
+            edge = edge_dict.get(internal_name)
+            if edge:
+                # Entity-typed field — show the RAW value from the PDF (forensic).
+                # The normalized value lives on Entity.value (used for graph linking);
+                # the raw value lives on UsesIdentifier.original_value (preserved
+                # at ingest time specifically for detail-display and audit trail).
+                value = edge.original_value or edge.entity.value
+                country_code = edge.entity.country_code
+                entity_type = edge.entity.entity_type
+            else:
+                # Sheet-typed field — prefer raw_data (exact PDF text),
+                # fall back to typed column if raw_data is missing.
+                # For decimal fields like request_amount, raw_data preserves
+                # the currency symbol and original separators ("€ 280.000,00");
+                # the typed column would lose this.
+                raw_value = app.raw_data.get(internal_name) if app.raw_data else None
+                typed_value = getattr(app, internal_name, None)
+                value = raw_value or typed_value or ""
+                country_code = None
+                entity_type = None
+
             sec_data["rows"].append({
                 "label": label,
-                "value": value
+                "value": value,
+                "country_code": country_code,       # None for non-VAT/TIN or invalid VAT/TIN
+                "entity_type": entity_type,         # 'VAT', 'TIN', 'IBAN', etc. — or None
+                "is_foreign": (
+                    country_code is not None
+                    and country_code != cc
+                    and entity_type in ('VAT', 'TIN', 'IBAN')
+                ),
+                # ─── NEW: attach the list of alerts for this specific field ───
+                # The template iterates row.alerts in the unified badge loop.
+                # If no alerts target this field, this is an empty list — the
+                # template's {% for alert in row.alerts %} simply doesn't iterate.
+                "alerts": field_to_alerts.get(internal_name, []),
+                # ───────────────────────────────────────────────────────────────
             })
+
         detail_sections.append(sec_data)
 
     return render(
@@ -492,8 +581,9 @@ def sheet_detail_view(request, sheet_id):
             'app': app,
             'country_flag': get_country_flag(app.country_code),
             'detail_sections': detail_sections,
-            'resolved_errors': resolve_alerts(app.validation_errors, ui_strings, app.country_code),
-            'resolved_warnings': resolve_alerts(app.rule_warnings, ui_strings, app.country_code),
+            # Reuse the resolved lists computed above (for the accordions at the bottom)
+            'resolved_errors': resolved_errors,
+            'resolved_warnings': resolved_warnings,
             'ui': ui_strings
         }
     )
@@ -517,8 +607,8 @@ def app_cards_view(request, sheet_id):
         context={
             'app': app,
             'ui': ui_strings,
-            'resolved_errors':   resolve_alerts(app.validation_errors, ui_strings, app.country_code),
-            'resolved_warnings': resolve_alerts(app.rule_warnings, ui_strings, app.country_code),
+            'resolved_errors':   resolve_alerts(app.validation_errors, ui_strings, app.country_code, alert_type="error"),
+            'resolved_warnings': resolve_alerts(app.rule_warnings, ui_strings, app.country_code, alert_type="warning"),
             'oob': True
         }
     )
@@ -540,12 +630,18 @@ def graph_data_view(request, sheet_id):
     node_ids = set()
     edge_map = set()
 
-    def add_node(node_id, label, group, title=""):
+    def add_node(node_id, label, group, title="", raw_values=None):
         if node_id not in node_ids:
             node_data = {"id": node_id, "label": label, "group": group}
             # ONLY add the title key if it's not empty!
             if title:
                 node_data["title"] = title
+            # NEW: attach the list of raw values (from root + all linked sheets
+            # that share this entity). Used by applyEvidence() to highlight
+            # matches in the detail panes, which display raw_value (not the
+            # normalized entity.value).
+            if raw_values:
+                node_data["raw_values"] = raw_values
             nodes.append(node_data)
             node_ids.add(node_id)
 
@@ -596,7 +692,34 @@ def graph_data_view(request, sheet_id):
 
         # Uppercase the entity type to match JS groups (e.g., 'VAT', 'TIN')
         group_name = entity.entity_type.upper()
-        add_node(ent_node_id, display_label, group_name, node_title)
+
+        # ─── NEW: Collect raw values for this entity from root + all linked sheets ───
+        # The detail panes display the RAW value (from UsesIdentifier.original_value),
+        # not the normalized entity.value. So applyEvidence needs the raw values
+        # to be able to highlight matches in the rendered HTML.
+        #
+        # We collect from:
+        #   - u_edge (the root sheet's edge to this entity)
+        #   - each connected_app's edge to this entity
+        #
+        # Using a set to dedupe (same raw value on multiple sheets → only one entry).
+        raw_values_set = set()
+        if u_edge.original_value:
+            raw_values_set.add(u_edge.original_value)
+
+        # Pre-fetch all linked edges in one query (avoids N+1 inside the loop below)
+        linked_edges = UsesIdentifier.objects.filter(
+            application__in=connected_apps,
+            entity=entity,
+        ).values_list('original_value', flat=True)
+        for rv in linked_edges:
+            if rv:
+                raw_values_set.add(rv)
+
+        raw_values_list = list(raw_values_set)
+        # ──────────────────────────────────────────────────────────────────────────────
+
+        add_node(ent_node_id, display_label, group_name, node_title, raw_values=raw_values_list)
 
         root_context = _get_translated_field_context(u_edge.source_field, root_app.country_code)
         # Edge: Root Sheet -> Shared Entity

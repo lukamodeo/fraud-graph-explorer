@@ -1,18 +1,34 @@
+<!-- src/fraud_graph_explorer/templates/graph_explorer/_alerts_list.html -->
+
+{% load graph_explorer_tags %}
+
 {% if alerts %}
 
 <ol class="list-group list-group-flush small mb-0">
     {% for alert in alerts %}
     <li class="list-group-item d-flex align-items-start gap-2 px-2 py-1 border-0">
-        <span class="mt-1 badge text-bg-{{ alert.severity }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
-              style="min-width: 1.75rem;">
-            {{ forloop.counter }}
+        <span class="mb-auto badge border border-{{ alert.alert_bs_color }} {{ alert.severity_class }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
+              title="{{ alert.level_tooltip }}"
+              style="min-width: 1rem; margin-top: 0.1rem !important">
+            <i class="bi {{ alert.icon }} alert-icon py-0 px-1 m-0"></i>
         </span>
         <div class="flex-grow-1 min-width-0">
-            <span class="fw-semibold">{{ alert.type_label }}</span>
-            <span class="text-muted">({{ alert.reason_label }})</span>:
-            <code class="text-break fs-6 fw-semibold">{{ alert.raw_value }}</code>
+            <span class="fw-semibold">
+                {{ alert.type_label }}
+            </span>
             <span class="text-muted">
-                <span class="text-uppercase small fw-semibold">[{{ alert.section_label }} - {{ alert.field_label }}]</span>
+                (
+                {{ alert.reason_label }}
+                {% if alert.count > 1 %}
+                   : <span class="fw-semibold">{{ alert.count }} {{ ui.OCCURRENCES_COUNT }}</span>
+                {% endif %}
+                )
+            </span>:
+            <code class="alert-value fs-6 fw-semibold">
+                {{ alert.raw_value }}
+            </code>
+            <span class="text-muted text-uppercase small fw-semibold">
+                [{{ alert.section_label }} - {{ alert.field_label }}]
             </span>
         </div>
     </li>

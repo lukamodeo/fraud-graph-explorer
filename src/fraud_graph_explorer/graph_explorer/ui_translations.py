@@ -1,13 +1,99 @@
 # src/fraud_graph_explorer/graph_explorer/ui_translations.py
 from typing import Dict
 
+# Country adjectives, translated per browser UI language.
+# Used by resolve_alerts to compose type_labels like "Italian P.IVA Blacklist"
+# when the alert's identifier_country is set.
+#
+# 2D structure: {COUNTRY_CODE: {BROWSER_LANG: translated_adjective}}
+# 25 entries (5 countries × 5 languages) — much smaller than pre-resolving
+# 5 full ui_strings dicts.
+COUNTRY_ADJECTIVES = {
+    'IT': {
+        'en-gb': 'Italian',
+        'it':    'Italiano',
+        'de':    'Italienisch',
+        'fr':    'Italien',
+        'es':    'Italiano',
+    },
+    'DE': {
+        'en-gb': 'German',
+        'it':    'Tedesco',
+        'de':    'Deutsch',
+        'fr':    'Allemand',
+        'es':    'Alemán',
+    },
+    'FR': {
+        'en-gb': 'French',
+        'it':    'Francese',
+        'de':    'Französisch',
+        'fr':    'Français',
+        'es':    'Francés',
+    },
+    'ES': {
+        'en-gb': 'Spanish',
+        'it':    'Spagnolo',
+        'de':    'Spanisch',
+        'fr':    'Espagnol',
+        'es':    'Español',
+    },
+    'GB': {
+        'en-gb': 'British',
+        'it':    'Britannico',
+        'de':    'Britisch',
+        'fr':    'Britannique',
+        'es':    'Británico',
+    },
+}
+
+# Country-specific nouns for VAT/TIN/IBAN identifiers.
+# These are language-INVARIANT — they're abbreviations of each country's
+# official term (P.IVA = "Partita IVA" in Italian, TVA = "Taxe sur la
+# Valeur Ajoutée" in French, etc.). Not translated per browser UI language.
+#
+# Used by resolve_alerts to compose the type_label using a {noun} placeholder.
+# Example: "TVA Blacklist" (FR identifier) vs "P.IVA Blacklist" (IT identifier).
+# The country adjective ("French", "Italian") is dropped — the noun itself
+# already implies the country (TVA is uniquely French, P.IVA is uniquely Italian).
+IDENTIFIER_NOUNS_BY_COUNTRY = {
+    'VAT': {
+        'IT': 'P.IVA',
+        'DE': 'USt-IdNr.',
+        'FR': 'TVA',
+        'ES': 'NIF',
+        'GB': 'VAT Reg.',
+    },
+    'TIN': {
+        'IT': 'Codice Fiscale',
+        'DE': 'Steuer-ID',
+        'FR': 'NIR',
+        'ES': 'DNI',
+        'GB': 'UTR',
+    },
+    'IBAN': {
+        # IBAN is the same abbreviation in all 5 countries
+        'IT': 'IBAN',
+        'DE': 'IBAN',
+        'FR': 'IBAN',
+        'ES': 'IBAN',
+        'GB': 'IBAN',
+    },
+}
+
 UI_STRINGS = {
-    "COUNTRY_NAMES": {
+    "COUNTRY_FLAGS_NAMES": {
         "it": [('IT', '🇮🇹 Italia'), ('DE', '🇩🇪 Germania'), ('FR', '🇫🇷 Francia'), ('ES', '🇪🇸 Spagna'), ('GB', '🇬🇧 Regno Unito')],
         "de": [('IT', '🇮🇹 Italien'), ('DE', '🇩🇪 Deutschland'), ('FR', '🇫🇷 Frankreich'), ('ES', '🇪🇸 Spanien'), ('GB', '🇬🇧 Vereinigtes Königreich')],
         "fr": [('IT', '🇮🇹 Italie'), ('DE', '🇩🇪 Allemagne'), ('FR', '🇫🇷 France'), ('ES', '🇪🇸 Espagne'), ('GB', '🇬🇧 Royaume-Uni')],
         "es": [('IT', '🇮🇹 Italia'), ('DE', '🇩🇪 Alemania'), ('FR', '🇫🇷 Francia'), ('ES', '🇪🇸 España'), ('GB', '🇬🇧 Reino Unido')],
         "en-gb": [('IT', '🇮🇹 Italy'), ('DE', '🇩🇪 Germany'), ('FR', '🇫🇷 France'), ('ES', '🇪🇸 Spain'), ('GB', '🇬🇧 United Kingdom')]
+        },
+    "COUNTRY_NAMES": {
+        "it": [('IT', 'Italia'), ('DE', 'Germania'), ('FR', 'Francia'), ('ES', 'Spagna'), ('GB', 'Regno Unito')],
+        "de": [('IT', 'Italien'), ('DE', 'Deutschland'), ('FR', 'Frankreich'), ('ES', 'Spanien'), ('GB', 'Vereinigtes Königreich')],
+        "fr": [('IT', 'Italie'), ('DE', 'Allemagne'), ('FR', 'France'), ('ES', 'Espagne'), ('GB', 'Royaume-Uni')],
+        "es": [('IT', 'Italia'), ('DE', 'Alemania'), ('FR', 'Francia'), ('ES', 'España'), ('GB', 'Reino Unido')],
+        "en-gb": [('IT', 'Italy'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'), ('GB', 'United Kingdom')]
     },
     "TAB_01": {
         "it": "Gestione domande",
@@ -136,28 +222,56 @@ UI_STRINGS = {
         "en-gb": "With Alerts"
     },
     "FILTER_STATUS_ERR_OR_WARN": {
-        "it": "Con errori o segnalazioni",
+        "it": "Con Errori o Segnalazioni",
         "de": "Mit Fehlern oder Warnungen",
         "fr": "Avec erreurs ou alertes",
         "es": "Con errores o alertas",
         "en-gb": "With errors or alerts"
         },
+    "FILTER_PREFIX_DATE": {
+        "it": "Acquisite",
+        "de": "Erfasst",
+        "fr": "Reçues",
+        "es": "Recibidas",
+        "en-gb": "Received"
+        },
     "FILTER_START_DATE": {
-        "it": "Dal",
-        "de": "Von",
-        "fr": "De",
-        "es": "Desde",
-        "en-gb": "From"
+        "it": "dal",
+        "de": "von",
+        "fr": "du",
+        "es": "desde",
+        "en-gb": "from"
         },
     "FILTER_END_DATE": {
-        "it": "Al",
-        "de": "Bis",
-        "fr": "À",
-        "es": "Hasta",
-        "en-gb": "To"
+        "it": "al",
+        "de": "bis",
+        "fr": "au",
+        "es": "hasta",
+        "en-gb": "to"
+        },
+    "FILTER_PREFIX_AMOUNT": {
+        "it": "Importo",
+        "de": "Betrag",
+        "fr": "Montant",
+        "es": "Importe",
+        "en-gb": "Amount"
+        },
+    "FILTER_MIN_AMOUNT": {
+        "it": "minimo",
+        "de": "Minimum",
+        "fr": "minimum",
+        "es": "mínimo",
+        "en-gb": "minimum"
+        },
+    "FILTER_MAX_AMOUNT": {
+        "it": "massimo",
+        "de": "Maximum",
+        "fr": "maximum",
+        "es": "máximo",
+        "en-gb": "maximum"
         },
     "FILTER_BTN_CLEAR": {
-        "it": "Rimuovi Filtri",
+        "it": "Rimuovi tutti i Filtri", #TODO
         "de": "Filter löschen",
         "fr": "Effacer les filtres",
         "es": "Borrar filtros",
@@ -382,7 +496,7 @@ UI_STRINGS = {
         },
     "GRAPH_LBL_BRANCH": {
         "it": "Filiale",
-        "de": "Filiale",
+        "de": "Niederlassung",
         "fr": "Agence",
         "es": "Sucursal",
         "en-gb": "Branch"
@@ -478,11 +592,11 @@ UI_STRINGS = {
         "en-gb": "Linked Application"
         },
     "DETAIL_ROOT_HELP_TEXT": {
-        "it": "Seleziona una domanda dall'elenco facendo click sulle azioni: Grafo oppure Dettagli", #TODO
-        "de": "Klicke bei einem Antrag in der Liste auf „Graph erkunden“ oder „Details“",
-        "fr": "Cliquez sur « Exploration du graphe » ou « Détails » pour une demande dans la liste",
-        "es": "Haz clic en «Exploración grafo» o «Detalles» en una solicitud de la lista",
-        "en-gb": "Click 'Graph Explorer' or 'Details' on an application in the list"
+        "it": "Seleziona una domanda dall'elenco facendo clic sulle azioni: Grafo oppure Dettagli",
+        "de": "Wähle einen Antrag aus der Liste über die Aktionen „Graph“ oder „Details“ aus",
+        "fr": "Sélectionnez une demande dans la liste à l’aide des actions « Graphe » ou « Détails »",
+        "es": "Selecciona una solicitud de la lista mediante las acciones «Grafo» o «Detalles»",
+        "en-gb": "Select an application from the list using the Graph or Details actions"
         },
     "DETAIL_LINKED_HELP_TEXT": {
         "it": "Seleziona una domanda collegata sul Grafo",
@@ -519,6 +633,27 @@ UI_STRINGS = {
         "es": "Descargar PDF",
         "en-gb": "Download PDF"
         },
+    "DETAIL_NO_DATA": {
+        "it":    "Nessun dato",
+        "de":    "Keine Daten",
+        "fr":    "Aucune donnée",
+        "es":    "Sin datos",
+        "en-gb": "No data",
+    },
+    "DETAIL_FOREIGN": {
+        "it":    "Identificativo estero",
+        "de":    "Ausländische Kennung",
+        "fr":    "Identifiant étranger",
+        "es":    "Identificador extranjero",
+        "en-gb": "Foreign identifier",
+    },
+    "DETAIL_INVALID": {
+        "it":    "Formato non valido",
+        "de":    "Ungültiges Format",
+        "fr":    "Format invalide",
+        "es":    "Formato no válido",
+        "en-gb": "Invalid format",
+    },
     # VAT: Combined string, browser language term placed first
     "LEGEND_VAT": {
         "it": "P.IVA / USt-IdNr. / N° TVA / NIF / VAT R.No.",
@@ -584,7 +719,21 @@ UI_STRINGS = {
         "es": "Teléfono",
         "en-gb": "Phone"
         },
-    "NO_DATA": {
+    "COUNT_TOTAL": {
+        "it": "Domande totali",
+        "de": "Anträge insgesamt",
+        "fr": "Nombre total de demandes",
+        "es": "Total de solicitudes",
+        "en-gb": "Total applications"
+        },
+    "COUNT_FILTERED": {
+        "it": "filtrate",
+        "de": "gefiltert",
+        "fr": "filtrées",
+        "es": "filtradas",
+        "en-gb": "filtered",
+        },
+    "LIST_EMPTY": {
         "it": "Nessuna domanda di prestito trovata",
         "de": "Kein Kreditantrag gefunden",
         "fr": "Aucune demande de prêt trouvée",
@@ -613,18 +762,18 @@ UI_STRINGS = {
         "en-gb": "Alerts"
     },
     "HAS_LINKS": {
-        "it": "Presenta collegamenti con altre domande", #TODO
-        "de": "",
-        "fr": "",
-        "es": "",
-        "en-gb": ""
-    },
+        "it": "Presenta collegamenti con altre domande",
+        "de": "Mit anderen Anträgen verknüpft",
+        "fr": "Liée à d’autres demandes",
+        "es": "Vinculada a otras solicitudes",
+        "en-gb": "Linked to other applications"
+        },
     "HAS_NO_LINKS": {
-        "it": "Nessun collegamento con altre domande",  # TODO
-        "de": "",
-        "fr": "",
-        "es": "",
-        "en-gb": ""
+        "it": "Nessun collegamento con altre domande",
+        "de": "Keine Verknüpfungen mit anderen Anträgen",
+        "fr": "Aucune liaison avec d’autres demandes",
+        "es": "Sin vínculos con otras solicitudes",
+        "en-gb": "No links to other applications"
         },
     "ACT_EXPLORE": {
         "it": "Esplora Grafo",
@@ -662,12 +811,19 @@ UI_STRINGS = {
         "en-gb": "Country"
     },
     "COL_LINKED": {
-        "it": "Collegamenti", #TODO
-        "de": "Verknüpft",
-        "fr": "Liée",
-        "es": "Vinculada",
-        "en-gb": "Linked"
+        "it": "Collegamenti",
+        "de": "Verknüpfungen",
+        "fr": "Liens",
+        "es": "Vínculos",
+        "en-gb": "Links"
         },
+    "COL_AMOUNT": {
+        "it":    "Importo",
+        "de":    "Betrag",
+        "fr":    "Montant",
+        "es":    "Importe",
+        "en-gb": "Amount",
+    },
     "COL_ACQ_DATE": {
         "it": "Data Acquisizione",
         "de": "Erfassungsdatum",
@@ -718,19 +874,64 @@ UI_STRINGS = {
     },
 
     # The Validations and Rules message strings
-    "TYPE_SYSTEM": {
-        "it": "Errore di sistema",   #TODO
-        "de": "Anwendung",
-        "fr": "Application",
-        "es": "Aplicación",
-        "en-gb": "Application"
+    "EVIDENCE_LINKED_TOOLTIP": {
+        "it": "Rilevata corrispondenza: presente in entrambe le domande",
+        "de": "Übereinstimmung erkannt: in beiden Anträgen vorhanden",
+        "fr": "Correspondance détectée : présente dans les deux demandes",
+        "es": "Coincidencia detectada: presente en ambas solicitudes",
+        "en-gb": "Match detected: present in both applications"
+        },
+    "SEVERITY_LEVEL_LABEL": {
+        "it": "Livello di severità",
+        "de": "Schweregrad",
+        "fr": "Niveau de gravité",
+        "es": "Nivel de gravedad",
+        "en-gb": "Severity level"
+        },
+
+    "SEVERITY_HIGH": {
+        "it":    "Alto",
+        "de":    "Hoch",
+        "fr":    "Élevé",
+        "es":    "Alto",
+        "en-gb": "High",
     },
+    "SEVERITY_MEDIUM": {
+        "it":    "Medio",
+        "de":    "Mittel",
+        "fr":    "Moyen",
+        "es":    "Medio",
+        "en-gb": "Medium",
+    },
+    "SEVERITY_LOW": {
+        "it":    "Basso",
+        "de":    "Niedrig",
+        "fr":    "Bas",
+        "es":    "Bajo",
+        "en-gb": "Low",
+    },
+
+    "OCCURRENCES_COUNT": {
+        "it":    "occorrenze",
+        "de":    "Vorkommen",
+        "fr":    "occurrences",
+        "es":    "ocurrencias",
+        "en-gb": "occurrences",
+    },
+
+    "TYPE_SYSTEM": {
+        "it": "Errore di sistema",
+        "de": "Systemfehler",
+        "fr": "Erreur système",
+        "es": "Error del sistema",
+        "en-gb": "System error"
+        },
     "REASON_SYSTEM_ERROR": {
-        "it": "'{}': {}",   #TODO
-        "de": "Fehler bei der Ausführung von '{}': {}",
-        "fr": "Erreur lors de l'exécution de '{}': {}",
-        "es": "Error al ejecutar '{}': {}",
-        "en-gb": "Error executing '{}': {}"
+        "it": "'{}': {}",
+        "de": "'{}': {}",
+        "fr": "'{}': {}",
+        "es": "'{}': {}",
+        "en-gb": "'{}': {}"
     },
 
     "TYPE_REQUIRED": {
@@ -741,12 +942,12 @@ UI_STRINGS = {
         "en-gb": "Required field"
     },
     "REASON_REQUIRED": {
-        "it": "mancante",   #TODO
-        "de": "Pflichtfeld fehlt",
-        "fr": "Champ obligatoire manquant",
-        "es": "Falta un campo obligatorio",
-        "en-gb": "Missing required field"
-    },
+        "it": "Dato mancante",
+        "de": "Fehlende Angabe",
+        "fr": "Donnée manquante",
+        "es": "Dato obligatorio ausente",
+        "en-gb": "Missing data"
+        },
 
     "TYPE_NUMERIC": {
         "it": "Formato numerico",
@@ -756,12 +957,12 @@ UI_STRINGS = {
         "en-gb": "Numeric Format"
     },
     "REASON_NUMERIC_INVALID": {
-        "it": "non è un numero valido", #TODO
-        "de": "Der Wert ist keine gültige Zahl",
-        "fr": "La valeur n'est pas un nombre valide",
-        "es": "El valor no es un número válido",
-        "en-gb": "Value is not a valid number"
-    },
+        "it": "Numero non valido",
+        "de": "Ungültige Zahl",
+        "fr": "Nombre non valide",
+        "es": "Número no válido",
+        "en-gb": "Invalid number"
+        },
 
     "TYPE_POSITIVE": {
         "it": "Valore positivo",
@@ -771,12 +972,12 @@ UI_STRINGS = {
         "en-gb": "Positive Value"
     },
     "REASON_POSITIVE_INVALID": {
-        "it": "deve essere maggiore di zero",   #TODO
-        "de": "Der Wert muss größer als null sein",
-        "fr": "La valeur doit être supérieure à zéro",
-        "es": "El valor debe ser mayor que cero",
-        "en-gb": "Value must be greater than zero"
-    },
+        "it": "Numero inferiore o uguale a zero",
+        "de": "Zahl kleiner oder gleich null",
+        "fr": "Nombre inférieur ou égal à zéro",
+        "es": "Número menor o igual que cero",
+        "en-gb": "Number less than or equal to zero"
+        },
 
     "TYPE_EMAIL": {
         "it": "E-mail",
@@ -786,29 +987,192 @@ UI_STRINGS = {
         "en-gb": "E-mail"
     },
     "REASON_EMAIL_INVALID": {
-        "it": "indirizzo non valido",   #TODO
-        "de": "Ungültige E-Mail-Adresse",
-        "fr": "Adresse e-mail non valide",
-        "es": "Dirección de correo electrónico no válida",
-        "en-gb": "Invalid email address"
-    },
+        "it": "Indirizzo non valido",
+        "de": "Ungültige Adresse",
+        "fr": "Adresse non valide",
+        "es": "Dirección no válida",
+        "en-gb": "Invalid address"
+        },
+
+    "TYPE_IP": {
+        "it": "Indirizzo IPv4",
+        "de": "IPv4-Adresse",
+        "fr": "Adresse IPv4",
+        "es": "Dirección IPv4",
+        "en-gb": "IPv4 address"
+        },
+    "REASON_IP_INVALID": {
+        "it": "Indirizzo non valido",
+        "de": "Ungültige IP-Adresse",
+        "fr": "Adresse IP non valide",
+        "es": "Dirección IP no válida",
+        "en-gb": "Invalid IP address"
+        },
 
     "TYPE_IBAN": {
-        "it": "IBAN",
-        "de": "IBAN",
-        "fr": "IBAN",
-        "es": "IBAN",
-        "en-gb": "IBAN"
-    },
+        "it": {
+            "ANY": {
+                "IT": "IBAN italiano",
+                "DE": "IBAN tedesco",
+                "FR": "IBAN francese",
+                "ES": "IBAN spagnolo",
+                "GB": "IBAN britannico"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Italienische IBAN",
+                "DE": "Deutsche IBAN",
+                "FR": "Französische IBAN",
+                "ES": "Spanische IBAN",
+                "GB": "Britische IBAN"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "IBAN italien",
+                "DE": "IBAN allemand",
+                "FR": "IBAN français",
+                "ES": "IBAN espagnol",
+                "GB": "IBAN britannique"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "IBAN italiano",
+                "DE": "IBAN alemán",
+                "FR": "IBAN francés",
+                "ES": "IBAN español",
+                "GB": "IBAN británico"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Italian IBAN",
+                "DE": "German IBAN",
+                "FR": "French IBAN",
+                "ES": "Spanish IBAN",
+                "GB": "British IBAN"
+                }
+            }
+        },
     "REASON_IBAN_INVALID": {
-        "it": "checksum non valido",    #TODO
-        "de": "Ungültige IBAN-Prüfsumme",
-        "fr": "Clé de contrôle IBAN non valide",
-        "es": "Dígito de control del IBAN no válido",
-        "en-gb": "Invalid IBAN checksum"
-    },
+        "it": "Formato non valido",
+        "de": "Ungültiges Format",
+        "fr": "Format non valide",
+        "es": "Formato no válido",
+        "en-gb": "Invalid format"
+        },
 
+    "TYPE_TIN": {
+        "it": {
+            "ANY": {
+                "IT": "Codice Fiscale italiano",
+                "DE": "Steuer-ID tedesca",
+                "FR": "NIR francese",
+                "ES": "DNI spagnola",
+                "GB": "National Insurance number britannico"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Italienischer Codice Fiscale",
+                "DE": "Deutsche Steuer-ID",
+                "FR": "Französische NIR",
+                "ES": "Spanische DNI",
+                "GB": "Britische National Insurance number"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "Codice Fiscale italien",
+                "DE": "Steuer-ID allemande",
+                "FR": "NIR français",
+                "ES": "DNI espagnol",
+                "GB": "National Insurance number britannique"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "Codice Fiscale italiano",
+                "DE": "Steuer-ID alemana",
+                "FR": "NIR francés",
+                "ES": "DNI español",
+                "GB": "National Insurance number británico"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Italian Codice Fiscale",
+                "DE": "German Steuer-ID",
+                "FR": "French NIR",
+                "ES": "Spanish DNI",
+                "GB": "British National Insurance number"
+                }
+            }
+        },
+    "REASON_TIN_INVALID": {
+        "it": "Formato non valido",
+        "de": "Ungültiges Format",
+        "fr": "Format non valide",
+        "es": "Formato no válido",
+        "en-gb": "Invalid format"
+        },
 
+    "TYPE_VAT": {
+        "it": {
+            "ANY": {
+                "IT": "P.IVA italiana",
+                "DE": "USt-IdNr. tedesca",
+                "FR": "TVA francese",
+                "ES": "NIF spagnola",
+                "GB": "VAT britannica"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Italienische P.IVA",
+                "DE": "Deutsche USt-IdNr.",
+                "FR": "Französische TVA",
+                "ES": "Spanische NIF",
+                "GB": "Britische VAT"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "P.IVA italienne",
+                "DE": "USt-IdNr. allemande",
+                "FR": "TVA française",
+                "ES": "NIF espagnol",
+                "GB": "VAT britannique"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "P.IVA italiana",
+                "DE": "USt-IdNr. alemana",
+                "FR": "TVA francesa",
+                "ES": "NIF español",
+                "GB": "VAT británica"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Italian P.IVA",
+                "DE": "German USt-IdNr.",
+                "FR": "French TVA",
+                "ES": "Spanish NIF",
+                "GB": "British VAT"
+                }
+            }
+        },
+    "REASON_VAT_INVALID": {
+        "it": "Formato non valido",
+        "de": "Ungültiges Format",
+        "fr": "Format non valide",
+        "es": "Formato no válido",
+        "en-gb": "Invalid format"
+        },
 
     "TYPE_BLACKLIST": {
         "it": "Blacklist",
@@ -833,85 +1197,270 @@ UI_STRINGS = {
     },
     "TYPE_BLACKLIST_VAT": {
         "it": {
-            "IT": "Blacklist P.IVA italiana",
-            "DE": "Blacklist USt-IdNr. tedesca",
-            "FR": "Blacklist TVA francese",
-            "ES": "Blacklist NIF spagnola",
-            "GB": "Blacklist VAT britannica"
-        },
+            "ANY": {
+                "IT": "Blacklist P.IVA italiana",
+                "DE": "Blacklist USt-IdNr. tedesca",
+                "FR": "Blacklist TVA francese",
+                "ES": "Blacklist NIF spagnola",
+                "GB": "Blacklist VAT britannica"
+                }
+            },
         "de": {
-            "IT": "Italienische P.IVA-Sperrliste",
-            "DE": "Deutsche USt-IdNr.-Sperrliste",
-            "FR": "Französische TVA-Sperrliste",
-            "ES": "Spanische NIF-Sperrliste",
-            "GB": "Britische VAT-Sperrliste"
-        },
+            "ANY": {
+                "IT": "Italienische P.IVA-Sperrliste",
+                "DE": "Deutsche USt-IdNr.-Sperrliste",
+                "FR": "Französische TVA-Sperrliste",
+                "ES": "Spanische NIF-Sperrliste",
+                "GB": "Britische VAT-Sperrliste"
+                }
+            },
         "fr": {
-            "IT": "Liste noire des P.IVA italiennes",
-            "DE": "Liste noire des USt-IdNr. allemandes",
-            "FR": "Liste noire des TVA françaises",
-            "ES": "Liste noire des NIF espagnols",
-            "GB": "Liste noire des VAT britanniques"
-        },
+            "ANY": {
+                "IT": "Liste noire des P.IVA italiennes",
+                "DE": "Liste noire des USt-IdNr. allemandes",
+                "FR": "Liste noire des TVA françaises",
+                "ES": "Liste noire des NIF espagnols",
+                "GB": "Liste noire des VAT britanniques"
+                }
+            },
         "es": {
-            "IT": "Lista negra de P.IVA italianas",
-            "DE": "Lista negra de USt-IdNr. alemanas",
-            "FR": "Lista negra de TVA francesas",
-            "ES": "Lista negra de NIF españoles",
-            "GB": "Lista negra de VAT británicas"
-        },
+            "ANY": {
+                "IT": "Lista negra de P.IVA italianas",
+                "DE": "Lista negra de USt-IdNr. alemanas",
+                "FR": "Lista negra de TVA francesas",
+                "ES": "Lista negra de NIF españoles",
+                "GB": "Lista negra de VAT británicas"
+                }
+            },
         "en-gb": {
-            "IT": "Italian P.IVA Blacklist",
-            "DE": "German USt-IdNr. Blacklist",
-            "FR": "French TVA Blacklist",
-            "ES": "Spanish NIF Blacklist",
-            "GB": "British VAT Blacklist"
-        }
-    },
+            "ANY": {
+                "IT": "Italian P.IVA Blacklist",
+                "DE": "German USt-IdNr. Blacklist",
+                "FR": "French TVA Blacklist",
+                "ES": "Spanish NIF Blacklist",
+                "GB": "British VAT Blacklist"
+                }
+            }
+        },
     "TYPE_BLACKLIST_TIN": {
         "it": {
-            "IT": "Blacklist Codice Fiscale italiano",
-            "DE": "Blacklist Steuer-ID tedesca",
-            "FR": "Blacklist NIR francese",
-            "ES": "Blacklist DNI spagnola",
-            "GB": "Blacklist National Insurance number britannico"
-        },
+            "ANY": {
+                "IT": "Blacklist Codice Fiscale italiano",
+                "DE": "Blacklist Steuer-ID tedesca",
+                "FR": "Blacklist NIR francese",
+                "ES": "Blacklist DNI spagnola",
+                "GB": "Blacklist National Insurance number britannico"
+                }
+            },
         "de": {
-            "IT": "Italienische Codice-Fiscale-Sperrliste",
-            "DE": "Deutsche Steuer-ID-Sperrliste",
-            "FR": "Französische NIR-Sperrliste",
-            "ES": "Spanische DNI-Sperrliste",
-            "GB": "Britische National-Insurance-number-Sperrliste"
-        },
+            "ANY": {
+                "IT": "Italienische Codice-Fiscale-Sperrliste",
+                "DE": "Deutsche Steuer-ID-Sperrliste",
+                "FR": "Französische NIR-Sperrliste",
+                "ES": "Spanische DNI-Sperrliste",
+                "GB": "Britische National-Insurance-number-Sperrliste"
+                }
+            },
         "fr": {
-            "IT": "Liste noire des Codice Fiscale italiens",
-            "DE": "Liste noire des Steuer-ID allemandes",
-            "FR": "Liste noire des NIR français",
-            "ES": "Liste noire des DNI espagnols",
-            "GB": "Liste noire des National Insurance numbers britanniques"
-        },
+            "ANY": {
+                "IT": "Liste noire des Codice Fiscale italiens",
+                "DE": "Liste noire des Steuer-ID allemandes",
+                "FR": "Liste noire des NIR français",
+                "ES": "Liste noire des DNI espagnols",
+                "GB": "Liste noire des National Insurance numbers britanniques"
+                }
+            },
         "es": {
-            "IT": "Lista negra de Codice Fiscale italianos",
-            "DE": "Lista negra de Steuer-ID alemanas",
-            "FR": "Lista negra de NIR franceses",
-            "ES": "Lista negra de DNI españoles",
-            "GB": "Lista negra de National Insurance numbers británicos"
-        },
+            "ANY": {
+                "IT": "Lista negra de Codice Fiscale italianos",
+                "DE": "Lista negra de Steuer-ID alemanas",
+                "FR": "Lista negra de NIR franceses",
+                "ES": "Lista negra de DNI españoles",
+                "GB": "Lista negra de National Insurance numbers británicos"
+                }
+            },
         "en-gb": {
-            "IT": "Italian Codice Fiscale Blacklist",
-            "DE": "German Steuer-ID Blacklist",
-            "FR": "French NIR Blacklist",
-            "ES": "Spanish DNI Blacklist",
-            "GB": "UK National Insurance number Blacklist"
-        }
-    },
+            "ANY": {
+                "IT": "Italian Codice Fiscale Blacklist",
+                "DE": "German Steuer-ID Blacklist",
+                "FR": "French NIR Blacklist",
+                "ES": "Spanish DNI Blacklist",
+                "GB": "UK National Insurance number Blacklist"
+                }
+            }
+        },
     "REASON_IN_BLACKLIST": {
-        "it": "presente in blacklist",  #TODO
-        "de": "Kennung/Wert in der Sperrliste gefunden",
-        "fr": "Identifiant/valeur trouvé dans la liste noire",
-        "es": "Identificador/valor encontrado en la lista negra",
-        "en-gb": "Identifier/value found in blacklist"
-    },
+        "it": "Presente in blacklist",
+        "de": "Auf der Sperrliste",
+        "fr": "Figurant sur la liste noire",
+        "es": "Incluido en la lista negra",
+        "en-gb": "On the blacklist"
+        },
+
+    "TYPE_FOREIGN_IBAN": {
+        "it": "Codice IBAN estero",
+        "de": "Ausländische IBAN",
+        "fr": "IBAN étranger",
+        "es": "IBAN extranjero",
+        "en-gb": "Foreign IBAN"
+        },
+    "REASON_FOREIGN_IBAN": {
+        "it": {
+            "ANY": {
+                "IT": "Rilevato IBAN italiano",
+                "DE": "Rilevato IBAN tedesco",
+                "FR": "Rilevato IBAN francese",
+                "ES": "Rilevato IBAN spagnolo",
+                "GB": "Rilevato IBAN britannico"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Erkannte italienische IBAN",
+                "DE": "Erkannte deutsche IBAN",
+                "FR": "Erkannte französische IBAN",
+                "ES": "Erkannte spanische IBAN",
+                "GB": "Erkannte britische IBAN"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "IBAN italien détecté",
+                "DE": "IBAN allemand détecté",
+                "FR": "IBAN français détecté",
+                "ES": "IBAN espagnol détecté",
+                "GB": "IBAN britannique détecté"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "IBAN italiano detectado",
+                "DE": "IBAN alemán detectado",
+                "FR": "IBAN francés detectado",
+                "ES": "IBAN español detectado",
+                "GB": "IBAN británico detectado"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Detected Italian IBAN",
+                "DE": "Detected German IBAN",
+                "FR": "Detected French IBAN",
+                "ES": "Detected Spanish IBAN",
+                "GB": "Detected British IBAN"
+                }
+            }
+        },
+
+    "TYPE_FOREIGN_VAT": {
+        "it": "Codice IVA estero",
+        "de": "Ausländische Umsatzsteuer-ID",
+        "fr": "Numéro de TVA étranger",
+        "es": "Número de IVA extranjero",
+        "en-gb": "Foreign VAT number"
+        },
+    "REASON_FOREIGN_VAT": {
+        "it": {
+            "ANY": {
+                "IT": "Rilevata P.IVA italiana",
+                "DE": "Rilevata USt-IdNr. tedesca",
+                "FR": "Rilevata TVA francese",
+                "ES": "Rilevata NIF spagnola",
+                "GB": "Rilevata VAT britannica"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Erkannte italienische P.IVA",
+                "DE": "Erkannte deutsche USt-IdNr.",
+                "FR": "Erkannte französische TVA",
+                "ES": "Erkannte spanische NIF",
+                "GB": "Erkannte britische VAT"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "P.IVA italienne détectée",
+                "DE": "USt-IdNr. allemande détectée",
+                "FR": "TVA française détectée",
+                "ES": "NIF espagnole détectée",
+                "GB": "VAT britannique détectée"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "P.IVA italiana detectada",
+                "DE": "USt-IdNr. alemana detectada",
+                "FR": "TVA francesa detectada",
+                "ES": "NIF española detectada",
+                "GB": "VAT británica detectada"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Detected Italian P.IVA",
+                "DE": "Detected German USt-IdNr.",
+                "FR": "Detected French TVA",
+                "ES": "Detected Spanish NIF",
+                "GB": "Detected British VAT"
+                }
+            }
+        },
+
+    "TYPE_FOREIGN_TIN": {
+        "it": "Codice Fiscale (TIN) estero",
+        "de": "Ausländische Steueridentifikationsnummer (TIN)",
+        "fr": "Numéro d’identification fiscale étranger (TIN)",
+        "es": "Número de identificación fiscal extranjero (TIN)",
+        "en-gb": "Foreign Tax Identification Number (TIN)"
+        },
+    "REASON_FOREIGN_TIN": {
+        "it": {
+            "ANY": {
+                "IT": "Rilevato Codice Fiscale italiano",
+                "DE": "Rilevata Steuer-ID tedesca",
+                "FR": "Rilevato NIR francese",
+                "ES": "Rilevata DNI spagnola",
+                "GB": "Rilevato National Insurance number britannico"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Erkannter italienischer Codice Fiscale",
+                "DE": "Erkannte deutsche Steuer-ID",
+                "FR": "Erkannter französischer NIR",
+                "ES": "Erkannte spanische DNI",
+                "GB": "Erkannte britische National Insurance number"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "Codice Fiscale italien détecté",
+                "DE": "Steuer-ID allemande détectée",
+                "FR": "NIR français détecté",
+                "ES": "DNI espagnol détecté",
+                "GB": "National Insurance number britannique détecté"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "Codice Fiscale italiano detectado",
+                "DE": "Steuer-ID alemana detectada",
+                "FR": "NIR francés detectado",
+                "ES": "DNI español detectado",
+                "GB": "National Insurance number británico detectado"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Detected Italian Codice Fiscale",
+                "DE": "Detected German Steuer-ID",
+                "FR": "Detected French NIR",
+                "ES": "Detected Spanish DNI",
+                "GB": "Detected British National Insurance number"
+                }
+            }
+        },
 
     "TYPE_DUPLICATE": {
         "it": "Valore duplicato",
@@ -928,92 +1477,152 @@ UI_STRINGS = {
         "en-gb": "Duplicate IPv4"
     },
     "TYPE_DUPLICATE_IBAN": {
-        "it": "IBAN duplicato",
-        "de": "Doppelte IBAN",
-        "fr": "IBAN en double",
-        "es": "IBAN duplicado",
-        "en-gb": "Duplicate IBAN"
-    },
+        "it": {
+            "ANY": {
+                "IT": "IBAN italiano duplicato",
+                "DE": "IBAN tedesco duplicato",
+                "FR": "IBAN francese duplicato",
+                "ES": "IBAN spagnolo duplicato",
+                "GB": "IBAN britannico duplicato"
+                }
+            },
+        "de": {
+            "ANY": {
+                "IT": "Doppelte italienische IBAN",
+                "DE": "Doppelte deutsche IBAN",
+                "FR": "Doppelte französische IBAN",
+                "ES": "Doppelte spanische IBAN",
+                "GB": "Doppelte britische IBAN"
+                }
+            },
+        "fr": {
+            "ANY": {
+                "IT": "IBAN italien dupliqué",
+                "DE": "IBAN allemand dupliqué",
+                "FR": "IBAN français dupliqué",
+                "ES": "IBAN espagnol dupliqué",
+                "GB": "IBAN britannique dupliqué"
+                }
+            },
+        "es": {
+            "ANY": {
+                "IT": "IBAN italiano duplicado",
+                "DE": "IBAN alemán duplicado",
+                "FR": "IBAN francés duplicado",
+                "ES": "IBAN español duplicado",
+                "GB": "IBAN británico duplicado"
+                }
+            },
+        "en-gb": {
+            "ANY": {
+                "IT": "Duplicate Italian IBAN",
+                "DE": "Duplicate German IBAN",
+                "FR": "Duplicate French IBAN",
+                "ES": "Duplicate Spanish IBAN",
+                "GB": "Duplicate British IBAN"
+                }
+            }
+        },
     "TYPE_DUPLICATE_VAT": {
         "it": {
-            "IT": "P.IVA italiana duplicata",
-            "DE": "USt-IdNr. tedesca duplicata",
-            "FR": "TVA francese duplicata",
-            "ES": "NIF spagnolo duplicato",
-            "GB": "VAT britannica duplicata"
-        },
+            "ANY": {
+                "IT": "P.IVA italiana duplicata",
+                "DE": "USt-IdNr. tedesca duplicata",
+                "FR": "TVA francese duplicata",
+                "ES": "NIF spagnolo duplicato",
+                "GB": "VAT britannica duplicata"
+                }
+            },
         "de": {
-            "IT": "Doppelte italienische P.IVA",
-            "DE": "Doppelte deutsche USt-IdNr.",
-            "FR": "Doppelte französische TVA",
-            "ES": "Doppelte spanische NIF",
-            "GB": "Doppelte britische VAT"
-        },
+            "ANY": {
+                "IT": "Doppelte italienische P.IVA",
+                "DE": "Doppelte deutsche USt-IdNr.",
+                "FR": "Doppelte französische TVA",
+                "ES": "Doppelte spanische NIF",
+                "GB": "Doppelte britische VAT"
+                }
+            },
         "fr": {
-            "IT": "P.IVA italienne en double",
-            "DE": "USt-IdNr. allemande en double",
-            "FR": "TVA française en double",
-            "ES": "NIF espagnol en double",
-            "GB": "VAT britannique en double"
-        },
+            "ANY": {
+                "IT": "P.IVA italienne en double",
+                "DE": "USt-IdNr. allemande en double",
+                "FR": "TVA française en double",
+                "ES": "NIF espagnol en double",
+                "GB": "VAT britannique en double"
+                }
+            },
         "es": {
-            "IT": "P.IVA italiana duplicada",
-            "DE": "USt-IdNr. alemana duplicada",
-            "FR": "TVA francesa duplicada",
-            "ES": "NIF español duplicado",
-            "GB": "VAT británica duplicada"
-        },
+            "ANY": {
+                "IT": "P.IVA italiana duplicada",
+                "DE": "USt-IdNr. alemana duplicada",
+                "FR": "TVA francesa duplicada",
+                "ES": "NIF español duplicado",
+                "GB": "VAT británica duplicada"
+                }
+            },
         "en-gb": {
-            "IT": "Duplicate Italian P.IVA",
-            "DE": "Duplicate German USt-IdNr.",
-            "FR": "Duplicate French TVA",
-            "ES": "Duplicate Spanish NIF",
-            "GB": "Duplicate British VAT"
-        }
-    },
+            "ANY": {
+                "IT": "Duplicate Italian P.IVA",
+                "DE": "Duplicate German USt-IdNr.",
+                "FR": "Duplicate French TVA",
+                "ES": "Duplicate Spanish NIF",
+                "GB": "Duplicate British VAT"
+                }
+            }
+        },
     "TYPE_DUPLICATE_TIN": {
         "it": {
-            "IT": "Codice Fiscale italiano duplicato",
-            "DE": "Steuer-ID tedesca duplicata",
-            "FR": "NIR francese duplicato",
-            "ES": "NIF spagnolo duplicato",
-            "GB": "National Insurance number britannico duplicato"
-        },
+            "ANY": {
+                "IT": "Codice Fiscale italiano duplicato",
+                "DE": "Steuer-ID tedesca duplicata",
+                "FR": "NIR francese duplicato",
+                "ES": "NIF spagnolo duplicato",
+                "GB": "National Insurance number britannico duplicato"
+                }
+            },
         "de": {
-            "IT": "Doppelter italienischer Codice Fiscale",
-            "DE": "Doppelte deutsche Steuer-ID",
-            "FR": "Doppelte französische NIR",
-            "ES": "Doppelte spanische NIF",
-            "GB": "Doppelte britische National Insurance number"
-        },
+            "ANY": {
+                "IT": "Doppelter italienischer Codice Fiscale",
+                "DE": "Doppelte deutsche Steuer-ID",
+                "FR": "Doppelte französische NIR",
+                "ES": "Doppelte spanische NIF",
+                "GB": "Doppelte britische National Insurance number"
+                }
+            },
         "fr": {
-            "IT": "Codice Fiscale italien en double",
-            "DE": "Steuer-ID allemande en double",
-            "FR": "NIR français en double",
-            "ES": "NIF espagnol en double",
-            "GB": "National Insurance number britannique en double"
-        },
+            "ANY": {
+                "IT": "Codice Fiscale italien en double",
+                "DE": "Steuer-ID allemande en double",
+                "FR": "NIR français en double",
+                "ES": "NIF espagnol en double",
+                "GB": "National Insurance number britannique en double"
+                }
+            },
         "es": {
-            "IT": "Codice Fiscale italiano duplicado",
-            "DE": "Steuer-ID alemana duplicada",
-            "FR": "NIR francés duplicado",
-            "ES": "NIF español duplicado",
-            "GB": "National Insurance number británico duplicado"
-        },
+            "ANY": {
+                "IT": "Codice Fiscale italiano duplicado",
+                "DE": "Steuer-ID alemana duplicada",
+                "FR": "NIR francés duplicado",
+                "ES": "NIF español duplicado",
+                "GB": "National Insurance number británico duplicado"
+                }
+            },
         "en-gb": {
-            "IT": "Duplicate Italian Codice Fiscale",
-            "DE": "Duplicate German Steuer-ID",
-            "FR": "Duplicate French NIR",
-            "ES": "Duplicate Spanish NIF",
-            "GB": "Duplicate UK National Insurance number"
-        }
-    },
+            "ANY": {
+                "IT": "Duplicate Italian Codice Fiscale",
+                "DE": "Duplicate German Steuer-ID",
+                "FR": "Duplicate French NIR",
+                "ES": "Duplicate Spanish NIF",
+                "GB": "Duplicate UK National Insurance number"
+                }
+            }
+        },
     "REASON_DUPLICATE_VALUE": {
-        "it": "duplicato nella stessa richiesta",   #TODO
-        "de": "Doppelter Bezeichner/Wert in derselben Antragsdatei gefunden",
-        "fr": "Identifiant/valeur en double trouvé dans la même fiche de demande",
-        "es": "Identificador/valor duplicado encontrado en la misma ficha de solicitud",
-        "en-gb": "Duplicate identifier/value found in the same application sheet"
+        "it": "Rilevato duplicato nella stessa richiesta",
+        "de": "Doppelter Wert im selben Antrag erkannt",
+        "fr": "Valeur en double détectée dans la même demande",
+        "es": "Valor duplicado detectado en la misma solicitud",
+        "en-gb": "Duplicate value detected in the same application"
     },
 
     "TYPE_MISMATCH": {
@@ -1025,78 +1634,98 @@ UI_STRINGS = {
     },
     "TYPE_TIN_NAME_MISMATCH": {
         "it": {
-            "IT": "Incongruenza dati anagrafici",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Incongruenza dati anagrafici",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "de": {
-            "IT": "Inkonsistenz der Personendaten",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Inkonsistenz der Personendaten",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "fr": {
-            "IT": "Incohérence des données d'identité",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Incohérence des données d'identité",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "es": {
-            "IT": "Incongruencia de los datos personales",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Incongruencia de los datos personales",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "en-gb": {
-            "IT": "Personal data inconsistency",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        }
-    },
+            "ANY": {
+                "IT": "Personal data inconsistency",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            }
+        },
     "REASON_TIN_NAME_MISMATCH": {
         "it": {
-            "IT": "Codice Fiscale italiano non corrisponde a Nome e Cognome",   #TODO
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Codice Fiscale italiano non corrispondente a Nome e Cognome",  # TODO
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "de": {
-            "IT": "Der angegebene italienische Codice Fiscale stimmt nicht mit dem angegebenen Vor- und Nachnamen überein",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Der angegebene italienische Codice Fiscale stimmt nicht mit dem angegebenen Vor- und Nachnamen überein",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "fr": {
-            "IT": "Le Codice Fiscale italien fourni ne correspond pas au prénom et au nom indiqués",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "Le Codice Fiscale italien fourni ne correspond pas au prénom et au nom indiqués",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "es": {
-            "IT": "El Codice Fiscale italiano proporcionado no corresponde al nombre y los apellidos indicados",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
-        },
+            "ANY": {
+                "IT": "El Codice Fiscale italiano proporcionado no corresponde al nombre y los apellidos indicados",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            },
         "en-gb": {
-            "IT": "The Italian Codice Fiscale provided does not match the First Name and Last Name provided",
-            "DE": "",
-            "FR": "",
-            "ES": "",
-            "GB": ""
+            "ANY": {
+                "IT": "The Italian Codice Fiscale provided does not match the First Name and Last Name provided",
+                "DE": "",
+                "FR": "",
+                "ES": "",
+                "GB": ""
+                }
+            }
         }
-    }
 }
 
 
@@ -1122,7 +1751,17 @@ def get_ui_strings(lang_code: str, pdf_country_code: str = "GB") -> Dict[str, st
             context_dict = val.get(lang, val.get("en-gb", {}))
 
             if isinstance(context_dict, dict):
-                flat_dict[key] = context_dict.get(pdf_cc, context_dict.get("GB", ""))
+                final_value = context_dict.get(pdf_cc, context_dict.get("GB", ""))
+                if final_value:
+                    # Regular 2D entry — found the sheet's country string
+                    flat_dict[key] = final_value
+                else:
+                    # NEW: "ANY"-wrapped entry — fall back to the country→string sub-dict
+                    # Used for TYPE_* translations where the lookup needs to use the
+                    # alert's identifier_country, not the sheet's country.
+                    # Returns the inner {country: string} dict for resolve_alerts to do
+                    # the second-level lookup.
+                    flat_dict[key] = context_dict.get("ANY", "")
             else:
                 flat_dict[key] = ""
         else:

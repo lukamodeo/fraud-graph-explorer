@@ -118,6 +118,9 @@ function resetRootSheetView() {
     const cardsPanel = document.getElementById('ingest-status');
     if (cardsPanel) cardsPanel.innerHTML = '';
 
+    // ─── NEW: clear any evidence highlights (no shared values to highlight anymore) ───
+    updateEvidenceHighlights();
+
     // If user is on Tab 2 or Tab 3, jump back to Tab 1
     const activeTab = document.querySelector('.nav-link.active');
     if (activeTab && (activeTab.dataset.tab === 'tab2' || activeTab.dataset.tab === 'tab3')) {
@@ -133,10 +136,187 @@ function resetLinkedPane() {
 
     window.currentLinkedSheet = null;
 
-    // If user is currently on Tab 3, stay there — they can pick another linked sheet
-    // from the graph in Tab 2. No tab switch needed here.
+    // ─── NEW: clear evidence highlights (linked sheet is gone) ───
+    // The root pane still has content, but with no linked sheet, there are
+    // no shared values to highlight — clear any stale highlights from the
+    // previous linked sheet.
+    updateEvidenceHighlights();
 }
 
+/**
+ * Highlight (or clear) occurrences of `evidenceWords` in the given DOM elements.
+ * Wraps matches in <mark class="evidence-highlight">.
+ *
+ * To clear: call with an empty evidenceWords array.
+ *
+ * Each pane gets its own highlight color via CSS:
+ *   #root-detail-pane .evidence-highlight   → purple bg (matching old PoC root color)
+ *   #linked-detail-pane .evidence-highlight → red bg   (matching old PoC selected color)
+ *
+ * (CSS classes already defined in your style.css.)
+ */
+function applyEvidence(elements, evidenceWords) {
+    if (!elements || elements.length === 0) {
+        console.warn("applyEvidence: No elements provided.");
+        return;
+    }
+
+    // ─── Cleanup previous highlights ───
+    elements.forEach(element => {
+        const highlights = element.querySelectorAll('.evidence-highlight');
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+        delete element.dataset.evidenceApplied;
+    });
+
+    // ─── Early exit if no new evidence words ───
+    if (!evidenceWords || evidenceWords.length === 0) {
+        return;
+    }
+
+    // ─── Build regex (longer phrases first to prevent partial matches) ───
+    const validWords = evidenceWords.filter(w => w && w.trim() !== '');
+    if (validWords.length === 0) return;
+
+    validWords.sort((a, b) => b.length - a.length);
+
+    // Escape regex special chars
+    const escapedWords = validWords.map(word =>
+        word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    );
+
+    // Word boundaries: (?<!\w) and (?!\w) — works for both words and phrases
+    const regexParts = escapedWords.map(word => `(?<!\\w)${word}(?!\\w)`);
+    const regex = new RegExp(regexParts.join('|'), 'gi');
+
+    // ─── Apply new highlights ───
+    elements.forEach(element => {
+        const originalHTML = element.innerHTML;
+        const modifiedHTML = originalHTML.replace(regex, match =>
+            `<span class="evidence-highlight" title="${window.EVIDENCE_LINKED_TOOLTIP || ''}">` +
+                `<i class="bi bi-arrow-left-right evidence-icon me-2"></i>` +
+                `<span class="evidence-text">${match}</span>` +
+            `</span>`
+        );
+
+        if (modifiedHTML !== originalHTML) {
+            element.innerHTML = modifiedHTML;
+            element.dataset.evidenceApplied = 'true';
+        }
+    });
+}
+
+/**
+ * Extract the entity values shared between the root sheet and the linked sheet.
+ * These are the values that should be highlighted in BOTH detail panes —
+ * they represent the forensic "link" between the two sheets.
+ *
+ * Reads from network.body.data (the in-memory Vis.js dataset) — no API call.
+ *
+ * Returns: array of strings (full entity values, not truncated labels).
+ *          Empty if either sheet is not loaded, or no shared entities exist.
+ */
+function getSharedEntityValues() {
+    if (!network) return [];
+    if (!window.currentRootSheet || !window.currentLinkedSheet) return [];
+
+    const rootId = `sheet_${window.currentRootSheet}`;
+    const linkedId = `sheet_${window.currentLinkedSheet}`;
+    const edges = network.body.data.edges.get();
+    const nodes = network.body.data.nodes;
+
+    // ─── Get entity IDs connected to root ───
+    const rootConnected = new Set();
+    edges.forEach(edge => {
+        if (edge.from === rootId && edge.to.startsWith('ent_')) {
+            rootConnected.add(edge.to);
+        } else if (edge.to === rootId && edge.from.startsWith('ent_')) {
+            rootConnected.add(edge.from);
+        }
+    });
+
+    // ─── Get entity IDs connected to linked ───
+    const linkedConnected = new Set();
+    edges.forEach(edge => {
+        if (edge.from === linkedId && edge.to.startsWith('ent_')) {
+            linkedConnected.add(edge.to);
+        } else if (edge.to === linkedId && edge.from.startsWith('ent_')) {
+            linkedConnected.add(edge.from);
+        }
+    });
+
+    // ─── Intersection: entities connected to BOTH ───
+    const sharedIds = [...rootConnected].filter(id => linkedConnected.has(id));
+
+    // ─── Build evidence words list ───
+    // Include BOTH:
+    //   - The normalized value (node.title or node.label) — for cases where
+    //     the detail pane happens to show the normalized form (rare)
+    //   - All raw values (node.raw_values) — for the common case where the
+    //     detail pane shows the original PDF text with spaces/dashes/case
+    //
+    // Dedupe via a Set so the same string isn't passed twice.
+    const evidenceWords = [];
+    const seen = new Set();
+
+    sharedIds.forEach(entId => {
+        const node = nodes.get(entId);
+        if (!node) return;
+
+        // Normalized value (full, from title or label)
+        const normalizedValue = node.title || node.label;
+        if (normalizedValue && !seen.has(normalizedValue)) {
+            evidenceWords.push(normalizedValue);
+            seen.add(normalizedValue);
+        }
+
+        // All raw values (root's + each linked sheet's)
+        if (node.raw_values && Array.isArray(node.raw_values)) {
+            node.raw_values.forEach(rv => {
+                if (rv && !seen.has(rv)) {
+                    evidenceWords.push(rv);
+                    seen.add(rv);
+                }
+            });
+        }
+    });
+
+    return evidenceWords;
+}
+
+
+/**
+ * Update highlights in BOTH detail panes based on the current root + linked sheets.
+ *
+ * - If both root + linked are loaded → highlights shared entity values
+ * - If only root is loaded (no linked yet) → clears previous highlights
+ * - If neither is loaded → clears all highlights
+ *
+ * Called after every HTMX swap on either pane, and on reset functions.
+ *
+ * Idempotent: safe to call multiple times. Each call clears previous highlights
+ * before applying new ones.
+ */
+function updateEvidenceHighlights() {
+    const rootPane = document.getElementById('root-detail-pane');
+    const linkedPane = document.getElementById('linked-detail-pane');
+
+    if (!rootPane || !linkedPane) return;
+
+    const rootTable = rootPane.querySelector('.sheet-detail-table');
+    const linkedTable = linkedPane.querySelector('.sheet-detail-table');
+
+    if (!rootTable || !linkedTable) {
+        // One of the tables isn't rendered yet (e.g., empty state) — nothing to do
+        return;
+    }
+
+    const sharedValues = getSharedEntityValues();
+    applyEvidence([rootTable, linkedTable], sharedValues);
+}
 
 // Function to highlight row and load cards
 function selectAppForCards(row) {
@@ -175,6 +355,7 @@ document.body.addEventListener('selectNewApp', function(evt) {
     console.log("==> selectNewApp fired! Waiting for list to reload...", pendingSelectSheetId);
     clearFilters();
 });
+
 // Listen for HTMX to finish loading the applications list
 const appList = document.getElementById('applications-list');
 if (appList) {
@@ -320,6 +501,13 @@ function preloadApplication(sheetId) {
     window.currentRootSheet = sheetId;
     window.currentLinkedSheet = null;   // previous linked sheet is no longer valid
 
+    // ─── NEW: clear the linked pane — switching root invalidates the previous linked sheet ───
+    const linkedPane = document.getElementById('linked-detail-pane');
+    if (linkedPane) linkedPane.innerHTML = getEmptyStateHtml();
+
+    // ─── NEW: clear any stale highlights (no linked sheet → no shared values to highlight) ───
+    updateEvidenceHighlights();
+
     // Prepare Graph Data for Tab 2 (will be re-fit when user opens Tab 2)
     loadGraphData(sheetId);
 }
@@ -346,6 +534,144 @@ function loadLinkedDetail(sheetId) {
     htmx.ajax('GET', detailUrl, { target: '#linked-detail-pane', swap: 'innerHTML' });
 }
 
+const rootStyle = getComputedStyle(document.documentElement);
+const rootBrdColor = rootStyle.getPropertyValue('--root-brd-color').trim();
+const rootBgColor = rootStyle.getPropertyValue('--root-bg-color').trim();
+const linkedBrdColor = rootStyle.getPropertyValue('--linked-brd-color').trim();
+const linkedBgColor = rootStyle.getPropertyValue('--linked-bg-color').trim();
+
+// Define i2-style Colors & Shapes based on "group"
+const options = {
+    groups: {
+        'Root_Sheet': {
+            chosen: {
+                label: false,
+            },
+            color: {
+                border: rootBrdColor,
+                background: rootBgColor,
+                hover: { border: rootBrdColor, background: rootBgColor },
+                highlight: { border: rootBrdColor, background: rootBgColor }
+            },
+            font: {
+                multi: 'html',
+                color: '#ffffff',
+                size: 14,
+                face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                vadjust: 0,
+                bold: {
+                    color: '#ffff00',
+                    vadjust: 0,
+                    mod: 'bold'
+                },
+                ital: {
+                    color: '#ffffff',
+                    vadjust: 0,
+                    mod: 'italic'
+                },
+                boldital: {
+                    color: '#ffffff',
+                    size: 24,
+                    face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                    vadjust: 0,
+                    mod: 'bold italic'
+                },
+                mono: {
+                    size: 16,
+                    color: '#ffff00',
+                    vadjust: 0,
+                    mod: ''
+                }
+            },
+            shape: 'box',
+            borderWidth: 2,
+            margin: 12,
+            widthConstraint: { minimum: 100, maximum: 300 }
+         },
+        'Linked_Sheet': {
+            chosen: {
+                label: false,
+            },
+            color: {
+                border: linkedBrdColor,
+                background: linkedBgColor,
+                hover: { border: linkedBrdColor, background: linkedBgColor },
+                highlight: { border: linkedBgColor, background: linkedBrdColor }
+            },
+            font: {
+                multi: 'html',
+                color: '#ffffff',
+                size: 14,
+                face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                vadjust: 0,
+                bold: {
+                    color: '#ffff00',
+                    vadjust: 0,
+                    mod: 'bold'
+                },
+                ital: {
+                    color: '#ffffff',
+                    vadjust: 0,
+                    mod: 'italic'
+                },
+                boldital: {
+                    color: '#ffffff',
+                    size: 24,
+                    face: '"Noto Flags", Helvetica, Arial, sans-serif',
+                    vadjust: 0,
+                    mod: 'bold italic'
+                },
+                mono: {
+                    size: 16,
+                    color: '#ffff00',
+                    vadjust: 0,
+                    mod: ''
+                }
+            },
+            shape: 'box',
+            borderWidth: 2,
+            margin: 12,
+            widthConstraint: { minimum: 100, maximum: 300 }
+        },
+
+        // SPREAD THE DYNAMIC GROUPS HERE!
+        ...window.ENTITY_GRAPH_GROUPS
+
+    },
+    nodes: {
+        shape: 'box',
+        font: { size: 12, color: '#ffffff', multi: 'html' },
+        borderWidth: 1,
+    },
+    edges: {
+        smooth: { type: 'continuous' },
+        font: { size: 12, color: '#333', strokeWidth: 3, strokeColor: '#ffffff', align: 'top' }
+    },
+    physics: {
+        forceAtlas2Based: {
+            gravitationalConstant: -50,
+            centralGravity: 0.01,
+            springLength: 100,
+            avoidOverlap: 1
+        },
+        solver: 'forceAtlas2Based',
+        enabled: true,
+        stabilization: {
+            enabled: true,
+            iterations: 150,
+            updateInterval: 25
+        }
+    },
+    interaction: {
+        hover: true,
+        zoomView: true,
+        zoomSpeed: 0.5,
+        dragView: true,
+        dragNodes: true,
+        navigationButtons: true,
+        keyboard: true
+    }
+};
 
 
 async function loadGraphData(sheetId) {
@@ -390,142 +716,6 @@ async function loadGraphData(sheetId) {
             physicsToggle.checked = false;
         }
 
-        // Define i2-style Colors & Shapes based on "group"
-        const options = {
-            groups: {
-                'Root_Sheet': {
-                    chosen: {
-                        label: false,
-                    },
-                    color: {
-                        border: '#8e44ad',
-                        background: '#9b59b6',
-                        hover: { border: "#8e44ad", background: "#9b59b6" },
-                        highlight: { border: "#8e44ad", background: "#9b59b6" }
-                    },
-                    font: {
-                        multi: 'html',
-                        color: '#ffffff',
-                        size: 14,
-                        face: '"Noto Flags", Helvetica, Arial, sans-serif',
-                        vadjust: 0,
-                        bold: {
-                            color: '#ffff00',
-                            vadjust: 0,
-                            mod: 'bold'
-                        },
-                        ital: {
-                            color: '#ffffff',
-                            vadjust: 0,
-                            mod: 'italic'
-                        },
-                        boldital: {
-                            color: '#ffffff',
-                            size: 24,
-                            face: '"Noto Flags", Helvetica, Arial, sans-serif',
-                            vadjust: 0,
-                            mod: 'bold italic'
-                        },
-                        mono: {
-                            size: 16,
-                            color: '#ffff00',
-                            vadjust: 0,
-                            mod: ''
-                        }
-                    },
-                    shape: 'box',
-                    borderWidth: 2,
-                    margin: 12,
-                    widthConstraint: { minimum: 100, maximum: 300 }
-                 },
-                'Linked_Sheet': {
-                    chosen: {
-                        label: false,
-                    },
-                    color: {
-//                        border: '#c0392b',
-//                        background: '#e74c3c',
-//                        hover: { border: '#c0392b', background: '#e74c3c' },
-//                        highlight: { border: '#e74c3c', background: '#c0392b' }
-                        border: '#0087c7',
-                        background: '#0099cc',
-                        hover: { border: '#0087c7', background: '#0099cc' },
-                        highlight: { border: '#0099cc', background: '#0087c7' }
-                    },
-                    font: {
-                        multi: 'html',
-                        color: '#ffffff',
-                        size: 14,
-                        face: '"Noto Flags", Helvetica, Arial, sans-serif',
-                        vadjust: 0,
-                        bold: {
-                            color: '#ffff00',
-                            vadjust: 0,
-                            mod: 'bold'
-                        },
-                        ital: {
-                            color: '#ffffff',
-                            vadjust: 0,
-                            mod: 'italic'
-                        },
-                        boldital: {
-                            color: '#ffffff',
-                            size: 24,
-                            face: '"Noto Flags", Helvetica, Arial, sans-serif',
-                            vadjust: 0,
-                            mod: 'bold italic'
-                        },
-                        mono: {
-                            size: 16,
-                            color: '#ffff00',
-                            vadjust: 0,
-                            mod: ''
-                        }
-                    },
-                    shape: 'box',
-                    borderWidth: 2,
-                    margin: 12,
-                    widthConstraint: { minimum: 100, maximum: 300 }
-                },
-
-                // SPREAD THE DYNAMIC GROUPS HERE!
-                ...window.ENTITY_GRAPH_GROUPS
-
-            },
-            nodes: {
-                shape: 'box',
-                font: { size: 12, color: '#ffffff', multi: 'html' },
-                borderWidth: 1,
-            },
-            edges: {
-                smooth: { type: 'continuous' },
-                font: { size: 12, color: '#333', strokeWidth: 3, strokeColor: '#ffffff', align: 'top' }
-            },
-            physics: {
-                forceAtlas2Based: {
-                    gravitationalConstant: -50,
-                    centralGravity: 0.01,
-                    springLength: 100,
-                    avoidOverlap: 1
-                },
-                solver: 'forceAtlas2Based',
-                enabled: true,
-                stabilization: {
-                    enabled: true,
-                    iterations: 150,
-                    updateInterval: 25
-                }
-            },
-            interaction: {
-                hover: true,
-                zoomView: true,
-                zoomSpeed: 0.5,
-                dragView: true,
-                dragNodes: true,
-                navigationButtons: true,
-                keyboard: true
-            }
-        };
 
         // Initialize or update Vis.js Network
         const nodesDataset = new vis.DataSet(data.nodes);
@@ -547,55 +737,55 @@ async function loadGraphData(sheetId) {
             // Event Listeners for Analyst Interaction (Only bound once)
             // Populate/Clear details when a node is selected
             network.on("selectNode", function(params) {
-                if (params.nodes.length > 0) {
-                    const nodeId = params.nodes[0];
-                    const pane = document.getElementById('linked-detail-pane');
+                if (params.nodes.length === 0) return;
 
-                    if (nodeId.startsWith('sheet_')) {
-                        const selectedSheetId = nodeId.replace('sheet_', '');
+                const nodeId = params.nodes[0];
 
-                        // If it's the Root Sheet, clear the right pane (it's already in the left pane)
-                        if (selectedSheetId === window.currentRootSheet) {
-                            if (pane) pane.innerHTML = getEmptyStateHtml();
-                        } else {
-                            // It's a Linked Sheet, load its details
-                            loadLinkedDetail(selectedSheetId);
-                        }
-                    } else {
-                        // Selected an entity (like VAT), so clear the sheet details
-                        if (pane) pane.innerHTML = getEmptyStateHtml();
-                    }
+                // Only Linked Sheet nodes change the linked pane.
+                // Root Sheet clicks: do nothing (pane stays showing the current linked sheet)
+                // Entity clicks:     do nothing (pane stays showing the current linked sheet)
+                // Edge clicks:       don't fire selectNode at all (Vis.js doesn't select edges via click by default)
+                if (!nodeId.startsWith('sheet_')) {
+                    return;   // entity node — ignore
                 }
+
+                const selectedSheetId = nodeId.replace('sheet_', '');
+
+                // Skip the Root Sheet — don't clear the linked pane
+                if (selectedSheetId === window.currentRootSheet) {
+                    return;
+                }
+
+                // It's a Linked Sheet — load its details (replaces previous)
+                loadLinkedDetail(selectedSheetId);
             });
 
             // Populate/Clear details when a node drag ends
             network.on("dragEnd", function(params) {
-                if (params.nodes.length > 0) {
-                    const nodeId = params.nodes[0];
-                    const pane = document.getElementById('linked-detail-pane');
+                if (params.nodes.length === 0) return;
 
-                    if (nodeId.startsWith('sheet_')) {
-                        const draggedSheetId = nodeId.replace('sheet_', '');
+                const nodeId = params.nodes[0];
 
-                        // If it's the Root Sheet, clear the right pane
-                        if (draggedSheetId === window.currentRootSheet) {
-                            if (pane) pane.innerHTML = getEmptyStateHtml();
-                        } else {
-                            // It's a Linked Sheet, load its details
-                            loadLinkedDetail(draggedSheetId);
-                        }
-                    } else {
-                        // Dragged an entity, so clear the sheet details
-                        if (pane) pane.innerHTML = getEmptyStateHtml();
-                    }
+                if (!nodeId.startsWith('sheet_')) {
+                    return;   // dragged an entity — ignore
                 }
+
+                const draggedSheetId = nodeId.replace('sheet_', '');
+
+                // Skip the Root Sheet
+                if (draggedSheetId === window.currentRootSheet) {
+                    return;
+                }
+
+                // It's a Linked Sheet — load its details
+                loadLinkedDetail(draggedSheetId);
             });
 
-            // Empty details when a node is deselected (e.g., clicking empty canvas)
-            network.on("deselectNode", function(params) {
-                const pane = document.getElementById('linked-detail-pane');
-                if (pane) pane.innerHTML = getEmptyStateHtml();
-            });
+//            // Empty details when a node is deselected (e.g., clicking empty canvas)
+//            network.on("deselectNode", function(params) {
+//                const pane = document.getElementById('linked-detail-pane');
+//                if (pane) pane.innerHTML = getEmptyStateHtml();
+//            });
 
             // Double-click to make new root (Excluding the Root Sheet itself)
             network.on("doubleClick", function(params) {
@@ -639,3 +829,28 @@ async function loadGraphData(sheetId) {
     }
 }
 
+
+
+// ─── Wire up HTMX afterSettle listeners for evidence highlighting ───
+// Whenever either detail pane gets new content (via HTMX swap), recompute
+// the shared entity values and re-apply highlights.
+//
+// Order of operations when user clicks a Linked Sheet node:
+//   1. selectNode fires → calls loadLinkedDetail(newLinkedId)
+//   2. loadLinkedDetail sets window.currentLinkedSheet = newLinkedId
+//   3. loadLinkedDetail triggers htmx.ajax → fetches + swaps linked pane
+//   4. htmx:afterSettle fires on #linked-detail-pane (this listener)
+//   5. updateEvidenceHighlights() runs:
+//        - reads currentRootSheet + currentLinkedSheet (both set)
+//        - getSharedEntityValues() finds entity nodes connecting both
+//        - applyEvidence([rootPane, linkedPane], sharedValues) highlights them
+
+const _rootPaneForEvidence = document.getElementById('root-detail-pane');
+const _linkedPaneForEvidence = document.getElementById('linked-detail-pane');
+
+if (_rootPaneForEvidence) {
+    _rootPaneForEvidence.addEventListener('htmx:afterSettle', updateEvidenceHighlights);
+}
+if (_linkedPaneForEvidence) {
+    _linkedPaneForEvidence.addEventListener('htmx:afterSettle', updateEvidenceHighlights);
+}
