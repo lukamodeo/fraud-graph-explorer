@@ -59,7 +59,7 @@ class SheetCrafterForm(forms.Form):
                 self.fields[internal_name].hint_key = field_config.get("hint_key", "")
 
                 # Pass needs_tin_calc to template
-                self.fields[internal_name].needs_tin_calc = field_config.get("needs_tin_calc", False) if cc in ['IT', 'FR'] else False
+                self.fields[internal_name].needs_tin_calc = field_config.get("needs_tin_calc", False)
 
                 # Handle Fields Modal Trigger
                 sex_field = field_config.get("sex_field")
@@ -70,10 +70,10 @@ class SheetCrafterForm(forms.Form):
                     self.fields[internal_name].sex_field = sex_field
                     self.fields[internal_name].dob_field = dob_field
 
-                    # ONLY inject the onchange trigger if the TIN is algorithmic!
-                    if cc in ['IT', 'FR']:
-                        self.fields[internal_name].widget.attrs.update({
-                            'onchange': f"openTinDataDialog('{sex_field}', '{dob_field}', '{tin_field}')"
+                    # Always attach — the JS checks the TIN's override country select
+                    # to decide whether to actually fire the modal
+                    self.fields[internal_name].widget.attrs.update({
+                        'onchange': f"openTinDataDialog('{sex_field}', '{dob_field}', '{tin_field}')"
                         })
                 else:
                     self.fields[internal_name].sex_field = ""
@@ -81,7 +81,23 @@ class SheetCrafterForm(forms.Form):
 
                 # Convert dict to json string
                 calc_fields = field_config.get("calc_fields")
+                #print(f"DEBUG: {internal_name} — schema has calc_fields: {calc_fields is not None}, value: {calc_fields}")
                 if calc_fields:
                     self.fields[internal_name].calc_fields = json.dumps(calc_fields)
+                    include_ids = []
+                    for key, fname in calc_fields.items():
+                        if key != 'tin':   # don't include the TIN field itself
+                            include_ids.append(f"#id_{fname}")
+                    self.fields[internal_name].hx_include_fields = ",".join(include_ids)
                 else:
                     self.fields[internal_name].calc_fields = ""
+                    self.fields[internal_name].hx_include_fields = ""
+
+                # ─── NEW: Attach tags + fake_type for template logic (country override selects) ───
+                self.fields[internal_name].tags = field_config.get("tags", [])
+                self.fields[internal_name].fake_type = field_config.get("fake_type", "")
+
+                # Determine if this field supports country override (VAT, TIN, or IBAN)
+                is_override_field = any(t in field_config.get("tags", []) for t in ("VAT", "TIN", "IBAN"))
+                self.fields[internal_name].is_country_override = is_override_field
+                # ──────────────────────────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ body {
     margin: auto;
     text-align: center;
     color: #fff;
-    background: darkblue;
+    background: #0077aa;
     padding-top: 5px;
     border-radius: 0 0 10px 10px;
 }
@@ -104,8 +104,16 @@ label {
     margin-top: 5px;
     box-sizing: border-box;
     border-radius: 0.5rem;
+    border: 1px solid #999;
     font-size: larger;
 }
+.ddn-container select:focus,
+.pdf-container input:focus,
+.pdf-container select:focus {
+    border-color: #0057ff;
+    outline: none;
+}
+
 
 button {
     margin-top: 16px;
@@ -139,42 +147,65 @@ form h3 {
     border-radius: 0.3rem;
 }
 
-/* Tooltip Styles */
+
+/* Country override select — flags only, narrow width */
+.field-country-select {
+    display: inline-block;
+    width: auto !important;
+    min-width: 3rem;
+    max-width: 4rem;
+    padding: 0.25rem 0.3rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Force flex layout so input + select + icons sit on one line */
 .input-group,
 .input-group-tin {
-    position: relative;
-    margin-top: 5px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
 }
 
-.input-group input,
-.input-group-tin input {
-    width: 100%;
-    padding: 8px;
-    padding-right: 35px; /* Leave room for the icon */
-    box-sizing: border-box;
+/* ALL direct children: stay in flex flow, don't overlap */
+.input-group > *,
+.input-group-tin > * {
+    position: relative !important;
+    flex: 0 0 auto !important;
 }
 
-.input-group-tin input {
-    padding-right: 65px;
+/* Input takes available space, doesn't force full width */
+.input-group input[type="text"],
+.input-group-tin input[type="text"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
 }
 
+/* Select and icons are fixed-width, don't shrink */
+.field-country-select,
+.tooltip-icon,
+.recalc-icon {
+    flex: 0 0 auto;
+}
 
-.tooltip-icon, .recalc-icon {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-35%) translateX(-150%);
-    font-size: 18px;
-    z-index: 2;
+/* Tooltip Styles */
+.tooltip-icon .bi,
+.recalc-icon .bi {
+    font-size: 1.8rem;
 }
 .tooltip-icon {
     color: #369;
     cursor: help;
 }
 .recalc-icon {
-    right: 10px;
     color: #396;
     cursor: pointer;
 }
+
 .tooltip-text {
     visibility: hidden;
     color: #fff;
@@ -188,7 +219,7 @@ form h3 {
     left: 50%;
     opacity: 0;
     transition: opacity 0.3s;
-    font-size: smaller;
+    font-size: medium;
 }
 
 .tooltip-icon .tooltip-text{
@@ -208,6 +239,11 @@ form h3 {
     visibility: visible;
     opacity: 1;
 }
+
+
+
+
+
 
 /* Modal */
 .modal-dialog {
@@ -281,3 +317,4 @@ form h3 {
         grid-column: auto;
     }
 }
+

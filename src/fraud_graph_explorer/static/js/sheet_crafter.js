@@ -1,6 +1,18 @@
 // src/fraud_graph/static/js/sheet_crafter.js
 
 function openTinDataDialog(sexFieldName, dobFieldName, tinFieldName) {
+    // Check the TIN's country override select
+    // Only fire the modal for algorithmic TINs (IT/FR).
+    // For DE/ES/GB, the TIN is a random pool value — no modal needed.
+    const tinCountrySelect = document.getElementById('id_' + tinFieldName + '_country');
+    const tinCountry = tinCountrySelect ? tinCountrySelect.value : null;
+
+    if (tinCountry !== 'IT' && tinCountry !== 'FR') {
+        // DE/ES/GB: TIN is independent of the name — no modal, no recalc
+        return;
+    }
+    // ────────────────────────────────────────────────────────
+
     const dialog = document.getElementById('tin-data-dialog');
 
     // Store the target field IDs on the dialog element
@@ -67,4 +79,50 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = input.defaultValue;
         }
     });
+
+    // Fix selects (Firefox restores select values on refresh)
+    // Reset each select to the option that has the "selected" attribute
+    // in the server-rendered HTML (i.e., the default value Django set).
+    const selects = document.querySelectorAll('#form-container select');
+    selects.forEach(select => {
+        const defaultOption = select.querySelector('option[selected]');
+        if (defaultOption) {
+            select.value = defaultOption.value;
+        }
+    });
 });
+
+/**
+ * Update an input's value from an HTMX response.
+ * Used by the country override selects — the endpoint returns
+ * the new value as plain text, and this function sets it on the input.
+ *
+ * HTMX's default swap (innerHTML) doesn't work on <input> elements
+ * (void elements have no inner HTML), so we use hx-swap="none" + this
+ * callback instead.
+ */
+function updateFieldValue(inputId, event) {
+    if (event.detail.xhr.status === 200) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.value = event.detail.xhr.responseText.trim();
+        }
+    }
+
+    // Update the tooltip text based on the selected country
+    const select = event.detail.requestConfig.elt;
+    if (select && window.FIELD_HINTS) {
+        const country = select.value;
+        const container = select.closest('.input-group, .input-group-tin');
+        if (container) {
+            const tooltipText = container.querySelector('.tooltip-text[data-hint-key]');
+            if (tooltipText) {
+                const hintKey = tooltipText.dataset.hintKey;
+                const hints = window.FIELD_HINTS[hintKey];
+                if (hints && typeof hints === 'object' && hints[country]) {
+                    tooltipText.innerHTML = hints[country];
+                }
+            }
+        }
+    }
+}

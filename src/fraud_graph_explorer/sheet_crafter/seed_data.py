@@ -1239,6 +1239,7 @@ def _slugify_company(name: str) -> str:
 
     return name[:25]  # Limit length
 
+
 def get_random_profile(country_code: str) -> dict:
     """
     Picks a perfectly matched profile (fullname, sex, DOB, birthplace, TIN).

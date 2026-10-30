@@ -1,9 +1,11 @@
 # src/fraud_graph_explorer/sheet_crafter/services.py
 
 import os
+import re
 import base64
 import hashlib
 import mimetypes
+
 import codicefiscale
 from typing import cast, Literal
 from xhtml2pdf import pisa
@@ -94,9 +96,30 @@ def _calculate_french_tin(fullname: str, sex: str, dob: str, birthplace: str) ->
 def get_calculated_tin(country_code: str, data: dict) -> str:
     """Router function to call the right TIN calculator."""
     fullname = data.get('fullname', '')
-    sex = data.get('sex', '')
+    sex = data.get('sex', '') or 'M'
     dob = data.get('dob', '')
     birthplace = data.get('birthplace', '')
+
+    # Lazy-load a profile ONLY if we need to fix dob or birthplace
+    _fallback_profile = None
+
+    if not dob:
+        _fallback_profile = get_random_profile(country_code)
+        dob = _fallback_profile['birthdate']
+
+    # Validate birthplace format per country
+    if country_code == 'IT':
+        if not re.match(r'^[A-Z]\d{3}$', (birthplace or '').upper()):
+            if not _fallback_profile:
+                _fallback_profile = get_random_profile('IT')
+            birthplace = _fallback_profile['birthplace']
+        else:
+            birthplace = birthplace.upper()
+    elif country_code == 'FR':
+        if not re.match(r'^\d{5}$', birthplace or ''):
+            if not _fallback_profile:
+                _fallback_profile = get_random_profile('FR')
+            birthplace = _fallback_profile['birthplace']
 
     if country_code == 'IT':
         return _calculate_italian_tin(fullname, sex, dob, birthplace)
@@ -125,6 +148,7 @@ def generate_dynamic_initial_data(country_code: str) -> dict:
             # We try up to 10 times to find a unique name (highly likely with 128 combos)
             # Fallback: if we fail 10 times, we just accept the duplicate to prevent infinite loops
             attempts = 0
+            profile = {}
             while attempts < 10:
                 profile = get_random_profile(country_code)
                 if profile["fullname"] not in used_fullnames:
@@ -162,7 +186,7 @@ def generate_dynamic_initial_data(country_code: str) -> dict:
                 # Pass **initial_data so get_random_data can read the company_name!
                 initial_data[internal_name] = get_random_data(country_code, fake_type, **initial_data)
 
-    initial_data['country_code'] =country_code
+    initial_data['country_code'] = country_code
 
     return initial_data
 

@@ -1,3 +1,5 @@
+<!-- src/fraud_graph_explorer/templates/sheet_crafter/sheet_crafter.html -->
+
 <!DOCTYPE html>
 
 {% load static %}
@@ -102,6 +104,12 @@
                 </form>
             </div>
         </dialog>
+
+
+        <!-- Inject country-specific hints for JS tooltip updates -->
+        <script>
+            window.FIELD_HINTS = {{ hints_json|safe }};
+        </script>
 
         <!-- Load the external JS file right before </body> -->
         <script src="{% static 'js/sheet_crafter.js' %}" defer></script>

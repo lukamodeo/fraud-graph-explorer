@@ -170,6 +170,7 @@ FIELDS = {
         "rules": ["blacklist", "foreign_identifier"],
         "max_length": 34,
         "fake_type": "iban",
+        "hint_key": "HINT_IBAN",
         "labels": {
             "IT": "IBAN",
             "DE": "IBAN",
