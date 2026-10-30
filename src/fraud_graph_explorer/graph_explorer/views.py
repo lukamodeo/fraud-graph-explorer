@@ -419,13 +419,12 @@ def ingest_pdf_view(request):
 
     if request.method == 'POST' and request.FILES.get('pdf_file'):
         pdf_file = request.FILES['pdf_file']
-        country = request.POST.get('country_code', 'GB') # Fallback
 
         # Read bytes from uploaded file
         pdf_bytes = pdf_file.read()
 
         # Run ingestion service!
-        app, error_code, existing_app = ingest_pdf(pdf_bytes, country, pdf_file.name, overwrite=False)
+        app, error_code, existing_app = ingest_pdf(pdf_bytes, pdf_file.name, overwrite=False)
 
         # Handle Success
         if app:
@@ -453,7 +452,6 @@ def ingest_pdf_view(request):
             context={
                 'ui': ui,
                 'temp_file_name': temp_file_name,
-                'country_code': country,
                 'file_name': pdf_file.name,
                 'dup_msg': msg
             }
@@ -494,7 +492,6 @@ def ingest_confirm_view(request):
 
     if request.method == 'POST':
         temp_file_name = request.POST.get('temp_file_name')
-        country = request.POST.get('country_code', 'IT')
         file_name = request.POST.get('file_name')
 
         # Reconstruct the full path to the OS temp file
@@ -512,7 +509,7 @@ def ingest_confirm_view(request):
         os.unlink(temp_path)
 
         # Call ingest_pdf with overwrite=True!
-        app, error_code, _ = ingest_pdf(pdf_bytes, country, file_name, overwrite=True)
+        app, error_code, _ = ingest_pdf(pdf_bytes, file_name, overwrite=True)
 
         if app:
             msg = ui.get("INGEST_OVERWRITTEN", "Overwritten: {req_num}").format(req_num=app.request_number)

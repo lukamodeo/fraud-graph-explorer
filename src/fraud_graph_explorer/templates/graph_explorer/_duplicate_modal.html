@@ -13,16 +13,16 @@
             <div class="modal-footer">
                 <!-- 1. Hide the modal cleanly BEFORE the request (Your correct fix) -->
                 <!-- 2. Clear the container AFTER the request so no duplicate IDs are left behind -->
-                <button type="button" class="btn btn-warning"
+                <button type="button" class="btn btn-warning rounded-pill"
                         hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                         hx-post="{% url 'graph_explorer:ingest_confirm' %}"
-                        hx-vals='{"temp_file_name": "{{ temp_file_name }}", "country_code": "{{ country_code }}", "file_name": "{{ file_name }}"}'
+                        hx-vals='{"temp_file_name": "{{ temp_file_name }}", "file_name": "{{ file_name }}"}'
                         hx-target="#ingest-status"
                         hx-on::before-request="let m = bootstrap.Modal.getInstance(document.getElementById('duplicateModal')); if(m){ m.hide(); }"
                         hx-on::after-request="document.getElementById('modal-container').innerHTML = ''">
                     {{ ui.DUP_BTN_OVERWRITE }}
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal"
                         onclick="document.getElementById('ingest-status').innerHTML = '<span class=\'badge text-bg-warning\'>{{ ui.INGEST_CANCELLED }}</span>'">
                     {{ ui.DUP_BTN_CANCEL }}
                 </button>

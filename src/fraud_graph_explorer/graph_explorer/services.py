@@ -192,7 +192,7 @@ def _normalize_value(raw_value: str, config: dict, country_code: str):
 
     return norm_value
 
-def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: bool = False):
+def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False):
     """
     Parses a PDF from memory, normalizes data, runs validation/rules,
     and creates Graph nodes/edges.
@@ -205,6 +205,8 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
     try:
         # Read PDF directly from bytes in memory
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+
+            country_code = 'GB'  # default fallback if auto-detection fails
 
             # --- AUTO-DETECT COUNTRY FROM SECTIONS ---
             # Scan the first page for any known localized section headers
@@ -258,7 +260,7 @@ def ingest_pdf(pdf_bytes: bytes, country_code: str, file_name: str, overwrite: b
                                     raw_value = raw_value[1:].strip()
 
                                 # We ALWAYS append, even if empty, so the validation engine can catch missing required fields!
-                                print(f"  [MATCH] '{line}' -> Field: {internal_name}, Value: {raw_value}")
+                                # print(f"  [MATCH] '{line}' -> Field: {internal_name}, Value: {raw_value}")
                                 extracted_data.append((internal_name, raw_value, config))
                                 expected_fields_queue.remove(internal_name)
                                 break  # Move to the next line

@@ -1,0 +1,78 @@
+# src/fraud_graph_explorer/graph_explorer/management/commands/bulk_ingest_pdfs.py
+
+"""
+Bulk-ingest PDF loan applications from a folder.
+
+Usage:
+    python manage bulk_ingest_pdfs --folder /tmp/fraud_pdfs
+    python manage bulk_ingest_pdfs --folder /tmp/fraud_pdfs --overwrite
+"""
+import os
+from django.core.management.base import BaseCommand
+
+from fraud_graph_explorer.graph_explorer.services import ingest_pdf
+
+
+class Command(BaseCommand):
+    help = "Bulk-ingest PDF loan applications from a folder."
+
+    def add_arguments(self, parser):
+        parser.add_argument('--folder', type=str, required=True,
+            help="Path to the folder containing PDF files")
+        parser.add_argument('--overwrite', action='store_true',
+            help="Overwrite existing sheets with the same request number")
+
+    def handle(self, *args, **options):
+        folder = options['folder']
+        overwrite = options['overwrite']
+
+        if not os.path.isdir(folder):
+            self.stdout.write(self.style.ERROR(f"Folder not found: {folder}"))
+            return
+
+        pdf_files = sorted(f for f in os.listdir(folder) if f.lower().endswith('.pdf'))
+
+        if not pdf_files:
+            self.stdout.write(self.style.WARNING(f"No PDF files in {folder}"))
+            return
+
+        self.stdout.write(f"Found {len(pdf_files)} PDFs | Overwrite: {overwrite}\n")
+
+        success, duplicates, invalid, errors = 0, 0, 0, 0
+
+        for filename in pdf_files:
+            filepath = os.path.join(folder, filename)
+            try:
+                with open(filepath, 'rb') as f:
+                    pdf_bytes = f.read()
+
+                app, error_code, existing = ingest_pdf(
+                    pdf_bytes=pdf_bytes,
+                    file_name=filename,
+                    overwrite=overwrite
+                )
+
+                if app:
+                    self.stdout.write(self.style.SUCCESS(
+                        f"  ✓ {filename} → {app.request_number} ({app.country_code})"
+                    ))
+                    success += 1
+                elif error_code == 'duplicate':
+                    self.stdout.write(self.style.WARNING(
+                        f"  ⚠ {filename} → duplicate of {existing.request_number if existing else '?'}"
+                    ))
+                    duplicates += 1
+                elif error_code == 'invalid_sheet':
+                    self.stdout.write(self.style.ERROR(f"  ✗ {filename} → no recognizable fields"))
+                    invalid += 1
+                elif error_code == 'parse_error':
+                    self.stdout.write(self.style.ERROR(f"  ✗ {filename} → parse error"))
+                    errors += 1
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"  ✗ {filename} → {e}"))
+                errors += 1
+
+        self.stdout.write(self.style.SUCCESS(
+            f"\nDone: {success} ingested, {duplicates} duplicates, "
+            f"{invalid} invalid, {errors} errors"
+        ))
