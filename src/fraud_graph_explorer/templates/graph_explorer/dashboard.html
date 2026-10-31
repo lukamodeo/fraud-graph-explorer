@@ -6,361 +6,370 @@
 
 {% load graph_explorer_tags %}
 
+{% block extra_head %}
+    {# Explorer-specific CSS #}
+    <!-- The order matter: Custom CSS after loading fonts  -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}"/>
+
+    <!-- ADD Vis.js Network CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/vis-network.min.css' %}"/>
+{% endblock %}
+
 {% block content %}
 
-<div class="dashboard-container d-flex flex-column pt-3 p-2 overflow-hidden">
-    <!-- Tab Navigation -->
+    <div class="dashboard-container d-flex flex-column p-2 overflow-hidden">
+        <!-- Tab Navigation -->
 
-    <!-- Add data-tab attributes to the buttons -->
-    <ul class="nav nav-tabs mb-1 border-0">
-        <li class="nav-item me-2">
-            <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6 active" data-tab="tab1" onclick="openTab('tab1')"><i class="bi bi-folder-symlink-fill fs-5"></i> {{ ui.TAB_01 }}</button>
-        </li>
-        <li class="nav-item me-2">
-            <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab2" onclick="openTab('tab2')"><i class="bi bi-diagram-3-fill fs-5"></i>️ {{ ui.TAB_02 }}</button>
-        </li>
-        <li class="nav-item me-2">
-            <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab3" onclick="openTab('tab3')"><i class="bi bi-list-columns fs-5"></i> <i class="bi bi-list-columns bi-mirror-horizontal fs-5"></i> {{ ui.TAB_03 }}</button>
-        </li>
-        <li class="nav-item me-2">
-            <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab4" onclick="openTab('tab4')"><i class="bi bi-info-circle-fill fs-5"></i> {{ ui.TAB_04 }}</button>
-        </li>
-    </ul>
+        <!-- Add data-tab attributes to the buttons -->
+        <ul class="nav nav-tabs mb-1 border-0">
+            <li class="nav-item me-2">
+                <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6 active" data-tab="tab1" onclick="openTab('tab1')"><i class="bi bi-folder-symlink-fill fs-5"></i> {{ ui.TAB_01 }}</button>
+            </li>
+            <li class="nav-item me-2">
+                <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab2" onclick="openTab('tab2')"><i class="bi bi-diagram-3-fill fs-5"></i>️ {{ ui.TAB_02 }}</button>
+            </li>
+            <li class="nav-item me-2">
+                <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab3" onclick="openTab('tab3')"><i class="bi bi-list-columns fs-5"></i> <i class="bi bi-list-columns bi-mirror-horizontal fs-5"></i> {{ ui.TAB_03 }}</button>
+            </li>
+            <li class="nav-item me-2">
+                <button class="nav-link btn border-0 bg-transparent px-3 py-2 fs-6" data-tab="tab4" onclick="openTab('tab4')"><i class="bi bi-info-circle-fill fs-5"></i> {{ ui.TAB_04 }}</button>
+            </li>
+        </ul>
 
-    <!-- Tab 1: Dashboard & Ingestion - do not remove dashboard-tab class: it is used by js -->
-    <div id="tab1" class="dashboard-tab         d-flex flex-column      flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-4 min-height-0 min-width-0">
+        <!-- Tab 1: Dashboard & Ingestion - do not remove dashboard-tab class: it is used by js -->
+        <div id="tab1" class="dashboard-tab         d-flex flex-column      flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-4 min-height-0 min-width-0">
 
-        <!-- SECTION 1: Top Row (3 columns) -->
-        <div class="d-flex gap-3 flex-shrink-0" style="height: 220px;">
+            <!-- SECTION 1: Top Row (3 columns) -->
+            <div class="d-flex gap-3 flex-shrink-0" style="height: 220px;">
 
-            <!-- Column 1: Upload Card (1/5 width - Primary color by default) -->
-            <div id="upload-card" class="card border-primary overflow-hidden min-width-0" style="flex: 1;">
-                <div class="card-header d-flex justify-content-between align-items-center text-bg-primary py-1">
-                    <i class="bi bi-filetype-pdf fs-5"></i> {{ ui.UPLOAD_TITLE }}
+                <!-- Column 1: Upload Card (1/5 width - Primary color by default) -->
+                <div id="upload-card" class="card border-primary overflow-hidden min-width-0" style="flex: 1;">
+                    <div class="card-header d-flex justify-content-between align-items-center text-bg-primary py-1">
+                        <i class="bi bi-filetype-pdf fs-5"></i> {{ ui.UPLOAD_TITLE }}
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3 overflow-hidden pt-2 pb-0">
+
+                        <form hx-post="{% url 'graph_explorer:ingest_pdf' %}"
+                              hx-target="#ingest-status"
+                              hx-encoding="multipart/form-data"
+                              hx-disabled-elt="find button"
+                              class="d-flex flex-column gap-2">
+                            {% csrf_token %}
+
+                            <!-- 1. File Label -->
+                            <label for="pdf-upload" class="form-label mb-0 fw-semibold fst-italic">{{ ui.UPLOAD_LABEL }}:</label>
+
+                            <!-- 2. Native File Input (Bootstrap styled) -->
+                            <input type="file" name="pdf_file" accept=".pdf" required id="pdf-upload" class="form-control form-control-sm mt-0 btn-secondary">
+
+                            <!-- 3. Submit Button -->
+                            <button type="submit" class="btn btn-primary btn-sm mt-1 mx-auto px-3 pt-1 pb-2 rounded-pill">
+                                <i class="bi bi-upload fw-bold fs-6"></i> {{ ui.UPLOAD_BTN_SUBMIT }}
+                            </button>
+                        </form>
+
+                        <!-- Status Badge Area -->
+                        <div id="ingest-status" class="my-0 mx-auto text-center w-100"></div>
+                    </div>
                 </div>
-                <div class="card-body d-flex flex-column gap-3 overflow-hidden pt-2 pb-0">
 
-                    <form hx-post="{% url 'graph_explorer:ingest_pdf' %}"
-                          hx-target="#ingest-status"
-                          hx-encoding="multipart/form-data"
-                          hx-disabled-elt="find button"
-                          class="d-flex flex-column gap-2">
-                        {% csrf_token %}
+                <!-- Column 2 & 3: Validation Errors & Rule Warnings Cards (2/5 width each - Success color by default) -->
+                {% include "graph_explorer/_app_cards.html" with app=None ui=ui %}
 
-                        <!-- 1. File Label -->
-                        <label for="pdf-upload" class="form-label mb-0 fw-semibold fst-italic">{{ ui.UPLOAD_LABEL }}:</label>
-
-                        <!-- 2. Native File Input (Bootstrap styled) -->
-                        <input type="file" name="pdf_file" accept=".pdf" required id="pdf-upload" class="form-control form-control-sm mt-0 btn-secondary">
-
-                        <!-- 3. Submit Button -->
-                        <button type="submit" class="btn btn-primary btn-sm mt-1 mx-auto px-3 pt-1 pb-2 rounded-pill">
-                            <i class="bi bi-upload fw-bold fs-6"></i> {{ ui.UPLOAD_BTN_SUBMIT }}
-                        </button>
-                    </form>
-
-                    <!-- Status Badge Area -->
-                    <div id="ingest-status" class="my-0 mx-auto text-center w-100"></div>
-                </div>
             </div>
 
-            <!-- Column 2 & 3: Validation Errors & Rule Warnings Cards (2/5 width each - Success color by default) -->
-            {% include "graph_explorer/_app_cards.html" with app=None ui=ui %}
+            <!-- SECTION 2: List (Bottom) -->
+            <div class="bg-light border rounded py-1 px-3 d-flex flex-column flex-fill min-height-0 min-width-0">
 
-        </div>
+                <!-- ACCORDION SHELL -->
+                <div class="accordion accordion-flush mb-2 flex-shrink-0 bg-light" id="filterAccordion">
+                    <div class="accordion-item">
+                        <div class="d-flex align-items-center justify-content-between p-1 bg-light">
+                            <div class="fw-bold">
+                                <div class="accordion-header ms-1 d-inline-flex align-items-center gap-2">
+                                    <h3>{{ ui.LIST_TITLE }}</h3>
+                                </div>
+                            </div>
+                            <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 rounded-pill bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
+                                <strong>{{ ui.FILTER_TITLE }}</strong>
+                                <i class="bi bi-caret-down-fill my-auto ms-1 me-0 my-auto accordion-button-icon"></i>
+                            </button>
+                        </div>
 
-        <!-- SECTION 2: List (Bottom) -->
-        <div class="bg-light border rounded py-1 px-3 d-flex flex-column flex-fill min-height-0 min-width-0">
+                        <div id="collapseFilter" class="bg-light accordion-collapse collapse" data-bs-parent="#filterAccordion">
+                            <div class="accordion-body bg-white border-top border-3 border-info rounded-start-pill me-1">
+                                <!-- FILTER FORM -->
+                                <form id="filter-form" class="d-flex gap-3 align-items-center flex-wrap"
+                                      hx-get="{% url 'graph_explorer:dashboard' %}"
+                                      hx-target="#applications-list"
+                                      hx-trigger="submit, change"
+                                      hx-push-url="true"
+                                      autocomplete="off">
 
-            <!-- ACCORDION SHELL -->
-            <div class="accordion accordion-flush mb-2 flex-shrink-0 bg-light" id="filterAccordion">
-                <div class="accordion-item">
-                    <div class="d-flex align-items-center justify-content-between p-1 bg-light">
-                        <div class="fw-bold">
-                            <div class="accordion-header ms-1 d-inline-flex align-items-center gap-2">
-                                <h3>{{ ui.LIST_TITLE }}</h3>
+                                    <!-- Search Input + Search Button (Grouped) -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-q" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_SEARCH }}:</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" name="q" id="filter-q" class="form-control" placeholder="{{ ui.FILTER_PLACEHOLDER }}" value="{{ query }}" style="min-width: 150px;">
+                                            <!-- Search Button with Icon -->
+                                            <button type="submit" class="btn btn-primary" title="{{ ui.FILTER_SEARCH }}">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Country Select (Dynamic + Selected) -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-country" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_COUNTRY }}:</label>
+                                        <select name="country" id="filter-country" autocomplete="off" class="country-flags form-select form-select-sm" style="min-width: 150px;">
+                                            <option value="" {% if not country_filter %}selected{% endif %}>{{ ui.FILTER_ALL }}</option>
+                                            {% for code, name in ui.COUNTRY_FLAGS_NAMES %}
+                                            <option value="{{ code }}" {% if country_filter == code %}selected{% endif %}>
+                                                {{ name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- Status Select -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-status" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_STATUS }}:</label>
+                                        <select name="status" id="filter-status" autocomplete="off" class="form-select form-select-sm" style="min-width: 150px;">
+                                            <option value="" {% if not status_filter %}selected{% endif %}>{{ ui.FILTER_ALL }}</option>
+                                            <option value="ok" {% if status_filter == 'ok' %}selected{% endif %}>{{ ui.FILTER_STATUS_OK }}</option>
+                                            <option value="err" {% if status_filter == 'err' %}selected{% endif %}>{{ ui.FILTER_STATUS_ERR }}</option>
+                                            <option value="warn" {% if status_filter == 'warn' %}selected{% endif %}>{{ ui.FILTER_STATUS_WARN }}</option>
+                                            <option value="err_or_warn" {% if status_filter == 'err_or_warn' %}selected{% endif %}>{{ ui.FILTER_STATUS_ERR_OR_WARN }}</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Date Range Filter -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-start-date" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_PREFIX_DATE }} {{ ui.FILTER_START_DATE }}:</label>
+                                        <input type="date" name="start_date" id="filter-start-date"
+                                               autocomplete="off"
+                                               class="form-control form-control-sm"
+                                               value="{{ start_date }}"
+                                               style="min-width: 120px;">
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-end-date" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_END_DATE }}:</label>
+                                        <input type="date" name="end_date" id="filter-end-date"
+                                               autocomplete="off"
+                                               class="form-control form-control-sm"
+                                               value="{{ end_date }}"
+                                               style="min-width: 120px;">
+                                    </div>
+
+                                    <!-- Amount Range Filter -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-min-amount" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_PREFIX_AMOUNT }} {{ ui.FILTER_MIN_AMOUNT }}:</label>
+                                        <input type="number" name="min_amount" id="filter-min-amount"
+                                               autocomplete="off"
+                                               class="form-control form-control-sm"
+                                               value="{{ min_amount }}"
+                                               step="1000" min="0" placeholder="0"
+                                               style="min-width: 80px; max-width: 100px;">
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="filter-max-amount" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_MAX_AMOUNT }}:</label>
+                                        <input type="number" name="max_amount" id="filter-max-amount"
+                                               autocomplete="off"
+                                               class="form-control form-control-sm"
+                                               value="{{ max_amount }}"
+                                               step="1000" min="0" placeholder="∞"
+                                               style="min-width: 80px; max-width: 100px;">
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 rounded-pill bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
-                            <strong>{{ ui.FILTER_TITLE }}</strong>
-                            <i class="bi bi-caret-down-fill my-auto ms-1 me-0 my-auto accordion-button-icon"></i>
-                        </button>
                     </div>
+                </div>
 
-                    <div id="collapseFilter" class="bg-light accordion-collapse collapse" data-bs-parent="#filterAccordion">
-                        <div class="accordion-body bg-white border-top border-3 border-info rounded-start-pill me-1">
-                            <!-- FILTER FORM -->
-                            <form id="filter-form" class="d-flex gap-3 align-items-center flex-wrap"
-                                  hx-get="{% url 'graph_explorer:dashboard' %}"
-                                  hx-target="#applications-list"
-                                  hx-trigger="submit, change"
-                                  hx-push-url="true"
-                                  autocomplete="off">
+                <!-- APPLIED FILTERS BADGES (Below Accordion) -->
+                <!-- OOB target. min-height prevents the layout from jumping when badges appear/disappear -->
+                <div id="active-filters-container" class="d-flex align-items-center justify-content-between mb-1 flex-shrink-0" style="min-height: 28px;">
+                    <div id="active-filters"></div>
+                    <div id="applications-count"></div>
+                </div>
 
-                                <!-- Search Input + Search Button (Grouped) -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-q" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_SEARCH }}:</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="text" name="q" id="filter-q" class="form-control" placeholder="{{ ui.FILTER_PLACEHOLDER }}" value="{{ query }}" style="min-width: 150px;">
-                                        <!-- Search Button with Icon -->
-                                        <button type="submit" class="btn btn-primary" title="{{ ui.FILTER_SEARCH }}">
-                                            <i class="bi bi-search"></i>
-                                        </button>
-                                    </div>
-                                </div>
 
-                                <!-- Country Select (Dynamic + Selected) -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-country" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_COUNTRY }}:</label>
-                                    <select name="country" id="filter-country" autocomplete="off" class="country-flags form-select form-select-sm" style="min-width: 150px;">
-                                        <option value="" {% if not country_filter %}selected{% endif %}>{{ ui.FILTER_ALL }}</option>
-                                        {% for code, name in ui.COUNTRY_FLAGS_NAMES %}
-                                        <option value="{{ code }}" {% if country_filter == code %}selected{% endif %}>
-                                            {{ name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                <!-- HTMX TABLE TARGET -->
+                <div id="applications-list"
+                     hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}"
+                     hx-trigger="load, refreshList from:body"
+                     class="d-flex flex-column flex-fill min-height-0 overflow-hidden">
+                    <p class="text-muted text-center mt-5">Loading applications...</p>
+                </div>
 
-                                <!-- Status Select -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-status" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_STATUS }}:</label>
-                                    <select name="status" id="filter-status" autocomplete="off" class="form-select form-select-sm" style="min-width: 150px;">
-                                        <option value="" {% if not status_filter %}selected{% endif %}>{{ ui.FILTER_ALL }}</option>
-                                        <option value="ok" {% if status_filter == 'ok' %}selected{% endif %}>{{ ui.FILTER_STATUS_OK }}</option>
-                                        <option value="err" {% if status_filter == 'err' %}selected{% endif %}>{{ ui.FILTER_STATUS_ERR }}</option>
-                                        <option value="warn" {% if status_filter == 'warn' %}selected{% endif %}>{{ ui.FILTER_STATUS_WARN }}</option>
-                                        <option value="err_or_warn" {% if status_filter == 'err_or_warn' %}selected{% endif %}>{{ ui.FILTER_STATUS_ERR_OR_WARN }}</option>
-                                    </select>
-                                </div>
+            </div>
 
-                                <!-- Date Range Filter -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-start-date" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_PREFIX_DATE }} {{ ui.FILTER_START_DATE }}:</label>
-                                    <input type="date" name="start_date" id="filter-start-date"
-                                           autocomplete="off"
-                                           class="form-control form-control-sm"
-                                           value="{{ start_date }}"
-                                           style="min-width: 120px;">
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-end-date" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_END_DATE }}:</label>
-                                    <input type="date" name="end_date" id="filter-end-date"
-                                           autocomplete="off"
-                                           class="form-control form-control-sm"
-                                           value="{{ end_date }}"
-                                           style="min-width: 120px;">
-                                </div>
+        </div>
 
-                                <!-- Amount Range Filter -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-min-amount" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_PREFIX_AMOUNT }} {{ ui.FILTER_MIN_AMOUNT }}:</label>
-                                    <input type="number" name="min_amount" id="filter-min-amount"
-                                           autocomplete="off"
-                                           class="form-control form-control-sm"
-                                           value="{{ min_amount }}"
-                                           step="1000" min="0" placeholder="0"
-                                           style="min-width: 80px; max-width: 100px;">
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-max-amount" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_MAX_AMOUNT }}:</label>
-                                    <input type="number" name="max_amount" id="filter-max-amount"
-                                           autocomplete="off"
-                                           class="form-control form-control-sm"
-                                           value="{{ max_amount }}"
-                                           step="1000" min="0" placeholder="∞"
-                                           style="min-width: 80px; max-width: 100px;">
-                                </div>
-                            </form>
-                        </div>
+        <!-- Tab 2: Graph Explorer - do not remove dashboard-tab class: it is used by js -->
+        <div id="tab2" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
+
+            <!-- Vis.js Graph (3/4 width) -->
+            <div id="graph-container" class="bg-light border rounded d-flex flex-column h-100 min-height-0 min-width-0 overflow-hidden" style="flex: 3;">
+                <!-- Added flex: 1 and explicit height 100% -->
+                <div id="vis-canvas" class="h-100 w-100"></div>
+            </div>
+
+            <!-- Sidebar (1/4 width) -->
+            <div id="graph-sidebar" class="bg-light border rounded p-3 d-flex flex-column min-height-0 min-width-0" style="flex: 1;">
+
+                <h4 class="mt-0 mb-1">{{ ui.LEGEND_TITLE }}</h4>
+
+                <ul class="text-muted small mb-2 lh-sm ps-2">
+                    {% for item in ui.LEGEND_HELP_TEXT|split:"|" %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+
+                <div id="graph-legend" class="d-flex flex-column gap-0 mt-1 mb-3 overflow-y-auto">
+
+                    <!-- DYNAMIC LEGEND WITH TOGGLE SWITCHES -->
+                    {% for item in legend_items %}
+                    <label class="d-flex align-items-center gap-2 fs-6">
+                        <span class="switch">
+                            <input type="checkbox" id="leg_{{ item.type }}" checked onclick="toggleGroup('{{ item.type }}', this.checked)">
+                            <span class="slider"></span>
+                        </span>
+                        <i class="bi {{ item.css_icon }} ms-2 me-1 fs-3" style="color: {{ item.color }};"></i> {{ item.label }}
+                    </label>
+                    {% endfor %}
+
+                </div>
+
+                <hr class="mt-auto mb-2 w-100 ">
+
+                <!-- PHYSICS TOGGLE & RESET BUTTON -->
+                <div class="d-flex flex-column gap-3">
+                    <label class="d-flex align-items-center gap-2 fs-6">
+                        <span class="switch">
+                            <input type="checkbox" id="toggle-physics" checked onclick="togglePhysics(this.checked)" disabled>
+                            <span class="slider"></span>
+                        </span>
+                        <i class="bi bi-magnet-fill ms-2 me-1 fs-3" style="color: #34495e;"></i> {{ ui.LEGEND_PHYSICS }}
+                    </label>
+                    <button onclick="network.fit({ animation: true })" class="btn btn-primary w-100 rounded-pill">{{ ui.LEGEND_RESET }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Application Comparison - do not remove dashboard-tab class: it is used by js -->
+        <div id="tab3" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
+            <!-- Root Sheet Details (1/2 width) -->
+            <!-- REMOVED flex-fill, ADDED style="flex: 1 1 0;" -->
+            <div id="root-detail-pane-container" class="card card-root border-3 rounded-3 d-flex flex-column min-height-0 min-width-0 overflow-hidden" style="flex: 1 1 0;">
+                <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 p-0 bg-transparent border-0">
+                    <div class="mx-4 w-100 px-5 pt-1 pb-2 lh-1 card-title rounded-pill rounded-top-0 text-center">
+                        <span class="fw-bold fs-5"><i class="bi bi-arrows-move fs-4 me-2"></i>{{ ui.DETAIL_ROOT_TITLE }}</span>
+                        <br>
+                        <span class="small">{{ ui.DETAIL_ROOT_HELP_TEXT }}</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column flex-fill min-height-0 min-width-0 p-2 pt-0">
+                    <!-- HTMX loads _sheet_detail.html here -->
+                    <div id="root-detail-pane" class="d-flex flex-column flex-fill min-height-0 min-width-0">
+                        {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
                     </div>
                 </div>
             </div>
 
-            <!-- APPLIED FILTERS BADGES (Below Accordion) -->
-            <!-- OOB target. min-height prevents the layout from jumping when badges appear/disappear -->
-            <div id="active-filters-container" class="d-flex align-items-center justify-content-between mb-1 flex-shrink-0" style="min-height: 28px;">
-                <div id="active-filters"></div>
-                <div id="applications-count"></div>
+            <!-- Linked Sheet Details (1/2 width) -->
+            <!-- REMOVED flex-fill, ADDED style="flex: 1 1 0;" -->
+            <div id="linked-detail-pane-container" class="card card-linked border-3 rounded-3 d-flex flex-column min-height-0 min-width-0 overflow-hidden" style="flex: 1 1 0;">
+                <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 p-0 bg-transparent border-0">
+                    <div class="mx-4 w-100 px-5 pt-1 pb-2 lh-1 card-title rounded-pill rounded-top-0 text-center">
+                        <span class="fw-bold fs-5"><i class="bi bi-box-arrow-in-right fs-4 me-2"></i>{{ ui.DETAIL_LINKED_TITLE }}</span>
+                        <br>
+                        <span class="small">{{ ui.DETAIL_LINKED_HELP_TEXT }}</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column flex-fill min-height-0 min-width-0 p-2 pt-0">
+                    <!-- HTMX loads _sheet_detail.html here -->
+                    <div id="linked-detail-pane" class="d-flex flex-column flex-fill min-height-0 min-width-0">
+                        {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
+                    </div>
+                </div>
             </div>
+        </div>
 
+        <!-- Tab 4: About - do not remove dashboard-tab class: it is used by js -->
+        <div id="tab4" class="dashboard-tab d-none  d-block                 flex-fill border bg-white p-3 rounded-2 overflow-hidden       min-height-0 min-width-0">
 
-            <!-- HTMX TABLE TARGET -->
-            <div id="applications-list"
-                 hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}"
-	             hx-trigger="load, refreshList from:body"
-                 class="d-flex flex-column flex-fill min-height-0 overflow-hidden">
-                <p class="text-muted text-center mt-5">Loading applications...</p>
+            <!-- Single pane filling the whole tab -->
+            <div class="bg-light border rounded py-4 px-0 d-flex flex-column h-100 min-height-0 min-width-0">
+
+            <!-- Header (fixed at top) -->
+                <div class="flex-shrink-0 mb-0 pb-2 px-4 border-bottom border-5">
+                    <h2 class="mb-2">{{ ui.ABOUT_TITLE|default:'About' }}</h2>
+
+                    {# ─── Translated summary (fixed at top, doesn't scroll) ─── #}
+                    <p class="fs-5 fst-italic mb-2" style="text-align: justify;">{{ ui.ABOUT_SUMMARY }}</p>
+                </div>
+
+                <!-- Scrollable README content -->
+                <div class="flex-fill overflow-y-auto min-height-0 p-4 mt-0 bg-white">
+                    <div class="readme-content">
+                        {{ readme_html|safe }}
+                    </div>
+                </div>
+
             </div>
 
         </div>
 
     </div>
 
-    <!-- Tab 2: Graph Explorer - do not remove dashboard-tab class: it is used by js -->
-    <div id="tab2" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
-
-        <!-- Vis.js Graph (3/4 width) -->
-        <div id="graph-container" class="bg-light border rounded d-flex flex-column h-100 min-height-0 min-width-0 overflow-hidden" style="flex: 3;">
-            <!-- Added flex: 1 and explicit height 100% -->
-            <div id="vis-canvas" class="h-100 w-100"></div>
-        </div>
-
-        <!-- Sidebar (1/4 width) -->
-        <div id="graph-sidebar" class="bg-light border rounded p-3 d-flex flex-column min-height-0 min-width-0" style="flex: 1;">
-
-            <h4 class="mt-0 mb-1">{{ ui.LEGEND_TITLE }}</h4>
-
-            <ul class="text-muted small mb-2 lh-sm ps-2">
-                {% for item in ui.LEGEND_HELP_TEXT|split:"|" %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-            </ul>
-
-            <div id="graph-legend" class="d-flex flex-column gap-0 mt-1 mb-3 overflow-y-auto">
-
-                <!-- DYNAMIC LEGEND WITH TOGGLE SWITCHES -->
-                {% for item in legend_items %}
-                <label class="d-flex align-items-center gap-2 fs-6">
-                    <span class="switch">
-                        <input type="checkbox" id="leg_{{ item.type }}" checked onclick="toggleGroup('{{ item.type }}', this.checked)">
-                        <span class="slider"></span>
-                    </span>
-                    <i class="bi {{ item.css_icon }} ms-2 me-1 fs-3" style="color: {{ item.color }};"></i> {{ item.label }}
-                </label>
-                {% endfor %}
-
-            </div>
-
-            <hr class="mt-auto mb-2 w-100 ">
-
-            <!-- PHYSICS TOGGLE & RESET BUTTON -->
-            <div class="d-flex flex-column gap-3">
-                <label class="d-flex align-items-center gap-2 fs-6">
-                    <span class="switch">
-                        <input type="checkbox" id="toggle-physics" checked onclick="togglePhysics(this.checked)" disabled>
-                        <span class="slider"></span>
-                    </span>
-                    <i class="bi bi-magnet-fill ms-2 me-1 fs-3" style="color: #34495e;"></i> {{ ui.LEGEND_PHYSICS }}
-                </label>
-                <button onclick="network.fit({ animation: true })" class="btn btn-primary w-100 rounded-pill">{{ ui.LEGEND_RESET }}</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab 3: Application Comparison - do not remove dashboard-tab class: it is used by js -->
-    <div id="tab3" class="dashboard-tab d-none  d-flex flex-row h-100   flex-fill border bg-white p-3 rounded-2 overflow-hidden gap-3 min-height-0 min-width-0">
-        <!-- Root Sheet Details (1/2 width) -->
-        <!-- REMOVED flex-fill, ADDED style="flex: 1 1 0;" -->
-        <div id="root-detail-pane-container" class="card card-root border-3 rounded-3 d-flex flex-column min-height-0 min-width-0 overflow-hidden" style="flex: 1 1 0;">
-            <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 p-0 bg-transparent border-0">
-                <div class="mx-4 w-100 px-5 pt-1 pb-2 lh-1 card-title rounded-pill rounded-top-0 text-center">
-                    <span class="fw-bold fs-5"><i class="bi bi-arrows-move fs-4 me-2"></i>{{ ui.DETAIL_ROOT_TITLE }}</span>
-                    <br>
-                    <span class="small">{{ ui.DETAIL_ROOT_HELP_TEXT }}</span>
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header py-2  text-bg-danger">
+                    <h1 class="modal-title fs-5 fw-bold" id="deleteModalLabel">{{ ui.DEL_TITLE }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="card-body d-flex flex-column flex-fill min-height-0 min-width-0 p-2 pt-0">
-                <!-- HTMX loads _sheet_detail.html here -->
-                <div id="root-detail-pane" class="d-flex flex-column flex-fill min-height-0 min-width-0">
-                    {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
+                <div class="modal-body">
+                    <p>{{ ui.DEL_MSG|safe }}</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Linked Sheet Details (1/2 width) -->
-        <!-- REMOVED flex-fill, ADDED style="flex: 1 1 0;" -->
-        <div id="linked-detail-pane-container" class="card card-linked border-3 rounded-3 d-flex flex-column min-height-0 min-width-0 overflow-hidden" style="flex: 1 1 0;">
-            <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 p-0 bg-transparent border-0">
-                <div class="mx-4 w-100 px-5 pt-1 pb-2 lh-1 card-title rounded-pill rounded-top-0 text-center">
-                    <span class="fw-bold fs-5"><i class="bi bi-box-arrow-in-right fs-4 me-2"></i>{{ ui.DETAIL_LINKED_TITLE }}</span>
-                    <br>
-                    <span class="small">{{ ui.DETAIL_LINKED_HELP_TEXT }}</span>
-                </div>
-            </div>
-            <div class="card-body d-flex flex-column flex-fill min-height-0 min-width-0 p-2 pt-0">
-                <!-- HTMX loads _sheet_detail.html here -->
-                <div id="linked-detail-pane" class="d-flex flex-column flex-fill min-height-0 min-width-0">
-                    {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger rounded-pill" onclick="confirmDelete()">
+                        {{ ui.DEL_BTN_CONFIRM }}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
+                        {{ ui.DEL_BTN_CANCEL }}
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tab 4: About - do not remove dashboard-tab class: it is used by js -->
-    <div id="tab4" class="dashboard-tab d-none  d-block                 flex-fill border bg-white p-3 rounded-2 overflow-hidden       min-height-0 min-width-0">
+    <!-- Dedicated container for HTMX-injected modals -->
+    <div id="modal-container"></div>
 
-        <!-- Single pane filling the whole tab -->
-        <div class="bg-light border rounded py-4 px-0 d-flex flex-column h-100 min-height-0 min-width-0">
+    <!-- ------------------------------------------------------------------
+         Hidden template for empty-state panes
+         Used by JS reset functions (resetRootSheetView, resetLinkedPane,
+         and the network deselect handler) to render the same translated
+         "empty" message that the initial page load uses — keeping markup
+         and translations DRY via the _empty_state.html partial.
+         ---------------------------------------------------------------- -->
+    <template id="empty-state">
+        {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
+    </template>
 
-        <!-- Header (fixed at top) -->
-            <div class="flex-shrink-0 mb-0 pb-2 px-4 border-bottom border-5">
-                <h2 class="mb-2">{{ ui.ABOUT_TITLE|default:'About' }}</h2>
-
-                {# ─── Translated summary (fixed at top, doesn't scroll) ─── #}
-                <p class="fs-5 fst-italic mb-2" style="text-align: justify;">{{ ui.ABOUT_SUMMARY }}</p>
-            </div>
-
-            <!-- Scrollable README content -->
-            <div class="flex-fill overflow-y-auto min-height-0 p-4 mt-0 bg-white">
-                <div class="readme-content">
-                    {{ readme_html|safe }}
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- DELETE CONFIRMATION MODAL -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header py-2  text-bg-danger">
-                <h1 class="modal-title fs-5 fw-bold" id="deleteModalLabel">{{ ui.DEL_TITLE }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>{{ ui.DEL_MSG|safe }}</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger rounded-pill" onclick="confirmDelete()">
-                    {{ ui.DEL_BTN_CONFIRM }}
-                </button>
-                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
-                    {{ ui.DEL_BTN_CANCEL }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Dedicated container for HTMX-injected modals -->
-<div id="modal-container"></div>
-
-<!-- ------------------------------------------------------------------
-     Hidden template for empty-state panes
-     Used by JS reset functions (resetRootSheetView, resetLinkedPane,
-     and the network deselect handler) to render the same translated
-     "empty" message that the initial page load uses — keeping markup
-     and translations DRY via the _empty_state.html partial.
-     ---------------------------------------------------------------- -->
-<template id="empty-state">
-    {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.DETAIL_PANE_EMPTY %}
-</template>
-
-<!-- INJECT JSON CONFIG INTO JAVASCRIPT -->
-<script>
-    window.ENTITY_GRAPH_GROUPS = {{ js_groups|safe }};
-    window.EVIDENCE_LINKED_TOOLTIP = "{{ ui.EVIDENCE_LINKED_TOOLTIP|escapejs }}";
-</script>
+    <!-- INJECT JSON CONFIG INTO JAVASCRIPT -->
+    <script>
+        window.ENTITY_GRAPH_GROUPS = {{ js_groups|safe }};
+        window.EVIDENCE_LINKED_TOOLTIP = "{{ ui.EVIDENCE_LINKED_TOOLTIP|escapejs }}";
+    </script>
 
 {% endblock %}
 
-
 {% block scripts %}
-<script src="{% static 'js/graph_explorer.js' %}" defer></script>
+    <script src="{% static 'vendor/js/vis-network.min.js' %}"></script>
+    <script src="{% static 'js/graph_explorer.js' %}" defer></script>
 {% endblock %}
 

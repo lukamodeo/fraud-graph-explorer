@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 from .alerts import resolve_alerts
 from .models import Application, Entity, UsesIdentifier
@@ -60,7 +61,6 @@ def _format_sheet_label(app, ui_strings):
         f"<code>{comp_vat}</code>\n"
     )
     return label
-
 
 def _render_readme_html():
     """
@@ -109,7 +109,6 @@ def _render_readme_html():
             _render_readme_html._cache = f'<p class="text-danger">Error rendering README: {e}</p>'
     return _render_readme_html._cache
 
-
 def _get_translated_field_context(internal_name, country_code):
     """
     Resolves an internal_name (e.g., 'representative_fullname')
@@ -139,7 +138,8 @@ def _get_translated_field_context(internal_name, country_code):
     return field_label
 
 
-def _entity_icon_view(request, entity_type):
+@login_required
+def entity_icon_view(request, entity_type):
     """
     Generates a dynamic SVG image with a white background and the Bootstrap Icon.
     Vis.js fetches this to render clean entity nodes without transparent edges.
@@ -173,8 +173,8 @@ def _entity_icon_view(request, entity_type):
 
     return HttpResponse(svg, content_type="image/svg+xml")
 
-
 @require_POST
+@login_required
 def delete_application_view(request, sheet_id):
     """
     Deletes an Application, cleans up orphans, and returns the correct
@@ -244,7 +244,7 @@ def delete_application_view(request, sheet_id):
     })
     return response
 
-
+@login_required
 def dashboard_view(request):
     # Base Queryset - Filtering & Pagination Logic
     queryset = Application.objects.all().order_by('-acquisition_date')
@@ -411,7 +411,7 @@ def dashboard_view(request):
 
     return render(request, 'graph_explorer/dashboard.html', context)
 
-
+@login_required
 def ingest_pdf_view(request):
     # Get UI strings for translation
     browser_lang = get_language()
@@ -485,7 +485,7 @@ def ingest_pdf_view(request):
     msg = ui.get("INGEST_ERR_NO_FILE", "No file uploaded.")
     return HttpResponse(f'<span class="badge text-bg-danger">{msg}</span>')
 
-
+@login_required
 def ingest_confirm_view(request):
     browser_lang = get_language()
     ui = get_ui_strings(browser_lang)
@@ -526,7 +526,7 @@ def ingest_confirm_view(request):
 
     return HttpResponse("Method not allowed", status=405)
 
-
+@login_required
 def sheet_detail_view(request, sheet_id):
     app = get_object_or_404(Application, sheet_id=sheet_id)
 
@@ -635,7 +635,7 @@ def sheet_detail_view(request, sheet_id):
         }
     )
 
-
+@login_required
 def app_cards_view(request, sheet_id):
     """Returns the Validation and Warning cards for a specific application."""
     app = get_object_or_404(Application, sheet_id=sheet_id)
@@ -660,7 +660,7 @@ def app_cards_view(request, sheet_id):
         }
     )
 
-
+@login_required
 def graph_data_view(request, sheet_id):
     """
     Calculates the 2-hop graph (Root Sheet -> Entities -> Connected Sheets)

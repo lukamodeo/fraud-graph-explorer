@@ -1,128 +1,75 @@
 <!-- src/fraud_graph_explorer/templates/sheet_crafter/sheet_crafter.html -->
 
-<!DOCTYPE html>
+{% extends "base.html" %}
 
 {% load static %}
 
-<!-- Use the dynamic active_lang variable -->
-<html lang="{{ active_lang }}">
+{% block lang %}{{ active_lang }}{% endblock %}
+{% block title %}{{ ui.TITLE }}{% endblock %}
 
-    <head>
+{% block extra_head %}
+    {# Crafter-specific CSS #}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/crafter.css' %}"/>
+{% endblock %}
 
-        <title>{{ ui.TITLE }}</title>
+{% block content %}
 
-        <!-- Local HTMX 2.0.10 - must be loaded in the head! -->
-        <script src="{% static 'vendor/js/htmx.min.js' %}"></script>
+    <div class="header-container">
+        <h1>{{ ui.HEADER }}</h1>
+        <p>{{ ui.INSTRUCTIONS|safe }}</p>
+    </div>
+    <!-- This container is what HTMX will swap out -->
+    <div id="form-container" class="form-container">
+        {% include "sheet_crafter/_form.html" %}
+    </div>
 
-        <!-- Local Bootstrap Icons 1.13.1 -->
-        <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap-icons.min.css' %}">
+    <!-- Native HTML Dialog -->
+    <dialog id="tin-data-dialog" class="crafter-dialog">
+        <div class="crafter-dialog-container">
 
-        {# Check if the browser is NOT Firefox #}
-        {% if 'Firefox' not in request.META.HTTP_USER_AGENT %}
-        <style>
-            @font-face {
-                font-family: 'Noto Flags';
-                src: url("{% static 'fonts/NotoColorEmoji-flagsonly.ttf' %}") format('truetype');
-                unicode-range: U+1F1E6-1F1FF;
-                font-display: swap;
-            }
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
-            }
-            .select-group select {
-                font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
-            }
-        </style>
-        {% else %}
-        <style>
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;; !important;
-            }
-            .select-group select {
-                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
-            }
-        </style>
-        {% endif %}
-        <!-- The order matter: Custom CSS after loading fonts  -->
-        <link rel="stylesheet" type="text/css" href="{% static 'css/crafter.css' %}"/>
+            <h3 style="margin-top: 0;">{{ ui.MODAL_TITLE }}</h3>
 
-    </head>
-    <body>
+            <p>{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
 
-        <div class="header">
-            <h1>{{ ui.HEADER }}</h1>
-            <p>{{ ui.INSTRUCTIONS|safe }}</p>
+            <!-- Dialog Form -->
+            <form id="tin-data-form" method="dialog">
+
+                <!-- Sex Selector -->
+                <div class="modal-form-field">
+                    <label for="modal-sex-select" class="modal-label">{{ ui.MODAL_SEX_LABEL }}</label>
+                    <!-- Added required attribute and empty disabled option -->
+                    <select id="modal-sex-select" name="sex" required>
+                        <option value="M">{{ ui.MODAL_SEX_MALE }}</option>
+                        <option value="F">{{ ui.MODAL_SEX_FEMALE }}</option>
+                    </select>
+                </div>
+
+                <!-- DOB Selector -->
+                <div class="modal-form-field">
+                    <label for="modal-dob-input" class="modal-label">
+                        {{ ui.MODAL_DOB_LABEL }}
+                    </label>
+                    <input type="date" id="modal-dob-input" name="dob" required>
+                </div>
+
+                <!-- Recalculate TIN Checkbox -->
+                <div class="modal-check-group">
+                    <input type="checkbox" id="modal-recalc-tin" name="recalc_tin" checked>
+                    <label for="modal-recalc-tin" class="modal-check-label">
+                        {{ ui.MODAL_RECALC_TIN_LABEL }}
+                    </label>
+                </div>
+
+                <button type="submit" class="modal-button">
+                    {{ ui.MODAL_BTN }}
+                </button>
+
+            </form>
         </div>
-        <!-- This container is what HTMX will swap out -->
-        <div id="form-container" class="form-container">
-            {% include "sheet_crafter/_form.html" %}
-        </div>
+    </dialog>
 
-        <!-- Native HTML Dialog -->
-        <dialog id="tin-data-dialog" class="modal-dialog">
-            <div class="modal-dialog-container">
+{% endblock %}
 
-                <h3 style="margin-top: 0;">{{ ui.MODAL_TITLE }}</h3>
-
-                <p>{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
-
-                <!-- Dialog Form -->
-                <form id="tin-data-form" method="dialog">
-
-                    <!-- Sex Selector -->
-                    <div class="modal-form-field">
-                        <label for="modal-sex-select" class="modal-label">
-                            {{ ui.MODAL_SEX_LABEL }}
-                        </label>
-                        <!-- Added required attribute and empty disabled option -->
-                        <select id="modal-sex-select" name="sex" required>
-                            <option value="M">{{ ui.MODAL_SEX_MALE }}</option>
-                            <option value="F">{{ ui.MODAL_SEX_FEMALE }}</option>
-                        </select>
-                    </div>
-
-                    <!-- DOB Selector -->
-                    <div class="modal-form-field">
-                        <label for="modal-dob-input" class="modal-label">
-                            {{ ui.MODAL_DOB_LABEL }}
-                        </label>
-                        <input type="date" id="modal-dob-input" name="dob" required>
-                    </div>
-
-                    <!-- Recalculate TIN Checkbox -->
-                    <div class="modal-check-group">
-                        <input type="checkbox" id="modal-recalc-tin" name="recalc_tin" checked>
-                        <label for="modal-recalc-tin" class="modal-check-label">
-                            {{ ui.MODAL_RECALC_TIN_LABEL }}
-                        </label>
-                    </div>
-
-                    <button type="submit" class="modal-button">
-                        {{ ui.MODAL_BTN }}
-                    </button>
-
-                </form>
-            </div>
-        </dialog>
-
-
-        <!-- Inject country-specific hints for JS tooltip updates -->
-        <script>
-            window.FIELD_HINTS = {{ hints_json|safe }};
-        </script>
-
-        <!-- Load the external JS file right before </body> -->
-        <script src="{% static 'js/sheet_crafter.js' %}" defer></script>
-
-    </body>
-
-</html>
-
-
-
-
-
-
-
-
-
+{% block scripts %}
+    <script src="{% static 'js/sheet_crafter.js' %}" defer></script>
+{% endblock %}

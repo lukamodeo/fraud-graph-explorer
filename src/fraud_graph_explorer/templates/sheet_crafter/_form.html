@@ -10,7 +10,8 @@
                 {{ ui.COUNTRY_LABEL }}
             </label>
              <!-- Manually write the select tag so we can put HTMX here -->
-            <select name="country_code"
+            <select class="country-flags"
+                    name="country_code"
                     id="id_country_code"
                     hx-get="."
                     hx-target="#form-container"
@@ -44,7 +45,7 @@
 
     <br>
 
-    <div class="pdf-container">
+    <div class="pdf-container mb-5 pb-5">
         <p class="data-entry"> {{ ui.PDF_DATA }}</p>
         {% for field in form %}
             {% if field.name != 'country_code' %}
@@ -56,7 +57,7 @@
                 {% else %}
 
                     {% ifchanged field.field.section_title %}
-                        <h3>{{ field.field.section_title }}</h3>
+                        <h5>{{ field.field.section_title }}</h5>
                     {% endifchanged %}
 
                     <!--suppress XmlInvalidId -->
@@ -64,7 +65,7 @@
 
                     {% if field.field.hint_key ==  'HINT_VAT'%}
                         {# ─── VAT: input + country select + tooltip ─── #}
-                        <div class="input-group">
+                        <div class="input-group-vat">
                             {{ field }}
 
                             {# 1. Tooltip icon (info) — right after the input #}
@@ -142,7 +143,7 @@
 
                     {% elif 'IBAN' in field.field.tags %}
                         {# ─── IBAN: input + country select (new branch) ─── #}
-                        <div class="input-group">
+                        <div class="input-group-iban">
                             {{ field }}
 
                             {# 1. Tooltip icon (info) — after calculator #}

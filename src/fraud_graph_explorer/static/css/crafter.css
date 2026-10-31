@@ -6,23 +6,23 @@ body {
     margin: 0;
 }
 
-.header {
-    max-width: 800px;
+.header-container {
+    max-width: 780px;
+    padding-top: 5px;
     padding-bottom: 12px;
     margin: auto;
     text-align: center;
     color: #fff;
-    background: #0077aa;
-    padding-top: 5px;
-    border-radius: 0 0 10px 10px;
+    /*background: #0077aa;
+    border-radius: 0 0 10px 10px;*/
 }
 
-.header h1 {
+.header-container h1 {
     margin: 0.5rem;
     font-size: 1.8rem;
 }
 
-.header p {
+.header-container p {
     margin: 0.2rem;
     line-height: 1.6rem;
 }
@@ -77,7 +77,7 @@ body {
 label {
     display: block;
     font-weight: bold;
-    margin-top: 16px;
+    margin-top: 12px;
     margin-left: 5px;
 }
 
@@ -140,11 +140,14 @@ button:hover {
     color: #666;
 }
 
-form h3 {
+form h5 {
     text-align: center;
     background: #cdd;
     padding: 0.4rem;
     border-radius: 0.3rem;
+    margin-top: 40px !important;
+    margin-bottom: 0 !important;
+    font-weight: bold;
 }
 
 
@@ -163,23 +166,26 @@ form h3 {
 }
 
 /* Force flex layout so input + select + icons sit on one line */
-.input-group,
-.input-group-tin {
+.input-group-vat,
+.input-group-tin,
+.input-group-iban {
     display: flex !important;
     align-items: center !important;
     gap: 0.5rem !important;
 }
 
 /* ALL direct children: stay in flex flow, don't overlap */
-.input-group > *,
-.input-group-tin > * {
+.input-group-vat > *,
+.input-group-tin > *,
+.input-group-iban > * {
     position: relative !important;
     flex: 0 0 auto !important;
 }
 
 /* Input takes available space, doesn't force full width */
-.input-group input[type="text"],
-.input-group-tin input[type="text"] {
+.input-group-vat input[type="text"],
+.input-group-tin input[type="text"],
+.input-group-iban input[type="text"] {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     width: auto !important;
@@ -240,25 +246,20 @@ form h3 {
     opacity: 1;
 }
 
-
-
-
-
-
 /* Modal */
-.modal-dialog {
+.crafter-dialog {
     padding: 0;
     border: none;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.modal-dialog-container {
+.crafter-dialog-container {
     padding: 40px;
     text-align: center;
 }
 
-.modal-dialog-container p {
+.crafter-dialog-container p {
     line-height: 1.5rem;
 }
 

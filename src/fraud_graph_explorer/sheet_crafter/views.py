@@ -7,6 +7,7 @@ import tempfile
 from django.shortcuts import render
 from django.http import FileResponse, Http404, HttpResponse
 from django.utils.translation import get_language
+from django.contrib.auth.decorators import login_required
 
 from .forms import SheetCrafterForm
 from .services import generate_pdf_sheet, generate_dynamic_initial_data, get_calculated_tin
@@ -14,7 +15,7 @@ from .ui_translations import get_ui_strings
 from .seed_data import get_random_data, get_random_profile
 from fraud_graph_explorer.domain_schema import FIELDS, CountryCodes
 
-
+# HELPER FUNCTIONS
 def _extract_hints(ui_strings, country):
     """
     Extract country-specific hints from ui_strings.
@@ -38,6 +39,7 @@ def _extract_hints(ui_strings, country):
     return resolved_hints, json.dumps(hints_by_country)
 
 
+@login_required
 def generate_field_value(request):
     """
     HTMX endpoint: regenerate a single field's value when its country
@@ -100,6 +102,7 @@ def generate_field_value(request):
     # ─── FIX: return the value as plain text ───
     return HttpResponse(value, content_type='text/plain')
 
+@login_required
 def calculate_tin_view(request):
     if request.method == 'POST':
         # HTMX flattens the JSON object into POST keys.
@@ -168,6 +171,7 @@ def calculate_tin_view(request):
 
     return HttpResponse("Error", status=405)  # Method Not Allowed
 
+@login_required
 def sheet_crafter_view(request):
     # Detect browser language for the UI
     browser_lang = get_language()

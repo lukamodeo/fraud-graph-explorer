@@ -1,3 +1,4 @@
+# src/fraud_graph_explorer/config/urls.py
 """
 URL configuration for config project.
 
@@ -18,11 +19,24 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
+from django.contrib.auth.views import LogoutView
+from django.views.generic import RedirectView
+
+from .views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # ─── Auth routes ───
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+
+    # Root → redirect to explorer (which redirects to login if not authenticated)
+    path('', RedirectView.as_view(url='/explorer/')),
+
+    # Apps
     path('crafter/', include('fraud_graph_explorer.sheet_crafter.urls')),
-    path('explorer/', include('fraud_graph_explorer.graph_explorer.urls'))
+    path('explorer/', include('fraud_graph_explorer.graph_explorer.urls')),
 ]
 
 

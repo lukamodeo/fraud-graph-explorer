@@ -1,21 +1,22 @@
+<!-- src/fraud_graph_explorer/templates/base.html -->
+
 <!DOCTYPE html>
 
 {% load static %}
 
-<html lang="en">
+<html lang="{% block lang %}en{% endblock %}">
 
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>Fraud Graph Explorer</title>
+        <title>{% block title %}Fraud Graph Explorer{% endblock %}</title>
 
         <!-- Local HTMX 2.0.10 - must be loaded in the head! -->
         <script src="{% static 'vendor/js/htmx.min.js' %}"></script>
 
         <!-- Local Bootstrap CSS 5.3.8 -->
         <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap.min.css' %}">
-
 
         <!-- Local Bootstrap Icons 1.13.1 -->
         <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap-icons.min.css' %}">
@@ -29,6 +30,9 @@
                 unicode-range: U+1F1E6-1F1FF;
                 font-display: block;
             }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; !important;
+            }
             .vis-network,
             .country-flags {
                 font-family: 'Noto Flags', 'Segoe UI Emoji', system-ui, Helvetica, Arial, sans-serif !important;
@@ -36,41 +40,46 @@
         </style>
         {% else %}
         <style>
-            canvas,
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;; !important;
+            }
+            .vis-network,
             .country-flags {
                 font-family: system-ui, Helvetica, Arial, sans-serif !important;
             }
         </style>
         {% endif %}
-        <!-- The order matter: Custom CSS after loading fonts  -->
-        <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}"/>
-
-        <!-- ADD Vis.js Network CSS -->
-        <link rel="stylesheet" type="text/css" href="{% static 'css/vis-network.min.css' %}"/>
 
         {% block extra_head %}{% endblock %}
+
     </head>
 
     <body>
-        <nav class="text-bg-dark py-0 px-3 mb-0" style="display: flex; justify-content: space-between; align-items: center;">
-            <strong>Fraud Graph Explorer</strong>
-            <div>
-                <a href="{% url 'sheet_crafter:crafter' %}" style="color: yellow; margin-right: 15px;">Sheet Crafter</a>
-                <a href="{% url 'graph_explorer:dashboard' %}" style="color: yellow;">Graph Explorer</a>
+
+        {% block nav %}
+        <nav class="text-bg-dark py-1 px-3 d-flex justify-content-between align-items-center" style="height: 32px;">
+            <strong class="text-light">Fraud Graph Explorer</strong>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'sheet_crafter:crafter' %}" class="text-warning text-decoration-none">Sheet Crafter</a>
+                <a href="{% url 'graph_explorer:dashboard' %}" class="text-warning text-decoration-none">Graph Explorer</a>
+                <span class="text-secondary">|</span>
+                <span class="text-light small">{{ user.username }}</span>
+                <form action="/logout/" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-3 mt-0">Logout</button>
+                </form>
             </div>
         </nav>
+        {% endblock %}
 
         <!-- Main content goes here -->
         {% block content %}{% endblock %}
 
-        <!-- Local Vis.js Network JS before body close -->
-        <script src="{% static 'vendor/js/vis-network.min.js' %}"></script>
-
         <!-- Local Bootstrap JS 5.3.8 -->
         <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
 
-
         {% block scripts %}{% endblock %}
+
     </body>
 
 </html>
