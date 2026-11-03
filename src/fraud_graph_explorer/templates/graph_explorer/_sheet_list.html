@@ -160,7 +160,7 @@
     {% endif %}
 
     <!-- 4. Fixed Pagination -->
-    <div class="d-flex justify-content-center align-items-center gap-2 pt-1 flex-shrink-0">
+    <div class="d-flex justify-content-center align-items-center gap-2 py-2 flex-shrink-0">
         <!-- First -->
         <button type="button" class="btn btn-sm btn-outline-secondary"
                 hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page=1"

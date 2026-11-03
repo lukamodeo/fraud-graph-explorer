@@ -6,8 +6,6 @@ from decimal import Decimal
 from typing import Dict, Any, List, Callable, Literal
 from collections import defaultdict
 
-from stdnum import iban
-
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -190,10 +188,29 @@ def check_numeric(raw_value, norm_value, config, all_data, **kwargs):
     active=True
 )
 def check_iban(raw_value, norm_value, config, all_data, **kwargs):
-    if norm_value and not iban.is_valid(norm_value):
+    """
+    Validates IBAN — restricted to our 5 target countries.
+
+    detect_iban_country() returns None if either:
+      - the value is not a valid IBAN (fails checksum), OR
+      - the value is a valid IBAN but the country prefix is outside
+        our 5-country target set (e.g., 'NL91...', 'BE68...')
+
+    Both cases produce one REASON_IBAN_INVALID error.
+
+    identifier_country is extracted from the first 2 chars so the alert's
+    type_label reflects the intended country — e.g., 'ES000000' on an IT
+    sheet shows "Spanish IBAN invalid", not "Italian IBAN invalid".
+    """
+    if not norm_value:
+        return []
+
+    if detect_iban_country(norm_value) is None:
+        identifier_country = norm_value[:2].upper() if len(norm_value) >= 2 else ''
         return [{
             "value": norm_value,
-            "raw_value": raw_value
+            "raw_value": raw_value,
+            "identifier_country": identifier_country,
         }]
 
     return []
@@ -216,14 +233,19 @@ def check_vat(raw_value, norm_value, config, all_data, **kwargs):
         our 5-country target set (e.g., 'NL123...', 'AT123...')
 
     Both cases produce one REASON_VAT_INVALID error.
+
+    identifier_country is extracted from the first 2 chars so the alert's
+    type_label reflects the intended country.
     """
     if not norm_value:
         return []
 
     if detect_vat_country(norm_value) is None:
+        identifier_country = norm_value[:2].upper() if len(norm_value) >= 2 else ''
         return [{
             "value": norm_value,
-            "raw_value": raw_value
+            "raw_value": raw_value,
+            "identifier_country": identifier_country,
         }]
 
     return []

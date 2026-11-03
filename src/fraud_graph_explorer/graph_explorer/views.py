@@ -180,7 +180,7 @@ def delete_application_view(request, sheet_id):
     Deletes an Application, cleans up orphans, and returns the correct
     filtered URL to redirect the list to Page 1.
     """
-    app = get_object_or_404(Application, sheet_id=sheet_id)
+    app = get_object_or_404(Application, sheet_id=sheet_id, user=request.user)
 
     if app.pdf_file:
         app.pdf_file.delete(save=False)
@@ -201,7 +201,8 @@ def delete_application_view(request, sheet_id):
     end_date = params.get('end_date', [''])[0]
 
     # Check if the filtered list is now EMPTY
-    qs = Application.objects.all()
+    #qs = Application.objects.all()
+    qs = Application.objects.filter(user=request.user)
     if query:
         q_objs = Q(request_number__icontains=query) | Q(company_name__icontains=query) | Q(company_vat__icontains=query) | Q(entities__value__icontains=query)
         qs = qs.filter(q_objs).distinct()
@@ -247,7 +248,7 @@ def delete_application_view(request, sheet_id):
 @login_required
 def dashboard_view(request):
     # Base Queryset - Filtering & Pagination Logic
-    queryset = Application.objects.all().order_by('-acquisition_date')
+    queryset = Application.objects.filter(user=request.user).order_by('-acquisition_date')
 
     # Search logic (wildcards)
     query = request.GET.get('q', '').strip()
@@ -325,7 +326,7 @@ def dashboard_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    page_items = annotate_has_links(page_obj.object_list)
+    page_items = annotate_has_links(page_obj.object_list, request.user)
 
     # Get UI strings from graph_explorer
     browser_lang = get_language()
@@ -373,7 +374,7 @@ def dashboard_view(request):
         'ui': ui_strings,
         'active_filters': active_filters,
         'filtered_applications': queryset.count(),
-        'total_applications': Application.objects.count(),
+        'total_applications': Application.objects.filter(user=request.user).count(),
         'readme_html': _render_readme_html(),  # NEW: rendered README HTML for Tab 4
         }
 
@@ -424,7 +425,7 @@ def ingest_pdf_view(request):
         pdf_bytes = pdf_file.read()
 
         # Run ingestion service!
-        app, error_code, existing_app = ingest_pdf(pdf_bytes, pdf_file.name, overwrite=False)
+        app, error_code, existing_app = ingest_pdf(pdf_bytes, pdf_file.name, overwrite=False, user=request.user)
 
         # Handle Success
         if app:
@@ -509,7 +510,7 @@ def ingest_confirm_view(request):
         os.unlink(temp_path)
 
         # Call ingest_pdf with overwrite=True!
-        app, error_code, _ = ingest_pdf(pdf_bytes, file_name, overwrite=True)
+        app, error_code, _ = ingest_pdf(pdf_bytes, file_name, overwrite=True, user=request.user)
 
         if app:
             msg = ui.get("INGEST_OVERWRITTEN", "Overwritten: {req_num}").format(req_num=app.request_number)
@@ -528,7 +529,7 @@ def ingest_confirm_view(request):
 
 @login_required
 def sheet_detail_view(request, sheet_id):
-    app = get_object_or_404(Application, sheet_id=sheet_id)
+    app = get_object_or_404(Application, sheet_id=sheet_id, user=request.user)
 
     # Get 2D UI Strings for THIS specific application's country
     browser_lang = get_language()
@@ -638,7 +639,7 @@ def sheet_detail_view(request, sheet_id):
 @login_required
 def app_cards_view(request, sheet_id):
     """Returns the Validation and Warning cards for a specific application."""
-    app = get_object_or_404(Application, sheet_id=sheet_id)
+    app = get_object_or_404(Application, sheet_id=sheet_id, user=request.user)
 
     # Get 2D UI Strings for THIS specific application's country
     browser_lang = get_language()
@@ -668,7 +669,8 @@ def graph_data_view(request, sheet_id):
     Only includes entities that are shared with at least one other sheet.
     """
     try:
-        root_app = Application.objects.get(sheet_id=sheet_id)
+        #root_app = Application.objects.get(sheet_id=sheet_id)
+        root_app = get_object_or_404(Application, sheet_id=sheet_id, user=request.user)
     except Application.DoesNotExist:
         return JsonResponse({"error": "Sheet not found"}, status=404)
 
@@ -720,7 +722,7 @@ def graph_data_view(request, sheet_id):
         entity = u_edge.entity
 
         # Check 2nd hop (Other Sheets)
-        connected_apps = entity.applications.exclude(sheet_id=root_app.sheet_id)
+        connected_apps = entity.applications.filter(user=request.user).exclude(sheet_id=root_app.sheet_id)
 
         # Only add the entity and the root->entity edge if it is shared
         if not connected_apps.exists():

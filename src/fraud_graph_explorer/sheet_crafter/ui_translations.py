@@ -47,11 +47,11 @@ UI_STRINGS = {
         "en-gb": "Country profile to simulate:"
         },
     "COUNTRY_HINT": {
-        "it": "Aggiorna le regole sui formati VAT, TIN e IBAN da utilizzare, oltre che la lingua di compilazione.",
-        "de": "Aktualisiert die anzuwendenden Formatregeln für VAT, TIN und IBAN sowie die Eingabesprache.",
-        "fr": "Met à jour les règles de format VAT, TIN et IBAN à utiliser, ainsi que la langue de saisie.",
-        "es": "Actualiza las reglas de formato de VAT, TIN e IBAN a utilizar, así como el idioma de introducción de datos.",
-        "en-gb": "Updates the VAT, TIN, and IBAN format rules to apply, as well as the data-entry language."
+        "it": "Aggiorna la lingua di compilazione e pre-seleziona le regole sui formati VAT, TIN e IBAN.",
+        "de": "Aktualisiert die Eingabesprache und wählt die Formatierungsregeln für USt-IdNr., TIN und IBAN voraus.",
+        "fr": "Met à jour la langue de saisie et présélectionne les règles de format des numéros de TVA, TIN et IBAN.",
+        "es": "Actualiza el idioma de introducción de datos y preselecciona las reglas de formato de los números de IVA, TIN e IBAN.",
+        "en-gb": "Updates the data-entry language and preselects the formatting rules for VAT, TIN and IBAN."
         },
     "BTN_RANDOMIZE": {
         "it": "Genera Nuovi Dati",
@@ -73,6 +73,13 @@ UI_STRINGS = {
         "fr": "Saisie et aperçu des données du PDF",
         "es": "Introducción y vista previa de los datos del PDF",
         "en-gb": "PDF data entry and preview"
+    },
+    "PDF_END": {
+        "it": "Scheda creata con dati sintetici a solo scopo di test",
+        "de": "Datenblatt mit synthetischen Daten ausschließlich zu Testzwecken erstellt",
+        "fr": "Fiche créée à partir de données synthétiques à des fins de test uniquement",
+        "es": "Ficha creada con datos sintéticos exclusivamente para fines de prueba",
+        "en-gb": "Sheet created using synthetic data for testing purposes only"
     },
     "MODAL_TITLE": {
         "it": "Aggiornamento dati anagrafici",
@@ -118,41 +125,51 @@ UI_STRINGS = {
     },
     "MODAL_RECALC_TIN_LABEL": {
         "it": {
-            "IT": "Ricalcola anche il Codice Fiscale.",
-            # "DE": "Ricalcola anche lo Steuer-ID.",
-            "FR": "Ricalcola anche il NIR.",
-            # "ES": "Ricalcola anche il DNI.",
-            # "GB": "Ricalcola anche il National Insurance number.",
-        },
+            "ANY": {
+                "IT": "Ricalcola anche il Codice Fiscale",
+                "DE": "Ricalcola anche lo Steuer-ID",
+                "FR": "Ricalcola anche il NIR",
+                "ES": "Ricalcola anche il DNI",
+                "GB": "Ricalcola anche il National Insurance number",
+                }
+            },
         "de": {
-            "IT": "Auch den Codice Fiscale neu berechnen.",
-            # "DE": "Auch die Steuer-ID neu berechnen.",
-            "FR": "Auch die NIR neu berechnen.",
-            # "ES": "Auch die DNI neu berechnen.",
-            # "GB": "Auch die National Insurance number neu berechnen."
-        },
+            "ANY": {
+                "IT": "Auch den Codice Fiscale neu berechnen",
+                "DE": "Auch die Steuer-ID neu berechnen",
+                "FR": "Auch die NIR neu berechnen",
+                "ES": "Auch die DNI neu berechnen",
+                "GB": "Auch die National Insurance number neu berechnen"
+                }
+            },
         "fr": {
-            "IT": "Recalculer également le Codice Fiscale.",
-            # "DE": "Recalculer également la Steuer-ID.",
-            "FR": "Recalculer également le NIR.",
-            # "ES": "Recalculer également le DNI.",
-            # "GB": "Recalculer également le National Insurance number."
-        },
+            "ANY": {
+                "IT": "Recalculer également le Codice Fiscale",
+                "DE": "Recalculer également la Steuer-ID",
+                "FR": "Recalculer également le NIR",
+                "ES": "Recalculer également le DNI",
+                "GB": "Recalculer également le National Insurance number"
+                }
+            },
         "es": {
-            "IT": "Recalcular también el Codice Fiscale.",
-            # "DE": "Recalcular también la Steuer-ID.",
-            "FR": "Recalcular también el NIR.",
-            # "ES": "Recalcular también el DNI.",
-            # "GB": "Recalcular también el National Insurance number."
-        },
+            "ANY": {
+                "IT": "Recalcular también el Codice Fiscale",
+                "DE": "Recalcular también la Steuer-ID",
+                "FR": "Recalcular también el NIR",
+                "ES": "Recalcular también el DNI",
+                "GB": "Recalcular también el National Insurance number"
+                }
+            },
         "en-gb": {
-            "IT": "Also recalculate the Codice Fiscale.",
-            # "DE": "Also recalculate the Steuer-ID.",
-            "FR": "Also recalculate the NIR.",
-            # "ES": "Also recalculate the DNI.",
-            # "GB": "Also recalculate the National Insurance number."
-        }
-    },
+            "ANY": {
+                "IT": "Also recalculate the Codice Fiscale",
+                "DE": "Also recalculate the Steuer-ID",
+                "FR": "Also recalculate the NIR",
+                "ES": "Also recalculate the DNI",
+                "GB": "Also recalculate the National Insurance number"
+                }
+            }
+        },
     "MODAL_BTN": {
         "it": "Salva",
         "de": "Speichern",
@@ -210,45 +227,45 @@ UI_STRINGS = {
     "HINT_TIN": {
         "it": {
             "ANY": {
-            "IT": "Il Codice Fiscale italiano è un identificativo derivato da Nome, Cognome, Sesso e Data di Nascita. Modificando uno di essi, il C.F. risulta non più valido.",
+            "IT": "Il Codice Fiscale italiano è un identificativo derivato da Nome, Cognome, Sesso e Data di Nascita.<br>Modificando uno di essi, il C.F. risulta non più valido.",
             "DE": "Lo Steuer-ID tedesco è un identificativo non derivato da dati personali quali Nome, Cognome, Sesso o Data di Nascita.",
-            "FR": "Il NIR francese è un identificativo derivato da Sesso e Data di Nascita. Modificando uno di essi, il NIR risulta non più valido.",
+            "FR": "Il NIR francese è un identificativo derivato da Sesso e Data di Nascita.<br>Modificando uno di essi, il NIR risulta non più valido.",
             "ES": "Il DNI spagnolo è un identificativo non derivato da dati personali quali Nome, Cognome, Sesso o Data di Nascita.",
             "GB": "Il National Insurance number britannico è un identificativo non derivato da dati personali quali Nome, Cognome, Sesso o Data di Nascita.",
             }
         },
         "de": {
             "ANY": {
-            "IT": "Der italienische Codice Fiscale ist eine Kennung, die aus Vorname, Nachname, Geschlecht und Geburtsdatum abgeleitet wird. Wird eines dieser Merkmale geändert, ist der C.F. nicht mehr gültig.",
+            "IT": "Der italienische Codice Fiscale ist eine Kennung, die aus Vorname, Nachname, Geschlecht und Geburtsdatum abgeleitet wird.<br>Wird eines dieser Merkmale geändert, ist der C.F. nicht mehr gültig.",
             "DE": "Die deutsche Steuer-ID ist eine Kennung, die nicht aus personenbezogenen Daten wie Vorname, Nachname, Geschlecht oder Geburtsdatum abgeleitet wird.",
-            "FR": "Die französische NIR ist eine Kennung, die aus Geschlecht und Geburtsdatum abgeleitet wird. Wird eines dieser Merkmale geändert, ist die NIR nicht mehr gültig.",
+            "FR": "Die französische NIR ist eine Kennung, die aus Geschlecht und Geburtsdatum abgeleitet wird.<br>Wird eines dieser Merkmale geändert, ist die NIR nicht mehr gültig.",
             "ES": "Die spanische DNI ist eine Kennung, die nicht aus personenbezogenen Daten wie Vorname, Nachname, Geschlecht oder Geburtsdatum abgeleitet wird.",
             "GB": "Die britische National Insurance number ist eine Kennung, die nicht aus personenbezogenen Daten wie Vorname, Nachname, Geschlecht oder Geburtsdatum abgeleitet wird."
             }
         },
         "fr": {
             "ANY": {
-            "IT": "Le Codice Fiscale italien est un identifiant dérivé du prénom, du nom, du sexe et de la date de naissance. Si l’un de ces éléments est modifié, le C.F. n’est plus valide.",
+            "IT": "Le Codice Fiscale italien est un identifiant dérivé du prénom, du nom, du sexe et de la date de naissance.<br>Si l’un de ces éléments est modifié, le C.F. n’est plus valide.",
             "DE": "La Steuer-ID allemande est un identifiant qui ne dérive pas de données personnelles telles que le prénom, le nom, le sexe ou la date de naissance.",
-            "FR": "Le NIR français est un identifiant dérivé du sexe et de la date de naissance. Si l’un de ces éléments est modifié, le NIR n’est plus valide.",
+            "FR": "Le NIR français est un identifiant dérivé du sexe et de la date de naissance.<br>Si l’un de ces éléments est modifié, le NIR n’est plus valide.",
             "ES": "Le DNI espagnol est un identifiant qui ne dérive pas de données personnelles telles que le prénom, le nom, le sexe ou la date de naissance.",
             "GB": "Le National Insurance number britannique est un identifiant qui ne dérive pas de données personnelles telles que le prénom, le nom, le sexe ou la date de naissance."
             }
         },
         "es": {
             "ANY": {
-            "IT": "El Codice Fiscale italiano es un identificador derivado del nombre, los apellidos, el sexo y la fecha de nacimiento. Si se modifica alguno de estos datos, el C.F. deja de ser válido.",
+            "IT": "El Codice Fiscale italiano es un identificador derivado del nombre, los apellidos, el sexo y la fecha de nacimiento.<br>Si se modifica alguno de estos datos, el C.F. deja de ser válido.",
             "DE": "La Steuer-ID alemana es un identificador que no se deriva de datos personales como el nombre, los apellidos, el sexo o la fecha de nacimiento.",
-            "FR": "El NIR francés es un identificador derivado del sexo y la fecha de nacimiento. Si se modifica alguno de estos datos, el NIR deja de ser válido.",
+            "FR": "El NIR francés es un identificador derivado del sexo y la fecha de nacimiento.<br>Si se modifica alguno de estos datos, el NIR deja de ser válido.",
             "ES": "El DNI español es un identificador que no se deriva de datos personales como el nombre, los apellidos, el sexo o la fecha de nacimiento.",
             "GB": "El National Insurance number británico es un identificador que no se deriva de datos personales como el nombre, los apellidos, el sexo o la fecha de nacimiento."
             }
         },
         "en-gb": {
             "ANY": {
-            "IT": "The Italian Codice Fiscale is an identifier derived from First Name, Last Name, Sex and Date of Birth. If any of these are changed, the C.F. is no longer valid.",
+            "IT": "The Italian Codice Fiscale is an identifier derived from First Name, Last Name, Sex and Date of Birth.<br>If any of these are changed, the C.F. is no longer valid.",
             "DE": "The German Steuer-ID is an identifier not derived from personal data such as First Name, Last Name, Sex or Date of Birth.",
-            "FR": "The French NIR is an identifier derived from Sex and Date of Birth. If either of these is changed, the NIR is no longer valid.",
+            "FR": "The French NIR is an identifier derived from Sex and Date of Birth.<br>If either of these is changed, the NIR is no longer valid.",
             "ES": "The Spanish DNI is an identifier not derived from personal data such as First Name, Last Name, Sex or Date of Birth.",
             "GB": "The UK National Insurance number is an identifier not derived from personal data such as First Name, Last Name, Sex or Date of Birth."
             }
@@ -262,11 +279,11 @@ UI_STRINGS = {
         "en-gb": "Recalculate"
     },
     "HINT_IBAN": {
-        "it": "Numero di Conto Bancario Internazionale. I primi 2 caratteri sono il codice paese ISO (es. IT, DE, FR, ES, GB).",
-        "de": "Internationale Bankkontonummer. Die ersten 2 Zeichen sind der ISO-Ländercode (z.B. IT, DE, FR, ES, GB).",
-        "fr": "Numéro de compte bancaire international. Les 2 premiers caractères sont le code pays ISO (ex. IT, DE, FR, ES, GB).",
-        "es": "Número de cuenta bancaria internacional. Los primeros 2 caracteres son el código de país ISO (ej. IT, DE, FR, ES, GB).",
-        "en-gb": "International Bank Account Number. The first 2 characters are the ISO country code (e.g., IT, DE, FR, ES, GB).",
+        "it": "IBAN<br>Numero di Conto Bancario Internazionale.<br>I primi 2 caratteri identificano il codice paese ISO (es. IT, DE, FR, ES, GB).",
+        "de": "IBAN<br>Internationale Bankkontonummer.<br>Die ersten 2 Zeichen geben den ISO-Ländercode an (z. B. IT, DE, FR, ES, GB).",
+        "fr": "IBAN<br>Numéro de compte bancaire international.<br>Les 2 premiers caractères correspondent au code pays ISO (ex. : IT, DE, FR, ES, GB).",
+        "es": "IBAN<br>Número Internacional de Cuenta Bancaria.<br>Los 2 primeros caracteres identifican el código de país ISO (p. ej., IT, DE, FR, ES, GB).",
+        "en-gb": "IBAN<br>International Bank Account Number.<br>The first 2 characters identify the ISO country code (e.g. IT, DE, FR, ES, GB)."
         },
 }
 

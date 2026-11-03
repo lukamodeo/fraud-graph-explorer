@@ -1,16 +1,22 @@
-<!-- src/fraud_graph_explorer/sheet_crafter/templates/sheet_crafter/_form.html -->
+{# src/fraud_graph_explorer/sheet_crafter/templates/sheet_crafter/_form.html #} 
 
-<form method="POST" action="{% url 'sheet_crafter:crafter' %}" autocomplete="nope">
+<form method="POST" action="{% url 'sheet_crafter:crafter' %}" autocomplete="nope"
+      class="p-0 m-0 d-flex flex-column flex-grow-1 overflow-hidden min-height-0">
+
     {% csrf_token %}
 
-    <div class="ddn-container">
-        <div class="select-group">
-            <!--suppress XmlInvalidId -->
-            <label for="{{ form.country_code.id_for_label }}">
+    {# Country selection and actions #} 
+    <div class="ddn-container m-0 mb-2 px-3 pt-2 pb-3 border border-2 rounded-2 bg-white flex-shrink-0 gap-3">
+
+        <div class="d-flex flex-column">
+
+            <!--suppress XmlInvalidId-->
+            <label for="{{ form.country_code.id_for_label }}" class="d-block fw-bold mt-3 ms-1">
                 {{ ui.COUNTRY_LABEL }}
             </label>
-             <!-- Manually write the select tag so we can put HTMX here -->
-            <select class="country-flags"
+
+            {# Country selector #} 
+            <select class="country-flags form-select"
                     name="country_code"
                     id="id_country_code"
                     hx-get="."
@@ -24,31 +30,42 @@
                     </option>
                 {% endfor %}
             </select>
-            <span class="country-hint">
+
+            <span class="country-hint small fst-italic mt-1 ms-1">
                 {{ ui.COUNTRY_HINT|safe }}
             </span>
+
         </div>
-        <div class="buttons-group">
+
+        <div class="d-flex flex-row flex-md-column justify-content-center">
+
             <button type="button"
-                    class="action-btn"
+                    class="btn btn-primary mt-3 px-3"
                     hx-get="."
                     hx-target="#form-container"
                     hx-include="[name='country_code']">
-                <i class="bi bi-repeat" style="font-size: larger; margin-right: 8px;"></i>{{ ui.BTN_RANDOMIZE }}
+                <i class="bi bi-repeat me-2"></i>{{ ui.BTN_RANDOMIZE }}
             </button>
-            <button type="submit"
-                    class="action-btn">
-                <i class="bi bi-floppy"  style="font-size: larger; margin-right: 10px;"></i>{{ ui.BTN_SAVE }}
+
+            <button type="submit" class="btn btn-primary mt-3 px-3">
+                <i class="bi bi-floppy me-2"></i>{{ ui.BTN_SAVE }}
             </button>
+
         </div>
+
     </div>
 
-    <br>
 
-    <div class="pdf-container mb-5 pb-5">
-        <p class="data-entry"> {{ ui.PDF_DATA }}</p>
+    {# PDF data #} 
+    <div class="pdf-container m-0 px-3 pt-4 pb-5 border border-2 rounded-2 bg-light flex-grow-1 overflow-auto min-height-0">
+
+        <p class="small fst-italic text-center">
+            {{ ui.PDF_DATA }}
+        </p>
+
         {% for field in form %}
             {% if field.name != 'country_code' %}
+
                 {# HIDDEN FIELDS: Render the input, but SKIP labels, sections, and UI elements #}
                 {% if field.is_hidden %}
                     {{ field }}
@@ -57,28 +74,36 @@
                 {% else %}
 
                     {% ifchanged field.field.section_title %}
-                        <h5>{{ field.field.section_title }}</h5>
+                        <h5 class="section-heading text-center text-bg-secondary fw-bold py-2 rounded-2 mb-0 mt-5">
+                            {{ field.field.section_title }}
+                        </h5>
                     {% endifchanged %}
 
-                    <!--suppress XmlInvalidId -->
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <!--suppress XmlInvalidId-->
+                    <label for="{{ field.id_for_label }}" class="d-block fw-bold mt-3 ms-1">
+                        {{ field.label }}
+                    </label>
 
                     {% if field.field.hint_key ==  'HINT_VAT'%}
+
                         {# ─── VAT: input + country select + tooltip ─── #}
-                        <div class="input-group-vat">
+                        <div class="input-group-vat d-flex align-items-center gap-2">
+
                             {{ field }}
 
                             {# 1. Tooltip icon (info) — right after the input #}
-                            <span class="tooltip-icon">
-                                <i class="bi bi-info-circle-fill"></i>
-                                <span class="tooltip-text" data-hint-key="HINT_VAT">
-                                    {{ resolved_hints.HINT_VAT|safe }}
-                                </span>
-                            </span>
+                            <i class="tooltip-icon bi bi-info-circle-fill fs-2 flex-shrink-0"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               data-bs-html="true"
+                               data-bs-title="{{ resolved_hints.HINT_VAT|safe }}"
+                               data-bs-custom-class="crafter-tooltip"
+                               data-hint-key="HINT_VAT">
+                            </i>
 
                             {# 2. Country select (flags) — last #}
                             {% if field.field.is_country_override %}
-                            <select class="country-flags field-country-select"
+                            <select class="country-flags field-country-select flex-shrink-0"
                                     name="{{ field.name }}_country"
                                     id="id_{{ field.name }}_country"
                                     hx-get="{% url 'sheet_crafter:generate_field' %}"
@@ -92,37 +117,45 @@
                                 {% endfor %}
                             </select>
                             {% endif %}
+
                         </div>
 
                     {% elif field.field.hint_key ==  'HINT_TIN'%}
+
                         {# ─── TIN: input + country select + tooltip + recalc ─── #}
-                        <div class="input-group-tin">
+                        <div class="input-group-tin d-flex align-items-center gap-2">
+
                             {{ field }}
 
                             {# 1. Recalc icon (calculator) — right after the input #}
                             {% if field.field.needs_tin_calc %}
-                            <span class="recalc-icon"
+                            <span class="d-inline-flex align-items-center flex-shrink-0"
                                   hx-post="{% url 'sheet_crafter:calculate_tin' %}"
                                   hx-target="#{{ field.id_for_label }}"
                                   hx-vals='{{ field.field.calc_fields|safe }}'
                                   hx-include="#id_{{ field.name }}_country{% if field.field.hx_include_fields %},{{ field.field.hx_include_fields }}{% endif %}"
-                                  hx-swap="outerHTML">
-                                <i class="bi bi-calculator-fill"></i>
-                                <span class="tooltip-text">{{ ui.HINT_RECALC|safe }}</span>
+                                  hx-swap="outerHTML"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  data-bs-title="{{ ui.HINT_RECALC }}"
+                                  data-bs-custom-class="crafter-tooltip">
+                                <i class="recalc-icon bi bi-calculator-fill fs-2"></i>
                             </span>
                             {% endif %}
 
                             {# 2. Tooltip icon (info) — after calculator #}
-                            <span class="tooltip-icon">
-                                <i class="bi bi-info-circle-fill"></i>
-                                <span class="tooltip-text" data-hint-key="HINT_TIN">
-                                    {{ resolved_hints.HINT_TIN|safe }}
-                                </span>
-                            </span>
+                            <i class="tooltip-icon bi bi-info-circle-fill fs-2 flex-shrink-0"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               data-bs-html="true"
+                               data-bs-title="{{ resolved_hints.HINT_TIN|safe }}"
+                               data-bs-custom-class="crafter-tooltip"
+                               data-hint-key="HINT_TIN">
+                            </i>
 
                             {# 3. Country select (flags) — last #}
                             {% if field.field.is_country_override %}
-                            <select class="country-flags field-country-select"
+                            <select class="country-flags field-country-select flex-shrink-0"
                                     name="{{ field.name }}_country"
                                     id="id_{{ field.name }}_country"
                                     hx-get="{% url 'sheet_crafter:generate_field' %}"
@@ -139,24 +172,29 @@
                                 {% endfor %}
                             </select>
                             {% endif %}
+
                         </div>
 
                     {% elif 'IBAN' in field.field.tags %}
+
                         {# ─── IBAN: input + country select (new branch) ─── #}
-                        <div class="input-group-iban">
+                        <div class="input-group-iban d-flex align-items-center gap-2">
+
                             {{ field }}
 
-                            {# 1. Tooltip icon (info) — after calculator #}
-                            <span class="tooltip-icon">
-                                <i class="bi bi-info-circle-fill"></i>
-                                <span class="tooltip-text">
-                                    {{ ui.HINT_IBAN|safe }}
-                                </span>
-                            </span>
+                            {# 1. Tooltip icon (info) — right after the input #}
+                            <i class="tooltip-icon bi bi-info-circle-fill fs-2 flex-shrink-0"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               data-bs-html="true"
+                               data-bs-title="{{ resolved_hints.HINT_IBAN|safe }}"
+                               data-bs-custom-class="crafter-tooltip"
+                               data-hint-key="HINT_IBAN">
+                            </i>
 
                             {# 2. Country select (flags) — right after input (no icons for IBAN) #}
                             {% if field.field.is_country_override %}
-                            <select class="country-flags field-country-select"
+                            <select class="country-flags field-country-select flex-shrink-0"
                                     name="{{ field.name }}_country"
                                     id="id_{{ field.name }}_country"
                                     hx-get="{% url 'sheet_crafter:generate_field' %}"
@@ -170,16 +208,24 @@
                                 {% endfor %}
                             </select>
                             {% endif %}
+
                         </div>
 
                     {% else %}
+
                         {# ─── Normal fields without country override ─── #}
-                        <div class="input-single">{{ field }}</div>
+                        <div class="input-single">
+                            {{ field }}
+                        </div>
 
                     {% endif %}
                 {% endif %}
             {% endif %}
         {% endfor %}
+
+        <p class="small fst-italic text-center mt-5 mb-0">
+            {{ ui.PDF_END }}
+        </p>
     </div>
 
 </form>

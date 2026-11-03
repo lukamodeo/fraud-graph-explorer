@@ -84,10 +84,11 @@ class SheetCrafterForm(forms.Form):
                 #print(f"DEBUG: {internal_name} — schema has calc_fields: {calc_fields is not None}, value: {calc_fields}")
                 if calc_fields:
                     self.fields[internal_name].calc_fields = json.dumps(calc_fields)
-                    include_ids = []
-                    for key, fname in calc_fields.items():
-                        if key != 'tin':   # don't include the TIN field itself
-                            include_ids.append(f"#id_{fname}")
+                    # include_ids = []
+                    # for key, fname in calc_fields.items():
+                    #     if key != 'tin':   # don't include the TIN field itself
+                    #         include_ids.append(f"#id_{fname}")
+                    include_ids = [f"#id_{fname}" for fname in calc_fields.values()]
                     self.fields[internal_name].hx_include_fields = ",".join(include_ids)
                 else:
                     self.fields[internal_name].calc_fields = ""

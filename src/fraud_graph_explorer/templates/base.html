@@ -50,6 +50,30 @@
         </style>
         {% endif %}
 
+        <style>
+            body {
+                background-image: url("{% static 'img/login-bg-v2.jpg' %}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+            }
+
+            #main-nav {
+                backdrop-filter: blur(10px);
+                background: initial;
+                border-bottom: 1px solid cadetblue;
+                flex-shrink: 0;
+                height: 34px;
+            }
+        </style>
+
         {% block extra_head %}{% endblock %}
 
     </head>
@@ -57,11 +81,11 @@
     <body>
 
         {% block nav %}
-        <nav class="text-bg-dark py-1 px-3 d-flex justify-content-between align-items-center" style="height: 32px;">
+        <nav id="main-nav" class="text-white py-1 px-3 d-flex justify-content-between align-items-center">
             <strong class="text-light">Fraud Graph Explorer</strong>
             <div class="d-flex align-items-center gap-3">
-                <a href="{% url 'sheet_crafter:crafter' %}" class="text-warning text-decoration-none">Sheet Crafter</a>
-                <a href="{% url 'graph_explorer:dashboard' %}" class="text-warning text-decoration-none">Graph Explorer</a>
+                <a href="{% url 'sheet_crafter:crafter' %}" class="btn btn-sm btn-warning rounded-pill py-0 px-3 text-decoration-none">Sheet Crafter</a>
+                <a href="{% url 'graph_explorer:dashboard' %}" class="btn btn-sm btn-warning rounded-pill py-0 px-3 text-decoration-none">Graph Explorer</a>
                 <span class="text-secondary">|</span>
                 <span class="text-light small">{{ user.username }}</span>
                 <form action="/logout/" method="post" class="d-inline">

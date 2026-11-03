@@ -1,321 +1,162 @@
 /* src/fraud_graph_explorer/static/css/crafter_style.css */
 
-body {
-    background: #666;
-    padding: 0;
-    margin: 0;
+/* Flexbox Fix (Bootstrap doesn't have these utility natively) */
+.min-height-0 {
+    min-height: 0;
 }
-
-.header-container {
-    max-width: 780px;
-    padding-top: 5px;
-    padding-bottom: 12px;
-    margin: auto;
-    text-align: center;
-    color: #fff;
-    /*background: #0077aa;
-    border-radius: 0 0 10px 10px;*/
+.min-width-0 {
+    min-width: 0;
 }
-
-.header-container h1 {
-    margin: 0.5rem;
-    font-size: 1.8rem;
-}
-
-.header-container p {
-    margin: 0.2rem;
-    line-height: 1.6rem;
-}
-
-.form-container {
-    max-width: 800px;
-    padding: 10px;
-    margin: auto;
-}
-
-
-.ddn-container {
-    padding: 16px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background: #fff;
-    display: grid;
-    grid-template-columns: 3fr 2fr;
-    gap: 1.2rem;
-    align-items: middle;
-}
-
-@media (max-width: 768px) {
-    .ddn-container {
-        grid-template-columns: 1fr;
-    }
-
-    .buttons-group {
-        flex-direction: row;
-        justify-content: center;
-    }
-}
-
-.select-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.buttons-group {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-
-.action-btn {
-    padding: 0 16px;
-    height: 40px;
-    font-size: medium;
-}
-
-label {
-    display: block;
-    font-weight: bold;
-    margin-top: 12px;
-    margin-left: 5px;
-}
-
-.country-hint {
-    margin-top: 0.2rem;
-    margin-left: 5px;
-    font-size: small;
-    font-style: italic;
-}
-
-.pdf-container {
-    padding: 16px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background: #f9f9f9;
-}
-
 
 .ddn-container select,
 .pdf-container input,
 .pdf-container select {
     width: 100%;
-    padding: 8px;
+    padding: 8px 12px;
     margin-top: 5px;
     box-sizing: border-box;
     border-radius: 0.5rem;
     border: 1px solid #999;
     font-size: larger;
 }
-.ddn-container select:focus,
-.pdf-container input:focus,
-.pdf-container select:focus {
-    border-color: #0057ff;
-    outline: none;
+
+
+/* Header: glass effect and maximum width */
+.header-container {
+    max-width: 776px;
+    backdrop-filter: blur(10px);
+    background: initial;
+    border: 1px solid cadetblue;
 }
 
-
-button {
-    margin-top: 16px;
-    padding: 10px 16px;
-    background: #007bff; /* 0d6efd; */
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    cursor: pointer;
+/* Main navigation */
+#main-nav {
+    height: 34px;
 }
 
-button:hover {
-    background: #0b5ed7;
+/* Main form width */
+.form-container {
+    max-width: 800px;
 }
 
-.data-entry{
-    font-size: small;
-    font-style: italic;
-    text-align: center;
+/* Dropdown area: retain the custom 3:2 grid */
+.ddn-container {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    align-items: center;
 }
 
-.hint {
-    font-size: 0.85em;
-    color: #666;
+/* Responsive layout */
+@media (max-width: 767.98px) {
+    .ddn-container {
+        grid-template-columns: 1fr;
+    }
 }
 
-form h5 {
-    text-align: center;
-    background: #cdd;
-    padding: 0.4rem;
-    border-radius: 0.3rem;
-    margin-top: 40px !important;
-    margin-bottom: 0 !important;
-    font-weight: bold;
+/* Country hint */
+.country-hint {
+    margin-left: 5px;
 }
 
-
-/* Country override select — flags only, narrow width */
+/* Country override select: flags only */
 .field-country-select {
-    display: inline-block;
     width: auto !important;
     min-width: 3rem;
     max-width: 4rem;
     padding: 0.25rem 0.3rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
     font-size: 1rem;
     cursor: pointer;
     vertical-align: middle;
 }
 
-/* Force flex layout so input + select + icons sit on one line */
+/* Compact input groups */
 .input-group-vat,
 .input-group-tin,
 .input-group-iban {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* ALL direct children: stay in flex flow, don't overlap */
 .input-group-vat > *,
 .input-group-tin > *,
 .input-group-iban > * {
-    position: relative !important;
-    flex: 0 0 auto !important;
-}
-
-/* Input takes available space, doesn't force full width */
-.input-group-vat input[type="text"],
-.input-group-tin input[type="text"],
-.input-group-iban input[type="text"] {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    width: auto !important;
-}
-
-/* Select and icons are fixed-width, don't shrink */
-.field-country-select,
-.tooltip-icon,
-.recalc-icon {
+    position: relative;
     flex: 0 0 auto;
 }
 
-/* Tooltip Styles */
-.tooltip-icon .bi,
-.recalc-icon .bi {
-    font-size: 1.8rem;
+/* Input takes remaining space */
+.input-group-vat input[type="text"],
+.input-group-tin input[type="text"],
+.input-group-iban input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
 }
+
+/* Tooltip and recalculation icons */
+.tooltip-icon,
+.recalc-icon {
+    font-size: 1.8rem;
+    flex: 0 0 auto;
+}
+
 .tooltip-icon {
     color: #369;
     cursor: help;
 }
+
 .recalc-icon {
     color: #396;
     cursor: pointer;
 }
 
-.tooltip-text {
-    visibility: hidden;
-    color: #fff;
-    text-align: center;
-    border-radius: 8px;
-    border-bottom-right-radius: 0;
-    padding: 8px;
-    position: absolute;
-    z-index: 1;
-    bottom: 100%;
-    left: 50%;
-    opacity: 0;
-    transition: opacity 0.3s;
-    font-size: medium;
+/* Bootstrap tooltip customization */
+.crafter-tooltip {
+    --bs-tooltip-bg: darkblue;
+    --bs-tooltip-color: white;
 }
 
-.tooltip-icon .tooltip-text{
-    background-color: #369;
-    width: 360px;
-    margin-left: -384px;
-}
-
-.recalc-icon .tooltip-text {
-    background-color: #396;
-    width: 70px;
-    margin-left: -90px;
-}
-
-.recalc-icon:hover .tooltip-text,
-.tooltip-icon:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-}
-
-/* Modal */
+/* Native HTML dialog */
 .crafter-dialog {
     padding: 0;
     border: none;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.crafter-dialog-container {
-    padding: 40px;
-    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .crafter-dialog-container p {
     line-height: 1.5rem;
 }
 
-.modal-button {
-    padding: 0 40px;
-    height: 40px;
-    font-size: medium;
-}
-
-.modal-label {
-    margin-bottom: 0.2rem;
-}
-
-.modal-check-label {
-    margin-right: 0.2rem;
-    display: inline;
-}
-
-
+/* Modal form: retain the two-column layout */
 #tin-data-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
 
+@media (max-width: 767.98px) {
+    #tin-data-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Center modal form fields */
 .modal-form-field {
     display: flex;
     flex-direction: column;
-    align-items: center;    /* center label and control */
+    align-items: center;
+}
+
+/* Modal checkbox label */
+.modal-check-label {
+    display: inline;
 }
 
 .modal-check-group,
 .modal-button {
-    grid-column: 1 / -1;    /* span both columns */
-    justify-self: center;   /* center button on second row */
-}
-
-.modal-form-field input,
-.modal-form-field select {
-    padding: 8px;
-    margin-top: 5px;
-    box-sizing: border-box;
-    border-radius: 0.5rem;
-    font-size: large;
-    /*font-family: Tahoma, Arial;*/
-}
-
-
-@media (max-width: 768px) {
-    #tin-data-form {
-        grid-template-columns: 1fr;
-    }
-
-    .modal-check-group,
-    .modal-button {
-        grid-column: auto;
-    }
+    grid-column: 1 / -1;
+    justify-self: center;
 }
 

@@ -192,7 +192,7 @@ def _normalize_value(raw_value: str, config: dict, country_code: str):
 
     return norm_value
 
-def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False):
+def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False, user=None):
     """
     Parses a PDF from memory, normalizes data, runs validation/rules,
     and creates Graph nodes/edges.
@@ -290,7 +290,7 @@ def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False):
         for internal_name, raw_value, config in extracted_data:
             if internal_name == "request_number":
                 # Check if an application with this request number already exists
-                existing_app = Application.objects.filter(request_number=raw_value).first()
+                existing_app = Application.objects.filter(request_number=raw_value, user=user).first()
                 if existing_app:
                     if not overwrite:
                         print(f"Duplicate detected: {raw_value}")
@@ -318,6 +318,7 @@ def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False):
     # STEP 3 & 4: Validations and Business Rules
     # ==========================================
     app = Application(
+        user=user,
         country_code=country_code,
         file_name=file_name,
         validation_errors=[],
@@ -480,7 +481,7 @@ def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False):
 
     return app, None, None
 
-def annotate_has_links(apps_qs):
+def annotate_has_links(apps_qs, user):
     """
     Attach a `has_links` boolean attribute to each Application in `apps_qs`,
     indicating whether at least one OTHER application shares an Entity via
@@ -515,6 +516,7 @@ def annotate_has_links(apps_qs):
         UsesIdentifier.objects
         .filter(entity_id__in=all_my_entity_ids)
         .exclude(application_id__in=app_pks)
+        .filter(application__user=user)          # ← NEW: only same user's sheets
         .values_list('entity_id', flat=True)
     ) if all_my_entity_ids else set()
 

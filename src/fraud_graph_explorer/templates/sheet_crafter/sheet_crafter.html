@@ -1,4 +1,4 @@
-<!-- src/fraud_graph_explorer/templates/sheet_crafter/sheet_crafter.html -->
+{# src/fraud_graph_explorer/templates/sheet_crafter/sheet_crafter.html #} 
 
 {% extends "base.html" %}
 
@@ -8,68 +8,86 @@
 {% block title %}{{ ui.TITLE }}{% endblock %}
 
 {% block extra_head %}
+
     {# Crafter-specific CSS #}
     <link rel="stylesheet" type="text/css" href="{% static 'css/crafter.css' %}"/>
+
 {% endblock %}
 
 {% block content %}
 
-    <div class="header-container">
-        <h1>{{ ui.HEADER }}</h1>
-        <p>{{ ui.INSTRUCTIONS|safe }}</p>
+    <div class="container header-container flex-shrink-0 my-2 mx-auto py-2 text-white text-center rounded-2">
+        <h1 class="my-2 fs-3">{{ ui.HEADER }}</h1>
+        <p class="my-1 lh-base">{{ ui.INSTRUCTIONS|safe }}</p>
     </div>
-    <!-- This container is what HTMX will swap out -->
-    <div id="form-container" class="form-container">
+    
+    {# This container is what HTMX will swap out #} 
+    <div id="form-container" class="container form-container d-flex flex-column flex-grow-1 overflow-hidden min-height-0 my-0 pt-0">
         {% include "sheet_crafter/_form.html" %}
     </div>
 
-    <!-- Native HTML Dialog -->
+    {# Native HTML Dialog #}
     <dialog id="tin-data-dialog" class="crafter-dialog">
-        <div class="crafter-dialog-container">
 
-            <h3 style="margin-top: 0;">{{ ui.MODAL_TITLE }}</h3>
+        <div class="crafter-dialog-container p-5 text-center">
 
-            <p>{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
+            <h3 class="mt-0">{{ ui.MODAL_TITLE }}</h3>
 
-            <!-- Dialog Form -->
+            <p class="lh-base">{{ ui.MODAL_INSTRUCTIONS|safe }}</p>
+
+            {# Dialog Form #} 
             <form id="tin-data-form" method="dialog">
 
-                <!-- Sex Selector -->
+                {# Sex Selector #} 
                 <div class="modal-form-field">
-                    <label for="modal-sex-select" class="modal-label">{{ ui.MODAL_SEX_LABEL }}</label>
-                    <!-- Added required attribute and empty disabled option -->
-                    <select id="modal-sex-select" name="sex" required>
+
+                    <label for="modal-sex-select" class="modal-label mb-1">
+                        {{ ui.MODAL_SEX_LABEL }}
+                    </label>
+
+                    <select id="modal-sex-select" name="sex" class="form-select" required>
                         <option value="M">{{ ui.MODAL_SEX_MALE }}</option>
                         <option value="F">{{ ui.MODAL_SEX_FEMALE }}</option>
                     </select>
+
                 </div>
 
-                <!-- DOB Selector -->
+                {# DOB Selector #} 
                 <div class="modal-form-field">
-                    <label for="modal-dob-input" class="modal-label">
+
+                    <label for="modal-dob-input" class="modal-label mb-1">
                         {{ ui.MODAL_DOB_LABEL }}
                     </label>
-                    <input type="date" id="modal-dob-input" name="dob" required>
+
+                    <input type="date" id="modal-dob-input" name="dob" class="form-control" required>
+
                 </div>
 
-                <!-- Recalculate TIN Checkbox -->
-                <div class="modal-check-group">
-                    <input type="checkbox" id="modal-recalc-tin" name="recalc_tin" checked>
-                    <label for="modal-recalc-tin" class="modal-check-label">
-                        {{ ui.MODAL_RECALC_TIN_LABEL }}
+                {# Recalculate TIN Checkbox #} 
+                <div class="modal-check-group d-flex align-items-center justify-content-center gap-1">
+
+                    <input type="checkbox" id="modal-recalc-tin" name="recalc_tin" class="form-check-input" checked>
+
+                    <label for="modal-recalc-tin" class="modal-check-label" id="modal-recalc-tin-label">
+                        {# Filled dynamically by openTinDataDialog() based on the TIN's override country #}
                     </label>
+
                 </div>
 
-                <button type="submit" class="modal-button">
+                <button type="submit" class="btn btn-primary modal-button px-5 py-1">
                     {{ ui.MODAL_BTN }}
                 </button>
 
             </form>
+
         </div>
+
     </dialog>
 
 {% endblock %}
 
 {% block scripts %}
+    <script>window.FIELD_HINTS = {{ hints_json|safe }};</script>
+    <script>window.MODAL_RECALC_LABELS = {{ modal_recalc_labels_json|safe }};</script>
     <script src="{% static 'js/sheet_crafter.js' %}" defer></script>
 {% endblock %}

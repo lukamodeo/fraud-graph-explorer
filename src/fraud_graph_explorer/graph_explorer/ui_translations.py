@@ -1728,11 +1728,11 @@ UI_STRINGS = {
         },
 
     "ABOUT_TITLE": {
-        "it":    "Informazioni",
-        "de":    "Über",
-        "fr":    "À propos",
-        "es":    "Acerca de",
-        "en-gb": "About",
+        "it": "Concept",
+        "de": "Konzept",
+        "fr": "Concept",
+        "es": "Concepto",
+        "en-gb": "Concept"
     },
     "ABOUT_SUBTITLE": {
         "it":    "Documentazione del progetto renderizzata da README.md",

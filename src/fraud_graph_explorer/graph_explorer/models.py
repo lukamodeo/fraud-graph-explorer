@@ -1,7 +1,9 @@
 # src/fraud_graph_explorer/graph_explorer/models.py
 
 import uuid
+
 from django.db import models
+from django.conf import settings
 
 from fraud_graph_explorer.domain_schema import FIELDS, EntityTypes, CountryCodes
 
@@ -62,6 +64,7 @@ class Application(models.Model):
     rule_warnings = models.JSONField(default=list, blank=True)
 
     country_code = models.CharField(max_length=2, choices=CountryCodes.choices)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='applications')
     pdf_file = models.FileField(upload_to=pdf_upload_path, blank=True, null=True)
 
     # Type hint for PyCharm to understand the reverse M2M relation

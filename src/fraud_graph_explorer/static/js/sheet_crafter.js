@@ -28,6 +28,13 @@ function openTinDataDialog(sexFieldName, dobFieldName, tinFieldName) {
     document.getElementById('modal-dob-input').value = currentDobInput.value || "";
     document.getElementById('modal-recalc-tin').checked = true; // Reset to checked
 
+    // Set the recalc label based on the TIN's override country
+    const recalcLabel = document.getElementById('modal-recalc-tin-label');
+    if (recalcLabel) {
+        const labels = window.MODAL_RECALC_LABELS || {};
+        recalcLabel.textContent = labels[tinCountry] || '';
+    }
+
     dialog.showModal();
 }
 
@@ -102,10 +109,22 @@ document.addEventListener('DOMContentLoaded', () => {
  * callback instead.
  */
 function updateFieldValue(inputId, event) {
-    if (event.detail.xhr.status === 200) {
-        const input = document.getElementById(inputId);
-        if (input) {
-            input.value = event.detail.xhr.responseText.trim();
+    if (event.detail.xhr.status !== 200) return;
+
+    const data = JSON.parse(event.detail.xhr.responseText.trim());
+    const input = document.getElementById(inputId);
+
+    if (input && data.value !== undefined) {
+        input.value = data.value;
+    }
+
+    // Populate hidden calc fields (sex, dob, birthplace)
+    if (data.updates) {
+        for (const [fieldName, fieldValue] of Object.entries(data.updates)) {
+            const fieldInput = document.getElementById('id_' + fieldName);
+            if (fieldInput) {
+                fieldInput.value = fieldValue;
+            }
         }
     }
 
@@ -113,16 +132,42 @@ function updateFieldValue(inputId, event) {
     const select = event.detail.requestConfig.elt;
     if (select && window.FIELD_HINTS) {
         const country = select.value;
-        const container = select.closest('.input-group, .input-group-tin');
+        const container = select.closest('.input-group-vat, .input-group-tin, .input-group-iban');
         if (container) {
-            const tooltipText = container.querySelector('.tooltip-text[data-hint-key]');
-            if (tooltipText) {
-                const hintKey = tooltipText.dataset.hintKey;
+            const tooltipEl = container.querySelector('[data-bs-toggle="tooltip"][data-hint-key]');
+            if (tooltipEl) {
+                const hintKey = tooltipEl.dataset.hintKey;
                 const hints = window.FIELD_HINTS[hintKey];
                 if (hints && typeof hints === 'object' && hints[country]) {
-                    tooltipText.innerHTML = hints[country];
+                    console.log(hints[country]);
+                    // Update the tooltip content
+                    tooltipEl.setAttribute('data-bs-title', hints[country]);
+                    const tooltip = bootstrap.Tooltip.getInstance(tooltipEl);
+                    if (tooltip) {
+                        tooltip.setContent({ '.tooltip-inner': hints[country] });
+                    }
                 }
             }
         }
     }
 }
+
+
+// ─── Bootstrap tooltip initialization ───
+function initTooltips() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        bootstrap.Tooltip.getOrCreateInstance(el, {
+            container: 'body',
+            html: true,
+            sanitize: false
+        });
+    });
+    // Force Chrome to flush its hit-test cache
+    document.body.getBoundingClientRect();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initTooltips);
+
+// Re-initialize after HTMX swaps (when form is re-rendered on country change)
+document.body.addEventListener('htmx:afterSettle', initTooltips);

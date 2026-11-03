@@ -8,6 +8,8 @@ Usage:
     python manage bulk_ingest_pdfs --folder /tmp/fraud_pdfs --overwrite
 """
 import os
+
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
 from fraud_graph_explorer.graph_explorer.services import ingest_pdf
@@ -17,14 +19,15 @@ class Command(BaseCommand):
     help = "Bulk-ingest PDF loan applications from a folder."
 
     def add_arguments(self, parser):
-        parser.add_argument('--folder', type=str, required=True,
-            help="Path to the folder containing PDF files")
-        parser.add_argument('--overwrite', action='store_true',
-            help="Overwrite existing sheets with the same request number")
+        parser.add_argument('--user', type=str, required=True, help="Username to ingest the PDFs as (required)")
+        parser.add_argument('--folder', type=str, required=True, help="Path to the folder containing PDF files")
+        parser.add_argument('--overwrite', action='store_true', help="Overwrite existing sheets with the same request number")
 
     def handle(self, *args, **options):
         folder = options['folder']
         overwrite = options['overwrite']
+
+        user = User.objects.get(username=options['user'])
 
         if not os.path.isdir(folder):
             self.stdout.write(self.style.ERROR(f"Folder not found: {folder}"))
@@ -49,7 +52,8 @@ class Command(BaseCommand):
                 app, error_code, existing = ingest_pdf(
                     pdf_bytes=pdf_bytes,
                     file_name=filename,
-                    overwrite=overwrite
+                    overwrite=overwrite,
+                    user=user,
                 )
 
                 if app:

@@ -93,8 +93,10 @@ def detect_vat_country(value):
     # (per EU VAT format: 'IT12345678901', 'DE123456789', etc.)
     # Compact first (strip whitespace, uppercase) then slice.
     country = stdnum_vatin.compact(value)[:2].upper()
+
     if country not in TARGET_COUNTRIES:
         return None
+
     return country
 
 

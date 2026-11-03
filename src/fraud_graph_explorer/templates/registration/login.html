@@ -2,17 +2,28 @@
 
 {% load static %}
 
+{% block extra_head %}
+<style>
+    .card {
+        backdrop-filter: blur(10px);
+        background: initial;
+        color: white;
+        border: 1px solid cadetblue;
+    }
+</style>
+{% endblock %}
+
 {% block nav %}{% endblock %}
 
 {% block content %}
     <div class="container-fluid">
-        <div class="row justify-content-center align-items-center vh-100 bg-secondary opacity-75">
+        <div class="row justify-content-center align-items-center vh-100">
             <div class="col-md-3">
                 <div class="card shadow">
                     <div class="card-body py-4 px-5">
 
                         <h3 class="text-center mb-1">Fraud Graph Explorer</h3>
-                        <p class="text-center text-muted mb-4">{{ login_ui.subtitle }}</p>
+                        <p class="text-center text-info mb-4">{{ login_ui.subtitle }}</p>
 
                         {% if form.errors %}
                         <div class="alert alert-danger text-center py-2">
@@ -26,22 +37,24 @@
                         </div>
                         {% endif %}
 
-                        <form method="post">
+                        <form method="post" class="w-75 mx-auto">
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label class="form-label" for="id_username">{{ login_ui.username }}</label>
                                 <input type="text" name="username"
                                        id="id_username" class="form-control"
+                                       style="border: 1px solid #999;"
                                        autofocus autocomplete="username" required>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-5">
                                 <label class="form-label" for="id_password">{{ login_ui.password }}</label>
                                 <input type="password" name="password"
                                        id="id_password" class="form-control"
-                                        autocomplete="current-password" required>
+                                       style="border: 1px solid #999;"
+                                       autocomplete="current-password" required>
                             </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary rounded-pill">
                                     {{ login_ui.submit }}
                                 </button>
                             </div>

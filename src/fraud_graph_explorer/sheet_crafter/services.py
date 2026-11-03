@@ -94,7 +94,12 @@ def _calculate_french_tin(fullname: str, sex: str, dob: str, birthplace: str) ->
 
 
 def get_calculated_tin(country_code: str, data: dict) -> str:
-    """Router function to call the right TIN calculator."""
+    """Router function to call the right TIN calculator.
+
+    Note: mutates `data` in place, writing back the resolved dob/birthplace
+    values (fallbacks and normalizations). Callers can read data['dob'] and
+    data['birthplace'] after the call to get the actual values used.
+    """
     fullname = data.get('fullname', '')
     sex = data.get('sex', '') or 'M'
     dob = data.get('dob', '')
@@ -106,6 +111,7 @@ def get_calculated_tin(country_code: str, data: dict) -> str:
     if not dob:
         _fallback_profile = get_random_profile(country_code)
         dob = _fallback_profile['birthdate']
+        data['dob'] = dob               # <-- NEW: write back fallback
 
     # Validate birthplace format per country
     if country_code == 'IT':
@@ -113,13 +119,16 @@ def get_calculated_tin(country_code: str, data: dict) -> str:
             if not _fallback_profile:
                 _fallback_profile = get_random_profile('IT')
             birthplace = _fallback_profile['birthplace']
+            data['birthplace'] = birthplace   # <-- NEW: write back fallback
         else:
             birthplace = birthplace.upper()
+            data['birthplace'] = birthplace   # <-- NEW: write back normalized
     elif country_code == 'FR':
         if not re.match(r'^\d{5}$', birthplace or ''):
             if not _fallback_profile:
                 _fallback_profile = get_random_profile('FR')
             birthplace = _fallback_profile['birthplace']
+            data['birthplace'] = birthplace   # <-- NEW: write back fallback
 
     if country_code == 'IT':
         return _calculate_italian_tin(fullname, sex, dob, birthplace)

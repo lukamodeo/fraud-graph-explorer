@@ -5,7 +5,7 @@ import json
 import tempfile
 
 from django.shortcuts import render
-from django.http import FileResponse, Http404, HttpResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.utils.translation import get_language
 from django.contrib.auth.decorators import login_required
 
@@ -14,6 +14,7 @@ from .services import generate_pdf_sheet, generate_dynamic_initial_data, get_cal
 from .ui_translations import get_ui_strings
 from .seed_data import get_random_data, get_random_profile
 from fraud_graph_explorer.domain_schema import FIELDS, CountryCodes
+from fraud_graph_explorer.validators.country_detection import detect_tin_country
 
 # HELPER FUNCTIONS
 def _extract_hints(ui_strings, country):
@@ -27,7 +28,8 @@ def _extract_hints(ui_strings, country):
     hints_by_country = {
         'HINT_VAT': ui_strings.get('HINT_VAT', {}),
         'HINT_TIN': ui_strings.get('HINT_TIN', {}),
-        }
+        'HINT_IBAN': ui_strings.get('HINT_IBAN', {}),
+    }
     resolved_hints = {}
     for hint_key, hint_val in hints_by_country.items():
         if isinstance(hint_val, dict):
@@ -53,6 +55,8 @@ def generate_field_value(request):
 
     Returns: the new value as plain text (HTMX swaps it into the input).
     """
+
+
     field_name = request.GET.get('field', '')
     sheet_country = request.GET.get('sheet_country', 'GB').upper()
 
@@ -63,13 +67,14 @@ def generate_field_value(request):
         if key.endswith('_country'):
             override_country = request.GET[key].upper()
             break
-    # ─────────────────────────────────────────────────────────────────────────────
+
 
     if not field_name or not override_country:
-        return HttpResponse('', content_type='text/plain')
+        return JsonResponse({'value': '', 'updates': {}})
 
     config = FIELDS.get(field_name, {})
     tags = config.get('tags', [])
+    updates = {}
 
     if 'VAT' in tags:
         value = get_random_data(override_country, 'vat')
@@ -81,29 +86,43 @@ def generate_field_value(request):
         if override_country in ('IT', 'FR'):
             # Algorithmic TIN — need fullname/sex/dob/birthplace from the form
             calc_fields = config.get('calc_fields', {})
-            fullname = request.GET.get(calc_fields.get('fullname', ''), '')
-            sex = request.GET.get(calc_fields.get('sex', ''), '')
-            dob = request.GET.get(calc_fields.get('dob', ''), '')
-            birthplace = request.GET.get(calc_fields.get('birthplace', ''), '')
 
-            value = get_calculated_tin(override_country, {
-                'fullname': fullname,
-                'sex': sex,
-                'dob': dob,
-                'birthplace': birthplace,
-                })
+            # Build the calc data dict from the form's hidden fields
+            calc_data = {
+                'fullname':    request.GET.get(calc_fields.get('fullname', ''), ''),
+                'sex':         request.GET.get(calc_fields.get('sex', ''), ''),
+                'dob':         request.GET.get(calc_fields.get('dob', ''), ''),
+                'birthplace':  request.GET.get(calc_fields.get('birthplace', ''), ''),
+            }
+
+            # Snapshot original values to detect what get_calculated_tin() resolved
+            original_dob = calc_data['dob']
+            original_birthplace = calc_data['birthplace']
+
+            value = get_calculated_tin(override_country, calc_data)
+
+            # calc_data is now mutated with resolved dob/birthplace.
+            # Send updates only for fields that actually changed.
+            if calc_data['dob'] != original_dob:
+                updates[calc_fields.get('dob', '')] = calc_data['dob']
+            if calc_data['birthplace'] != original_birthplace:
+                updates[calc_fields.get('birthplace', '')] = calc_data['birthplace']
         else:
             # DE/ES/GB: pick from the override country's TIN pool
             profile = get_random_profile(override_country)
             value = profile['tin']
+
     else:
         value = ''
 
-    # ─── FIX: return the value as plain text ───
-    return HttpResponse(value, content_type='text/plain')
+    # Uniform contract: always JSON, always {value, updates}
+    return JsonResponse({'value': value, 'updates': updates})
 
 @login_required
 def calculate_tin_view(request):
+
+    print(f"==> CALCULATE_TIN_VIEW")
+
     if request.method == 'POST':
         # HTMX flattens the JSON object into POST keys.
         fullname_key = request.POST.get('fullname')
@@ -152,11 +171,21 @@ def calculate_tin_view(request):
 
         # ─── Calculate TIN based on country ───
         if country_code in ('IT', 'FR'):
-                new_tin = get_calculated_tin(country_code, form_data)
+            new_tin = get_calculated_tin(country_code, form_data)
         else:
-            # DE/ES/GB: TIN is not algorithmic — pick from the pool
-            profile = get_random_profile(country_code)
-            new_tin = profile['tin']
+            # DE/ES/GB: TIN is not algorithmic.
+            # If the current TIN is already valid for this country, keep it —
+            # the user clicked recalc but the value is fine, no reason to change it.
+            # Only pull from the pool if the current value is invalid/empty
+            # or belongs to a different country.
+            current_tin = request.POST.get(tin_key, '').strip()
+            if current_tin and detect_tin_country(current_tin) == country_code:
+                new_tin = current_tin
+            else:
+                profile = get_random_profile(country_code)
+                new_tin = profile['tin']
+
+        print(f"==> CALCULATE_TIN_VIEW - NEW TIN: {new_tin}")
 
         # Copy the POST data to a mutable dictionary and update the TIN value
         form_data_dict = request.POST.dict()
@@ -198,6 +227,7 @@ def sheet_crafter_view(request):
         form = SheetCrafterForm(initial=initial_data, country_code=country, ui_strings=ui_strings)
 
         resolved_hints, hints_json = _extract_hints(ui_strings, country)   # ← NEW
+        modal_recalc_labels_json = json.dumps(ui_strings.get('MODAL_RECALC_TIN_LABEL', {}))
 
         # Reuse lang_code for the HTML lang attribute
         context = {
@@ -206,6 +236,7 @@ def sheet_crafter_view(request):
             'active_lang': lang_code,
             'resolved_hints': resolved_hints,
             'hints_json': hints_json,
+            'modal_recalc_labels_json': modal_recalc_labels_json
         }
 
         # If it's an HTMX request, return ONLY the form partial
@@ -254,11 +285,13 @@ def sheet_crafter_view(request):
 
             # ─── FIX: Re-render WITH the user's submitted data (don't lose edits) ───
             resolved_hints, hints_json = _extract_hints(ui_strings, country)
+            modal_recalc_labels_json = json.dumps(ui_strings.get('MODAL_RECALC_TIN_LABEL', {}))
             context = {
                 'form': form,                       # ← reuse the invalid form (preserves user's data)
                 'ui': ui_strings,
                 'active_lang': lang_code,
                 'resolved_hints': resolved_hints,
                 'hints_json': hints_json,
+                'modal_recalc_labels_json': modal_recalc_labels_json
             }
             return render(request, 'sheet_crafter/sheet_crafter.html', context)

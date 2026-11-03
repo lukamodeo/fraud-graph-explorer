@@ -4,6 +4,8 @@ A Django-based proof of concept designed to detect fraud in bank loan applicatio
 
 This project allows users to generate synthetic, formally valid loan application PDFs, ingest them, extract identifiers (VAT numbers, Tax Codes, names), and visualize the connections between different applications using an interactive graph. By keeping all countries in the same Vis.js graph, you mimic the behavior of a pan-European Fraud Monitoring tool (like Europol's SIENA or a central bank's AML system). It is highly useful for investigating cases where the same legal representative or applicant appears across multiple different loan applications — **even across country borders** (a French TVA on an Italian application, a German Steuer-ID on a British application, etc.).
 
+A built-in **authentication system** ensures each analyst works in their own private workspace: applications are isolated per user, while the global entity graph (shared identifiers, blacklists) remains common across the whole deployment.
+
 ## 🎯 Core Features
 
 ### 1. Synthetic Application Crafter (`sheet_crafter`) ✅ *Completed*
@@ -15,8 +17,12 @@ An interactive lab for generating realistic test data. It features a 100% config
 *   **Custom UK NINo Validator:** Since `python-stdnum` does not include a UK National Insurance Number validator (only UTR), the project ships a custom regex-based validator that mimics stdnum's `is_valid()` API. This makes UK TINs OECD-canonical rather than using UTR.
 *   **Robust Decimal Normalization:** The ingestion pipeline parses decimal values from PDFs that may contain currency symbols (`€`, `£`, `$`), currency names ("euro", "pounds", "EUR", "GBP"), and locale-specific separators. Country-aware disambiguation (EU dot-thousands/comma-decimal vs. GB comma-thousands/dot-decimal) is applied.
 *   **Controlled Entropy:** Uses a custom component-pool seed system (128 mathematical combinations) to guarantee graph collisions for testing, rather than using purely random generators.
-*   **Interactive Anomaly Injection:** Users can manually edit pre-compiled data. A Bootstrap 5 Modal intercepts name changes for IT/FR profiles to prompt for Sex and DOB, ensuring mathematical consistency before triggering an HTMX TIN recalculation.
+*   **Interactive Anomaly Injection:** Users can manually edit pre-compiled data. A Bootstrap 5 Modal intercepts name changes for IT/FR profiles to prompt for Sex and DOB, ensuring mathematical consistency before triggering an HTMX TIN recalculation. The modal uses a custom `.crafter-dialog` class (renamed from Bootstrap's `.modal-dialog` to avoid the `pointer-events: none` conflict).
 *   **HTML-to-PDF Export:** Renders perfectly styled PDFs using `xhtml2pdf` with embedded Base64 letterheads.
+*   **Per-Field Country Switcher:** VAT, TIN, and IBAN fields each feature a country-flag `<select>` dropdown that overrides the sheet's country for that single identifier — useful for crafting cross-border test cases (e.g., an Italian sheet with a French TVA). Defaults to the sheet's country. Selecting a different country triggers an HTMX call to the `generate_field_value` endpoint, which regenerates a valid identifier for the chosen country and updates the field value + tooltip in place. The original PDF labels still reflect the sheet's country (per-field override affects only the identifier value, not the PDF label translation).
+*   **Country-Specific Tooltips:** VAT and TIN info icons show context-aware help based on the **identifier's** override country (not the sheet's), leveraging the 3D translation engine with the "ANY" wrapper. IBAN has its own dedicated info icon. The IT and FR TIN tooltips are merged into a single component that switches content based on the TIN's override country.
+*   **DE/ES/GB TIN Recalculation:** Since German, Spanish, and UK TINs are administrative (not algorithmic), changing the override country to DE/ES/GB fetches a valid TIN from the seed data pool instead of trying to compute one. TIN birthplace format is validated per country (IT: `^[A-Z]\d{3}$`, FR: `^\d{5}$`) before recalculation; invalid birthplaces fall back to the seed pool.
+*   **Bootstrap Tooltips:** All crafter tooltips use Bootstrap's native tooltip component (appended to `<body>` via `container: 'body'`) with a custom CSS class `crafter-tooltip`, replacing the earlier custom CSS tooltips that were clipped by the scrollable form container.
 
 ### 2. Interactive Graph Explorer (`graph_explorer`) ✅ *Completed*
 The main analytical engine. It ingests the generated PDFs, extracts the key identifiers, and maps the relationships using a custom 5-step pipeline, all presented in a modern, **i2 Analyst's Notebook-style** web interface.
@@ -33,10 +39,10 @@ A sophisticated, 4-tab Bootstrap 5 interface designed to mimic desktop link-anal
     *   **Advanced Filtering:** Accordion-based filter system with wildcard search (`*`), country, status (ok/err/warn/err_or_warn), date range, and **amount range** (min/max with Decimal coercion and graceful invalid-input handling). All filters push state to the URL via `hx-push-url`, allowing analysts to bookmark or share filtered views.
     *   **Filter Badges:** Active filters are displayed as dismissible badges above the table, with formatted values (locale-aware date formatting via `|date:"SHORT_DATE_FORMAT"`, amount formatting via `|floatformat:0|intcomma` for thousands separators). Clicking the X on a badge clears the corresponding input via `removeFilter()`.
     *   **Count Badge in Header:** The accordion header shows a live count badge with both **Total** (absolute DB count) and **Filtered** (current filter result count), updated via out-of-band (OOB) HTMX swaps whenever filters change.
-    *   **Has-Links Column:** A dynamically-computed (per-page, not stored) column shows whether each application has linked applications, using set operations on the `UsesIdentifier` edge table — no DB column needed, automatically reflects new ingests.
+    *   **Has-Links Column:** A dynamically-computed (per-page, not stored) column shows whether each application has linked applications, using set operations on the `UsesIdentifier` edge table — no DB column needed, automatically reflects new ingests. Computation is scoped per user via `annotate_has_links(apps_qs, user)`.
     *   **Locale-Aware Amount Column:** The `request_amount` column uses `|floatformat:0|intcomma` from `django.contrib.humanize`, applying locale-aware thousands separators (e.g., `280.000` for Italian users, `280,000` for British users).
 
-*   **Graph Explorer (Tab 2):** Renders a dynamic `vis.js` network graph showing a root application plus identifiers plus other connected applications (2 hops at a time). Double-clicking any connected application instantly makes it the new root, allowing analysts to seamlessly traverse an infinite web of connections. Includes a toggleable physics engine and interactive legend filters to hide/show specific entity types. The graph auto-fits the canvas when Tab 2 becomes visible (handles the "graph stuck in top-left corner" bug when navigating from Tab 3 to Tab 2).
+*   **Graph Explorer (Tab 2):** Renders a dynamic `vis.js` network graph showing a root application plus identifiers plus other connected applications (2 hops at a time). Double-clicking any connected application instantly makes it the new root, allowing analysts to seamlessly traverse an infinite web of connections. Includes a toggleable physics engine and interactive legend filters to hide/show specific entity types. The graph auto-fits the canvas when Tab 2 becomes visible (handles the "graph stuck in top-left corner" bug when navigating from Tab 3 to Tab 2). Graph traversal respects per-user ownership: linked applications are filtered via `entity.applications.filter(user=request.user)`, so analysts only see **their own** applications even when linked entities exist on other users' applications.
 
 *   **Application Comparison (Tab 3):** A dual-pane view that reconstructs the original PDF layout from database records, using a 50/50 label/value split with monospace font for a data-centric (not PDF-replica) feel.
     *   **Raw Value Display:** Entity-typed fields show the **raw value from the PDF** (preserved on `UsesIdentifier.original_value`), not the normalized form — so currency symbols, original separators, and case are preserved for forensic fidelity. Sheet-tagged fields (like `request_amount`) show from `Application.raw_data` JSONField (preserves the exact PDF text including `€ 280.000,00`).
@@ -44,10 +50,10 @@ A sophisticated, 4-tab Bootstrap 5 interface designed to mimic desktop link-anal
     *   **Foreign Identifier Flag:** A single flag emoji appears next to the value when the field's identifier is foreign to the application (e.g., 🇫🇷 next to a French TVA on an Italian application), based on the row's `is_foreign` flag — avoids the duplicate-flag bug when multiple alerts fire on the same field.
     *   **Cross-Application Value Highlighting (`applyEvidence`):** When the user clicks a Linked Application node in the graph, the shared entity values (the identifiers that link the two applications) are highlighted in BOTH detail panes simultaneously. Root pane highlights use purple background (`#9b59b6`), linked pane highlights use red background (`#e74c3c`), matching the old i2 Notebook visual language. Each highlight includes a bidirectional-arrow icon (`bi-arrow-left-right`) with a tooltip: "Matched value — present in both applications". Highlights auto-clear and re-apply when the user picks a different linked application.
     *   **Stable Selection Behavior:** Clicking on entity nodes, edges, or empty canvas does NOT deselect the current linked application — only clicking another Linked Application changes the selection. This preserves context when the analyst explores the graph structure.
-    *   **Error/Warning Accordions:** Pinned at the bottom of each detail pane, with the same per-alert-type icons prepended to each line (visually linked to the inline badges above). Includes the duplicate count inline (`{count} occurrences`), translated per UI language.
+    *   **Error/Warning Accordions:** Pinned at the bottom of each detail pane, with the same per-alert-type icons prepended to each line (visually linked to the inline badges above). Includes the duplicate count inline (`{count} occurrences`), translated per UI language. Markup is scoped to `.sheet-detail-table` to prevent `<mark>` tags from alert lines leaking into the value cells.
     *   **Empty State:** When no application is selected, the panes show a centered icon + translated message (e.g., "No application selected") via the shared `_empty_state.html` partial.
 
-*   **About (Tab 4):** Project information and localization summary.
+*   **About (Tab 4):** Renders the project's `README.md` content directly inside the dashboard, processed with `markdown2` (using the `cuddled-lists` and `fenced-code-blocks` extras to handle lists immediately after paragraphs and triple-backtick code blocks). Above the rendered README, a translated summary highlights the main feature areas — keeping the analyst oriented without leaving the application.
 
 ### 4. Mixed-Country Identifier Management ✅ *Completed*
 A first-class feature: identifiers (VAT, TIN, IBAN) are NOT restricted to the application's own country. A French TVA can appear on an Italian application, a German Steuer-ID on a British application, etc. The system:
@@ -64,19 +70,42 @@ A custom translation system that handles the complex 2D matrix of (browser_lang 
 *   **`_localized_lookup()` helper:** Transparently handles both string values (regular 1D) and dict values ("ANY"-wrapped 3D) during alert resolution. Fallback chain: identifier_country → application's country → GB → key itself.
 *   **Hand-crafted translations:** Each (browser_lang, identifier_country) combination has its own grammatically-correct translation — no template-based composition that would produce awkward word orders in gendered languages (Italian, French, Spanish, German).
 
+### 6. Authentication & Per-User Isolation ✅ *Completed*
+A complete authentication layer that gives each analyst a private workspace while keeping the entity graph globally shared.
+*   **Django Auth Integration:** Built on `django.contrib.auth` with the standard `User` model. All views are decorated with `@login_required`; unauthenticated users are redirected to the login page. No self-registration — accounts are admin-created via `manage createsuperuser` or the Django admin.
+*   **Custom Login View:** `CustomLoginView` (in `config/views.py`) injects the `login_ui` translation set into the context based on the browser's `Accept-Language` header. The login page extends `base.html`, hides the main nav (`{% block nav %}` override), uses Bootstrap 5 card/form classes, and ships with a configurable background image. Translations are sourced from `config/login_translations.py` (`LOGIN_STRINGS` dict, 5 languages).
+*   **Nav Bar Restructure:** `base.html` exposes a `{% block nav %}` so the login page can suppress it. Authenticated users see their username + a logout button in the nav bar. Template inheritance blocks: `{% block lang %}`, `{% block title %}`, `{% block extra_head %}`, `{% block nav %}`, `{% block content %}`, `{% block scripts %}`.
+*   **Per-User Application Isolation (Option A):** The `Application` model has a `user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE, related_name='applications')` FK. Every list/detail/delete view filters querysets by `request.user` and uses `get_object_or_404(..., user=request.user)` for ownership checks. Duplicate-detection at ingest time is scoped per user (`ingest_pdf(..., user=...)`).
+*   **Shared Global Entity Graph:** `Entity` records (identifiers) are **not** user-scoped — they're globally shared, so two analysts who ingest the same VAT will both link to the same `Entity` vertex. This means the `foreign_identifier`, `blacklist`, and `duplicate` rules can fire across users when appropriate (e.g., a blacklisted VAT remains blacklisted for everyone). The graph traversal respects per-user ownership via `entity.applications.filter(user=request.user)`, so analysts only see **their own applications** in the graph even if linked entities exist on other users' applications.
+*   **`annotate_has_links(apps_qs, user)`:** The has-links column computation is scoped per user — it counts linked applications that belong to the same user, not globally.
+
+### 7. Bulk Generation & Ingestion CLI ✅ *Completed*
+Two management commands that simplify PoC demos and bulk testing:
+*   **`bulk_generate_pdfs`:** Generates N synthetic PDFs in one shot. Flags: `--count`, `--output-dir`, `--mixing` (enables cross-country identifier overrides), `--mixing-probability` (0.0–1.0 chance per VAT/TIN/IBAN field to override the sheet country). When mixing is enabled, the command applies random country overrides to VAT/TIN/IBAN fields — exactly mimicking the per-field country switcher in the UI.
+*   **`bulk_ingest_pdfs`:** Ingests every PDF in a folder. Flags: `--folder`, `--overwrite` (re-ingest existing filenames), `--user` (assigns ownership to a specific user; required for per-user isolation). Internally calls `ingest_pdf(..., user=user)` for each file.
+
+Example workflow:
+```bash
+manage bulk_generate_pdfs --count 50 --output-dir /tmp/pdfs --mixing --mixing-probability 0.3
+manage bulk_ingest_pdfs --folder /tmp/pdfs --user alice
+```
+
 ## 🏗️ Architecture & Tech Stack
 
 *   **Backend:** Django (using a modern `src` layout and a `config` settings module).
+*   **Authentication:** Django's built-in `django.contrib.auth` (standard `User` model). All views `@login_required`. Admin-created accounts only (no self-registration). Custom `CustomLoginView` provides browser-language-aware login UI.
 *   **PDF Generation:** `xhtml2pdf` for HTML/CSS-to-PDF rendering.
 *   **PDF Extraction:** `pdfplumber` for raw text extraction and state-machine parsing.
 *   **TIN/ID Validation:** `python-codicefiscale` for Italian ID algorithms, `python-stdnum` for international VAT/IBAN/TIN validation, plus a **custom UK NINo validator** (since `stdnum.gb.nino` doesn't exist).
 *   **Country Detection:** A shared `validators/country_detection.py` module with `detect_vat_country()`, `detect_tin_country()`, `detect_iban_country()` dispatchers — pure functions, no DB access, callable from both `sheet_crafter` (seed data verification) and `graph_explorer` (ingestion, validation, rules).
-*   **Frontend Interactivity:** `HTMX 2.0` for dynamic form updates, Out-Of-Band (OOB) swaps (filter badges, count badges), URL state management (`hx-push-url`), and asynchronous TIN recalculation.
-*   **Frontend Styling:** 100% native **Bootstrap 5.3** (locally hosted) combined with Bootstrap Icons. Custom Noto Color Emoji fonts are used for cross-browser country flags in native dropdowns. Custom CSS for severity-gradient badges (6 classes: `severity-{error|warning}-{high|medium|low}`) and evidence-highlight colors (purple for root pane, red for linked pane).
+*   **Frontend Interactivity:** `HTMX 2.0` for dynamic form updates, Out-Of-Band (OOB) swaps (filter badges, count badges), URL state management (`hx-push-url`), asynchronous TIN recalculation, and per-field country override recalculation.
+*   **Frontend Styling:** 100% native **Bootstrap 5.3** (locally hosted) combined with Bootstrap Icons. Bootstrap tooltips (appended to `<body>` via `container: 'body'`, with `data-bs-custom-class="crafter-tooltip"`) are used throughout to avoid clipping inside scrollable containers. Custom Noto Color Emoji fonts are used for cross-browser country flags in native dropdowns. Custom CSS for severity-gradient badges (6 classes: `severity-{error|warning}-{high|medium|low}`) and evidence-highlight colors (purple for root pane, red for linked pane).
 *   **Frontend Visualization:** `vis.js` (Network module) for the interactive graph UI, featuring dynamic SVG entity icons and ForceAtlas2 physics.
 *   **Frontend Highlighting:** Custom `applyEvidence()` JS function for cross-application value highlighting via regex word-boundary matching, with cleanup-before-apply pattern to handle re-selection.
-*   **CLI Management:** Uses `pyproject.toml` with a custom `manage` script for easy path resolution.
+*   **Markdown Rendering:** `markdown2` with `cuddled-lists` and `fenced-code-blocks` extras for rendering the project README inside Tab 4 of the dashboard.
+*   **CLI Management:** Uses `pyproject.toml` with a custom `manage` script for easy path resolution. Custom management commands (`bulk_generate_pdfs`, `bulk_ingest_pdfs`) for bulk testing workflows.
 *   **Secrets Management:** `python-dotenv` for loading `.env` (gitignored). A committed `.env.example` template documents required env vars for new contributors.
+*   **Layout System:** Flexbox-based layouts (`body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }`) for fixed nav + scrollable content areas, avoiding brittle `calc()` height computations. Templates separate visible DOM (`{% block content %}`) from resources (`{% block scripts %}`) to prevent whitespace text nodes from becoming stray flex items.
 
 ## 🚀 Getting Started
 
@@ -124,12 +153,17 @@ A custom translation system that handles the complex 2D matrix of (browser_lang 
    manage migrate
    ```
 
-6. **Start the development server:**
+6. **Create an admin user** (for logging in and for creating additional analyst accounts via the Django admin):
+   ```bash
+   manage createsuperuser
+   ```
+
+7. **Start the development server:**
    ```bash
    manage runserver
    ```
 
-7. Open your browser and navigate to `http://127.0.0.1:8000/`
+8. Open your browser and navigate to `http://127.0.0.1:8000/`. You'll be redirected to `/login/`. Authenticate with your superuser credentials. To create additional analyst accounts (non-admin users who can ingest and analyze applications), use the Django admin at `/admin/auth/user/`.
 
 ## 📂 Project Structure
 
@@ -148,22 +182,35 @@ fraud-graph-explorer/
         ├── manage                  <-- CLI entry point (installed via pip install -e .)
         ├── domain_schema.py        <-- Shared domain knowledge (Fields, Sections, Enums, helper functions)
         ├── db.sqlite3
-        ├── config/                 <-- Django Project Settings
+        ├── config/                 <-- Django Project Settings + Auth views
+        │   ├── settings.py
+        │   ├── urls.py             <-- CustomLoginView, LogoutView, root redirect to /explorer/
+        │   ├── views.py            <-- CustomLoginView (injects login_ui translations based on browser lang)
+        │   └── login_translations.py  <-- LOGIN_STRINGS dict (5 languages)
         ├── graph_explorer/         <-- App 1: PDF ingestion, Validation Engine, Graph DB, Vis.js UI
-        ├── sheet_crafter/          <-- App 2: Interactive form, TIN recalculation, HTML-to-PDF
+        │   └── management/
+        │       └── commands/
+        │           ├── bulk_generate_pdfs.py  <-- --count/--output-dir/--mixing/--mixing-probability
+        │           └── bulk_ingest_pdfs.py    <-- --folder/--overwrite/--user
+        ├── sheet_crafter/          <-- App 2: Interactive form, TIN recalculation, HTML-to-PDF, country switcher
         ├── static/                 <-- CSS, JS, Fonts, and Images
         │   ├── css/
-        │   │   ├── crafter.css
-        │   │   └── dashboard.css   <-- Custom severity-gradient + evidence-highlight CSS
+        │   │   ├── crafter.css     <-- Flex layout, crafter-tooltip, crafter-dialog
+        │   │   └── dashboard.css   <-- Severity-gradient + evidence-highlight + flex layout
         │   ├── fonts/
         │   ├── img/
         │   ├── js/
         │   │   ├── graph_explorer.js  <-- applyEvidence(), loadGraphData(), tab-switching, etc.
-        │   │   └── sheet_crafter.js
+        │   │   └── sheet_crafter.js   <-- initTooltips(), updateFieldValue(), openTinDataDialog()
         │   └── vendor/
         │       ├── css/
         │       └── js/
-        ├── templates/              <-- Centralized HTML templates (incl. _empty_state.html partial)
+        ├── templates/              <-- Centralized HTML Templates
+        │   ├── base.html           <-- Shared layout: nav, blocks (lang/title/extra_head/nav/content/scripts)
+        │   ├── registration/
+        │   │   └── login.html      <-- Bootstrap-styled login (extends base.html, hides nav, background image)
+        │   └── graph_explorer/
+        │       └── _empty_state.html  <-- Shared partial for empty detail panes
         └── validators/             <-- Shared country-detection helpers
             ├── __init__.py
             ├── country_detection.py  <-- detect_vat_country(), detect_tin_country(), detect_iban_country()
@@ -185,9 +232,15 @@ fraud-graph-explorer/
 *   [x] Add custom UK NINo validator (since stdnum.gb.nino doesn't exist).
 *   [x] Extend `is_foreign` flag to include IBAN (alongside VAT/TIN).
 *   [x] Set up `.env` + `.env.example` workflow for SECRET_KEY management.
+*   [x] Add per-field country switcher (VAT/TIN/IBAN flag dropdowns) in `sheet_crafter`.
+*   [x] Add country-specific tooltips for VAT/TIN via the 3D translation engine.
+*   [x] Implement Django authentication (login/logout, `@login_required`, custom login view with translations).
+*   [x] Implement per-user application isolation (Option A: shared global entities, per-user applications).
+*   [x] Add `bulk_generate_pdfs` and `bulk_ingest_pdfs` management commands.
+*   [x] Render project README inside Tab 4 with `markdown2` (cuddled-lists + fenced-code-blocks extras).
+*   [x] Switch from custom CSS tooltips to Bootstrap tooltips (appended to `<body>`) to fix clipping in scrollable containers.
+*   [x] Fix dashboard flex layout (48px whitespace gap from Django `{# #}` multi-line comment residue leaking as plain text).
 *   [ ] Add fuzzy matching for names during ingestion to catch intentional misspellings.
 *   [ ] Export graph findings to a PDF report.
 *   [ ] Add machine learning anomaly detection based on graph clustering.
 *   [ ] Add phone country detection (via international prefix).
-
-
