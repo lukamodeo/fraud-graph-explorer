@@ -1,3 +1,5 @@
+/*  src/fraud_graph_explorer/static/css/dashboard.css */
+
 :root {
     --root-brd-color: #8844aa; /* #8e44ad; */
     --root-bg-color: #9955bb;  /* #9b59b6; */
@@ -30,15 +32,14 @@
     box-shadow: none !important;
 }
 
+/* Bootstrap tooltip customization */
+.explorer-tooltip {
+    --bs-tooltip-bg: darkslategray;
+    --bs-tooltip-color: white;
+}
+
 /* Dashboard Layout */
 
-/* In dashboard.css — add: */
-
-
-/*.dashboard-container {
-    flex: 1 1 0;
-    min-height: 0;
-}*/
 
 .nav-link.active {
     border-bottom: 3px solid cadetblue !important;

@@ -113,7 +113,7 @@
 
 /* Bootstrap tooltip customization */
 .crafter-tooltip {
-    --bs-tooltip-bg: darkblue;
+    --bs-tooltip-bg: darkslategray;
     --bs-tooltip-color: white;
 }
 

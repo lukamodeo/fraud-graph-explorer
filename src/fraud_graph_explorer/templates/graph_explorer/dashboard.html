@@ -13,7 +13,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}"/>
 
     {# ADD Vis.js Network CSS #}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/vis-network.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/css/vis-network.min.css' %}"/>
 
 {% endblock %}
 
@@ -62,10 +62,12 @@
                             <label for="pdf-upload" class="form-label mb-0 fw-semibold fst-italic">{{ ui.UPLOAD_LABEL }}:</label>
 
                             {# 2. Native File Input (Bootstrap styled) #}
-                            <input type="file" name="pdf_file" accept=".pdf" required id="pdf-upload" class="form-control form-control-sm mt-0 btn-secondary">
+                            <input type="file" name="pdf_file" title=""
+                                   accept=".pdf" required id="pdf-upload"
+                                   class="form-control form-control-sm mt-0 btn-secondary">
 
                             {# 3. Submit Button #}
-                            <button type="submit" class="btn btn-primary btn-sm mt-1 mx-auto px-3 pt-1 pb-2 rounded-pill">
+                            <button type="submit" class="btn btn-outline-primary btn-sm mt-1 mx-auto px-3 pt-1 pb-2 rounded-pill">
                                 <i class="bi bi-upload fw-bold fs-6"></i> {{ ui.UPLOAD_BTN_SUBMIT }}
                             </button>
                         </form>
@@ -92,7 +94,7 @@
                                     <h3>{{ ui.LIST_TITLE }}</h3>
                                 </div>
                             </div>
-                            <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 rounded-pill bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
+                            <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 mt-auto mb-0 rounded-pill bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
                                 <strong>{{ ui.FILTER_TITLE }}</strong>
                                 <i class="bi bi-caret-down-fill my-auto ms-1 me-0 my-auto accordion-button-icon"></i>
                             </button>
@@ -114,7 +116,10 @@
                                         <div class="input-group input-group-sm">
                                             <input type="text" name="q" id="filter-q" class="form-control" placeholder="{{ ui.FILTER_PLACEHOLDER }}" value="{{ query }}" style="min-width: 150px;">
                                             {# Search Button with Icon #}
-                                            <button type="submit" class="btn btn-primary" title="{{ ui.FILTER_SEARCH }}">
+                                            <button type="submit" class="btn btn-primary"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-title="{{ ui.FILTER_SEARCH }}"
+                                                    data-bs-custom-class="explorer-tooltip">
                                                 <i class="bi bi-search"></i>
                                             </button>
                                         </div>
@@ -192,7 +197,6 @@
                 {# OOB target. min-height prevents the layout from jumping when badges appear/disappear #}
                 <div id="active-filters-container" class="d-flex align-items-center justify-content-between mb-1 flex-shrink-0" style="min-height: 28px;">
                     <div id="active-filters"></div>
-                    <div id="applications-count"></div>
                 </div>
 
 
@@ -305,7 +309,7 @@
             <div class="p-0 d-flex flex-column h-100 min-height-0 min-width-0">
 
                 {# Header (fixed at top) #}
-                <div class="bg-light rounded flex-shrink-0 min-height-0 min-width-0 my-0 p-4">
+                <div class="bg-light rounded flex-shrink-0 min-height-0 min-width-0 my-0 py-4 px-5">
                     <h2 class="mb-2">{{ ui.ABOUT_TITLE|default:'About' }}</h2>
 
                     {# ─── Translated summary (fixed at top, doesn't scroll) ─── #}
@@ -315,7 +319,7 @@
 
                 </div>
                 {# Scrollable README content #}
-                <div class="bg-white rounded flex-fill overflow-y-auto min-height-0 my-0 p-4">
+                <div class="bg-white rounded flex-fill overflow-y-auto min-height-0 my-0 py-4 px-5">
                     <div class="readme-content">
                         {{ readme_html|safe }}
                     </div>

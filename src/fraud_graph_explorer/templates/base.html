@@ -1,6 +1,6 @@
-<!-- src/fraud_graph_explorer/templates/base.html -->
-
 <!DOCTYPE html>
+
+{# src/fraud_graph_explorer/templates/base.html #}
 
 {% load static %}
 
@@ -12,13 +12,15 @@
 
         <title>{% block title %}Fraud Graph Explorer{% endblock %}</title>
 
-        <!-- Local HTMX 2.0.10 - must be loaded in the head! -->
+        <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+
+        {# Local HTMX 2.0.10 - must be loaded in the head! #}
         <script src="{% static 'vendor/js/htmx.min.js' %}"></script>
 
-        <!-- Local Bootstrap CSS 5.3.8 -->
+        {# Local Bootstrap CSS 5.3.8 #}
         <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap.min.css' %}">
 
-        <!-- Local Bootstrap Icons 1.13.1 -->
+        {# Local Bootstrap Icons 1.13.1 #}
         <link rel="stylesheet" type="text/css"  href="{% static 'vendor/css/bootstrap-icons.min.css' %}">
 
         {# Check if the browser is NOT Firefox #}
@@ -82,7 +84,18 @@
 
         {% block nav %}
         <nav id="main-nav" class="text-white py-1 px-3 d-flex justify-content-between align-items-center">
-            <strong class="text-light">Fraud Graph Explorer</strong>
+            <div class="d-flex align-items-center gap-1">
+                <img src="{% static 'img/logo.svg' %}"
+                     alt="Fraud Graph Explorer"
+                     width="26"
+                     height="26">
+                <strong class="text-light">
+                    Fraud Graph Explorer
+                </strong>
+            </div>
+            <div class="position-absolute start-50 translate-middle-x p-0 my-0 mx-auto">
+                <a style="color:white; font-weight:bold; font-size:0.7rem; text-decoration:none;" href="https://github.com/lukamodeo/fraud-graph-explorer">Source Code (AGPL v3)</a>
+            </div>
             <div class="d-flex align-items-center gap-3">
                 <a href="{% url 'sheet_crafter:crafter' %}" class="btn btn-sm btn-warning rounded-pill py-0 px-3 text-decoration-none">Sheet Crafter</a>
                 <a href="{% url 'graph_explorer:dashboard' %}" class="btn btn-sm btn-warning rounded-pill py-0 px-3 text-decoration-none">Graph Explorer</a>
@@ -96,10 +109,10 @@
         </nav>
         {% endblock %}
 
-        <!-- Main content goes here -->
+        {# Main content goes here #}
         {% block content %}{% endblock %}
 
-        <!-- Local Bootstrap JS 5.3.8 -->
+        {# Local Bootstrap JS 5.3.8 #}
         <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
 
         {% block scripts %}{% endblock %}

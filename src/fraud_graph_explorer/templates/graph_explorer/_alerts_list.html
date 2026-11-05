@@ -1,4 +1,4 @@
-<!-- src/fraud_graph_explorer/templates/graph_explorer/_alerts_list.html -->
+{# src/fraud_graph_explorer/templates/graph_explorer/_alerts_list.html #}
 
 {% load graph_explorer_tags %}
 
@@ -8,7 +8,9 @@
     {% for alert in alerts %}
     <li class="list-group-item d-flex align-items-start gap-2 px-2 py-1 border-0">
         <span class="mb-auto badge border border-{{ alert.alert_bs_color }} {{ alert.severity_class }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
-              title="{{ alert.level_tooltip }}"
+              data-bs-toggle="tooltip"
+              data-bs-title="{{ alert.level_tooltip }}"
+              data-bs-custom-class="explorer-tooltip"
               style="min-width: 1rem; margin-top: 0.1rem !important">
             <i class="bi {{ alert.icon }} alert-icon py-0 px-1 m-0"></i>
         </span>

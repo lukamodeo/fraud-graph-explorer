@@ -1,4 +1,4 @@
-<!-- src/fraud_graph_explorer/templates/graph_explorer/_duplicate_modal.html -->
+{# src/fraud_graph_explorer/templates/graph_explorer/_duplicate_modal.html #}
 
 <div class="modal fade" id="duplicateModal" tabindex="-1" aria-labelledby="duplicateModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -11,8 +11,8 @@
                 <p>{{ dup_msg|safe }}</p>
             </div>
             <div class="modal-footer">
-                <!-- 1. Hide the modal cleanly BEFORE the request (Your correct fix) -->
-                <!-- 2. Clear the container AFTER the request so no duplicate IDs are left behind -->
+                {# 1. Hide the modal cleanly BEFORE the request #}
+                {# 2. Clear the container AFTER the request so no duplicate IDs are left behind #}
                 <button type="button" class="btn btn-warning rounded-pill"
                         hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                         hx-post="{% url 'graph_explorer:ingest_confirm' %}"
@@ -31,7 +31,7 @@
     </div>
 </div>
 
-<!-- Initialize and show the modal immediately when HTMX injects this HTML -->
+{# Initialize and show the modal immediately when HTMX injects this HTML #}
 <script>
     var duplicateModalEl = document.getElementById('duplicateModal');
     if (duplicateModalEl) {

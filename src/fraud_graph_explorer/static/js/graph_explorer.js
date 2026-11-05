@@ -1,5 +1,23 @@
 // src/fraud_graph_explorer/static/js/graph_explorer.js
 
+/*
+# Fraud Graph Explorer
+# Copyright (C) 2026 Luca Amodeo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 let network = null; // Global Vis.js network instance
 
 let deleteSheetId = null;
@@ -165,6 +183,14 @@ function applyEvidence(elements, evidenceWords) {
     elements.forEach(element => {
         const highlights = element.querySelectorAll('.evidence-highlight');
         highlights.forEach(highlight => {
+
+            // ─── CHANGED: dispose Bootstrap tooltip before removing the span ───
+            // Otherwise the tooltip div (appended to <body>) becomes an orphan
+            // and accumulates on every re-selection.
+            const tip = bootstrap.Tooltip.getInstance(highlight);
+            if (tip) tip.dispose();
+            // ────────────────────────────────────────────────────────────────────
+
             const parent = highlight.parentNode;
             parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
             parent.normalize();
@@ -195,8 +221,12 @@ function applyEvidence(elements, evidenceWords) {
     // ─── Apply new highlights ───
     elements.forEach(element => {
         const originalHTML = element.innerHTML;
+        // ─── CHANGED: title= → data-bs-toggle + data-bs-title + custom class ───
         const modifiedHTML = originalHTML.replace(regex, match =>
-            `<span class="evidence-highlight" title="${window.EVIDENCE_LINKED_TOOLTIP || ''}">` +
+            `<span class="evidence-highlight" ` +
+                `data-bs-toggle="tooltip" ` +
+                `data-bs-title="${window.EVIDENCE_LINKED_TOOLTIP || ''}" ` +
+                `data-bs-custom-class="explorer-tooltip">` +
                 `<i class="bi bi-arrow-left-right evidence-icon me-2"></i>` +
                 `<span class="evidence-text">${match}</span>` +
             `</span>`
@@ -205,6 +235,18 @@ function applyEvidence(elements, evidenceWords) {
         if (modifiedHTML !== originalHTML) {
             element.innerHTML = modifiedHTML;
             element.dataset.evidenceApplied = 'true';
+
+            // ─── CHANGED: initialize Bootstrap tooltips on the new spans ───
+            // innerHTML insertion doesn't trigger initTooltips() (these spans
+            // aren't present at HTMX swap time — they're created dynamically
+            // by this function after the swap settles).
+            element.querySelectorAll('.evidence-highlight').forEach(span => {
+                bootstrap.Tooltip.getOrCreateInstance(span, {
+                    container: 'body',
+                    html: true,
+                    sanitize: false
+                });
+            });
         }
     });
 }
@@ -854,3 +896,23 @@ if (_rootPaneForEvidence) {
 if (_linkedPaneForEvidence) {
     _linkedPaneForEvidence.addEventListener('htmx:afterSettle', updateEvidenceHighlights);
 }
+
+
+// --- Bootstrap tooltip initialization ---
+function initTooltips() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        bootstrap.Tooltip.getOrCreateInstance(el, {
+            container: 'body',
+            html: true,
+            sanitize: false
+        });
+    });
+    // Force Chrome to flush its hit-test cache
+    document.body.getBoundingClientRect();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initTooltips);
+
+// Re-initialize after HTMX swaps (detail panes, filter results, badges)
+document.body.addEventListener('htmx:afterSettle', initTooltips);

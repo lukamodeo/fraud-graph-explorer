@@ -1,3 +1,5 @@
+{# src/fraud_graph_explorer/templates/registration/login.html #}
+
 {% extends "base.html" %}
 
 {% load static %}
@@ -22,7 +24,13 @@
                 <div class="card shadow">
                     <div class="card-body py-4 px-5">
 
-                        <h3 class="text-center mb-1">Fraud Graph Explorer</h3>
+                        <h3 class="text-center mb-1">
+                            <img src="{% static 'img/logo.svg' %}"
+                                 alt="Fraud Graph Explorer"
+                                 width="48"
+                                 height="48">
+                            Fraud Graph Explorer
+                        </h3>
                         <p class="text-center text-info mb-4">{{ login_ui.subtitle }}</p>
 
                         {% if form.errors %}

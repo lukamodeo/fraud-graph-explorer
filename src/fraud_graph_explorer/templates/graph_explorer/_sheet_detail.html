@@ -1,10 +1,10 @@
-<!-- src/fraud_graph_explorer/templates/graph_explorer/_sheet_detail.html -->
+{# src/fraud_graph_explorer/templates/graph_explorer/_sheet_detail.html #}
 
 {% load graph_explorer_tags %}
 
 <div class="d-flex flex-column h-100">
 
-    <!-- Header (Fixed at top) -->
+    {# Header (Fixed at top) #}
     <div class="d-flex justify-content-between align-items-center m-0 p-0 flex-shrink-0">
         <div>
             <span class="small text-muted font-monospace ms-2">(ID: {{ app.sheet_id }})</span>
@@ -20,12 +20,12 @@
         <div>
             <span class="fs-4">{{ app.company_name }}</span>
         </div>
-        <a href="{{ app.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-3 rounded-pill">
+        <a href="{{ app.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-3 rounded-pill">
             <i class="bi bi-download"></i> {{ ui.DETAIL_BTN_PDF }}
         </a>
     </div>
 
-    <!-- Reconstructed Data Table (Scrollable, takes remaining space) -->
+    {# Reconstructed Data Table (Scrollable, takes remaining space) #}
     <div class="sheet-detail-table flex-fill overflow-y-auto min-height-0 mb-3 px-2 font-monospace medium lh-2 border border-secondary-subtle">
 
         {% for section in detail_sections %}
@@ -49,7 +49,9 @@
                         {% endif %}
                         {% for alert in row.alerts %}
                             <span class="badge border border-{{ alert.alert_bs_color }} {{ alert.severity_class }} rounded-pill d-inline-flex align-items-center justify-content-center flex-shrink-0"
-                                  title="{{ alert.reason_label }}{% if alert.count > 1 %}: {{ alert.count }} {{ ui.OCCURRENCES_COUNT }}{% endif %}">
+                                  data-bs-toggle="tooltip"
+                                  data-bs-title="{{ alert.reason_label }}{% if alert.count > 1 %}: {{ alert.count }} {{ ui.OCCURRENCES_COUNT }}{% endif %}"
+                                  data-bs-custom-class="explorer-tooltip">
                                 <i class="bi {{ alert.icon }} alert-icon py-0 px-1 m-0"></i>
                             </span>
                         {% endfor %}
@@ -65,7 +67,7 @@
         {% endfor %}
     </div>
 
-    <!-- Errors Accordion (Pinned to bottom) -->
+    {# Errors Accordion (Pinned to bottom) #}
     <div class="accordion flex-shrink-0 mb-1" id="errAccordion-{{ app.sheet_id }}">
         <div class="accordion-item border-0">
             <h2 class="accordion-header">
@@ -90,7 +92,7 @@
         </div>
     </div>
 
-    <!-- Warnings Accordion (Pinned to bottom) -->
+    {# Warnings Accordion (Pinned to bottom) #}
     <div class="accordion flex-shrink-0" id="warnAccordion-{{ app.sheet_id }}">
         <div class="accordion-item border-0">
             <h2 class="accordion-header">

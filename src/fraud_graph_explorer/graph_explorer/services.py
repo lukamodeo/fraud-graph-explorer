@@ -1,5 +1,21 @@
 # src/fraud_graph_explorer/graph_explorer/services.py
 
+# Fraud Graph Explorer
+# Copyright (C) 2026 Luca Amodeo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import io
 import re
 import ipaddress
@@ -102,7 +118,8 @@ def _normalize_decimal(raw_value, country_code):
         # Only dot — disambiguate by country
         if country_code == 'GB':
             # Dot is decimal separator — leave as-is
-            pass
+            # Not in this case...
+            cleaned = cleaned.replace('.', '')
         else:
             # Dot is thousands separator (no decimal in the value) — remove it
             # But check: if there's exactly one dot followed by 1-2 digits,

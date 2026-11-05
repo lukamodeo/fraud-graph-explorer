@@ -1,8 +1,8 @@
-<!-- src/fraud_graph_explorer/templates/graph_explorer/_sheet_list.html -->
+{# src/fraud_graph_explorer/templates/graph_explorer/_sheet_list.html #}
 
 {% load graph_explorer_tags humanize %}
 
-<!-- OOB SWAP: Update Applied Filters Badges -->
+{# OOB SWAP: Update Applied Filters Badges #}
 <div id="active-filters" class="d-flex align-items-center gap-2 ms-1 me-auto" hx-swap-oob="true" >
     {% if active_filters %}
     <span class="text-muted fw-bold mx-1">{{ ui.FILTERS_APPLIED }}:</span>
@@ -36,33 +36,28 @@
         </span>
         {% endfor %}
 
-        <!-- Clear All Filters Button (Appears after the badges) -->
+        {# Clear All Filters Button (Appears after the badges) #}
         <button id="filterClearBtn" type="button" class="btn btn-info rounded-pill btn-sm ms-2" onclick="clearFilters()">
             <i class="bi bi-funnel"></i> {{ ui.FILTER_BTN_CLEAR }}
         </button>
     {% endif %}
 </div>
 
-<!-- OOB SWAP: Update Applications Count Badge in the Accordion Header -->
-<div id="applications-count" class="badge background-0 border border-success text-success rounded-2 py-2 px-2 ms-auto me-1" hx-swap-oob="true">
-    {{ ui.COUNT_TOTAL }}: {{ total_applications }} / {{ ui.COUNT_FILTERED }}: {{ filtered_applications }}
-</div>
-
-<!-- OOB SWAP: Validation Errors & Rule Warnings Cards to Empty State -->
+{# OOB SWAP: Validation Errors & Rule Warnings Cards to Empty State #}
 {% include "graph_explorer/_app_cards.html" with app=None ui=ui oob=True %}
 
-<!-- Main Table Wrapper - Flex Column Container -->
+{# Main Table Wrapper - Flex Column Container #}
 <div class="d-flex flex-column h-100 overflow-hidden">
 
-    <!-- Scrollable Table Area -->
+    {# Scrollable Table Area #}
     <div class="flex-grow-1 overflow-y-auto border rounded min-height-0">
         <table class="table table-hover table-sm align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <!-- sticky-top and bg-white keep headers locked when scrolling -->
+                    {# sticky-top and bg-white keep headers locked when scrolling #}
                     <th class="sticky-top text-center" style="width: 60px;">{{ ui.COL_COUNTRY }}</th>
 
-                    <!-- DYNAMIC HEADERS -->
+                    {# DYNAMIC HEADERS #}
                     {% for col in list_columns %}
                         <th class="sticky-top">{{ col.label }}</th>
                     {% endfor %}
@@ -79,7 +74,7 @@
                     hx-get="{% url 'graph_explorer:app_cards' app.sheet_id %}"
                     hx-target="#ingest-status"
                     onclick="selectAppForCards(this)">
-                    <!-- style="cursor: pointer;"> -->
+                    {# style="cursor: pointer;"> #}
 
                     <td class="country-flags text-center fs-4">
                         {{ country_flags|get_item:app.country_code|default:app.country_code }}
@@ -105,11 +100,17 @@
 
                     <td class="fs-5 text-center">
                         {% if app.has_links %}
-                        <span class="text-danger" title="{{ ui.HAS_LINKS|default:'Has linked sheets' }}">
+                        <span class="text-danger"
+                              data-bs-toggle="tooltip"
+                              data-bs-title="{{ ui.HAS_LINKS|default:'Has linked sheets' }}"
+                              data-bs-custom-class="explorer-tooltip">
                           <i class="bi bi-share-fill"></i>
                         </span>
                         {% else %}
-                        <span class="text-success" title="{{ ui.HAS_NO_LINKS|default:'No linked sheets' }}">
+                        <span class="text-success"
+                              data-bs-toggle="tooltip"
+                              data-bs-title="{{ ui.HAS_NO_LINKS|default:'No linked sheets' }}"
+                              data-bs-custom-class="explorer-tooltip">
                           <i class="bi bi-check2-square"></i>
                         </span>
                         {% endif %}
@@ -117,34 +118,47 @@
 
                     <td onclick="event.stopPropagation();" class="align-middle">
                         <div class="d-flex gap-3 align-items-center fs-5">
-                            <!-- Explore (Graph) -->
+                            {# Explore (Graph) #}
                             <a class="btn btn-sm btn-outline-primary" role="button"
                                onclick="loadApplication('{{ app.sheet_id }}', 'tab2', this.parentNode.parentNode.parentNode)"
-                               title="{{ ui.ACT_EXPLORE }}">
+                               data-bs-toggle="tooltip"
+                               data-bs-title="{{ ui.ACT_EXPLORE }}"
+                               data-bs-custom-class="explorer-tooltip">
                                 <i class="bi bi-diagram-3-fill"></i>
                             </a>
 
-                            <!-- Details -->
+                            {# Details #}
                             <a class="btn btn-sm btn-outline-secondary" role="button"
                                onclick="loadApplication('{{ app.sheet_id }}', 'tab3', this.parentNode.parentNode.parentNode)"
-                               title="{{ ui.ACT_DETAILS }}">
+                               data-bs-toggle="tooltip"
+                               data-bs-title="{{ ui.ACT_DETAILS }}"
+                               data-bs-custom-class="explorer-tooltip">
                                 <i class="bi bi-list-columns"></i>
                             </a>
 
-                            <!-- Delete -->
+                            {# Delete #}
                             <a class="btn btn-sm btn-outline-danger" role="button"
                                onclick="openDeleteDialog('{{ app.sheet_id }}', '{{ app.request_number }}')"
-                               title="{{ ui.ACT_DELETE }}">
+                               data-bs-toggle="tooltip"
+                               data-bs-title="{{ ui.ACT_DELETE }}"
+                               data-bs-custom-class="explorer-tooltip">
                                 <i class="bi bi-trash"></i>
                             </a>
 
-                            <!-- Download -->
+                            {# Download #}
                             {% if app.pdf_file %}
-                            <a href="{{ app.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="{{ ui.ACT_DOWNLOAD }}">
+                            <a href="{{ app.pdf_file.url }}" target="_blank"
+                               class="btn btn-sm btn-outline-secondary"
+                               data-bs-toggle="tooltip"
+                               data-bs-title="{{ ui.ACT_DOWNLOAD }}"
+                               data-bs-custom-class="explorer-tooltip">
                                 <i class="bi bi-download"></i>
                             </a>
                             {% else %}
-                            <a class="text-muted text-decoration-none pe-none" title="{{ ui.ACT_DOWNLOAD }}">
+                            <a class="text-muted text-decoration-none pe-none"
+                               data-bs-toggle="tooltip"
+                               data-bs-title="{{ ui.ACT_DOWNLOAD }}"
+                               data-bs-custom-class="explorer-tooltip">
                                 <i class="bi bi-download"></i>
                             </a>
                             {% endif %}
@@ -159,51 +173,71 @@
         {% include "graph_explorer/_empty_state.html" with icon="bi-archive" message=ui.LIST_EMPTY %}
     {% endif %}
 
-    <!-- 4. Fixed Pagination -->
-    <div class="d-flex justify-content-center align-items-center gap-2 py-2 flex-shrink-0">
-        <!-- First -->
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-                hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page=1"
-                hx-target="#applications-list"
-                hx-push-url="true"
-                title="{{ ui.PAG_FIRST }}"
-                {% if not page_obj.has_previous %}disabled{% endif %}>
-            <i class="bi bi-chevron-double-left"></i>
-        </button>
+    <div class="d-flex justify-content-between align-items-center mt-0">
 
-        <!-- Previous (Use |add:'-1' to avoid EmptyPage crash) -->
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-                hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.number|add:'-1' }}"
-                hx-target="#applications-list"
-                hx-push-url="true"
-                title="{{ ui.PAG_PREV }}"
-                {% if not page_obj.has_previous %}disabled{% endif %}>
-            <i class="bi bi-chevron-left"></i>
-        </button>
+        <div class="badge background-0 border rounded-2 py-2 px-5 mx-auto border-success text-success">
+            {{ ui.COUNT_TOTAL }}: {{ total_applications }}
+        </div>
 
-        <!-- Localized Page Info -->
-        <span class="badge background-0 border border-success text-success rounded-2 py-2 px-2 mx-2">
-            {{ ui.PAG_PAGE_OF }}
-        </span>
+        {# Fixed Pagination #}
+        <div class="d-flex justify-content-center align-items-center gap-2 py-2 flex-shrink-0">
+            {# First #}
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page=1"
+                    hx-target="#applications-list"
+                    hx-push-url="true"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="{{ ui.PAG_FIRST }}"
+                    data-bs-custom-class="explorer-tooltip"
+                    {% if not page_obj.has_previous %}disabled{% endif %}>
+                <i class="bi bi-chevron-double-left"></i>
+            </button>
 
-        <!-- Next (Use |add:'1' to avoid EmptyPage crash) -->
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-                hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.number|add:'1' }}"
-                hx-target="#applications-list"
-                hx-push-url="true"
-                title="{{ ui.PAG_NEXT }}"
-                {% if not page_obj.has_next %}disabled{% endif %}>
-            <i class="bi bi-chevron-right"></i>
-        </button>
+            {# Previous (Use |add:'-1' to avoid EmptyPage crash) #}
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.number|add:'-1' }}"
+                    hx-target="#applications-list"
+                    hx-push-url="true"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="{{ ui.PAG_PREV }}"
+                    data-bs-custom-class="explorer-tooltip"
+                    {% if not page_obj.has_previous %}disabled{% endif %}>
+                <i class="bi bi-chevron-left"></i>
+            </button>
 
-        <!-- Last -->
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-                hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.paginator.num_pages }}"
-                hx-target="#applications-list"
-                hx-push-url="true"
-                title="{{ ui.PAG_LAST }}"
-                {% if not page_obj.has_next %}disabled{% endif %}>
-            <i class="bi bi-chevron-double-right"></i>
-        </button>
+            {# Localized Page Info #}
+            <span class="badge background-0 border border-success text-success rounded-2 py-2 px-2 mx-2">
+                {{ ui.PAG_PAGE_OF }}
+            </span>
+
+            {# Next (Use |add:'1' to avoid EmptyPage crash) #}
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.number|add:'1' }}"
+                    hx-target="#applications-list"
+                    hx-push-url="true"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="{{ ui.PAG_NEXT }}"
+                    data-bs-custom-class="explorer-tooltip"
+                    {% if not page_obj.has_next %}disabled{% endif %}>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+            {# Last #}
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    hx-get="{% url 'graph_explorer:dashboard' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}page={{ page_obj.paginator.num_pages }}"
+                    hx-target="#applications-list"
+                    hx-push-url="true"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="{{ ui.PAG_LAST }}"
+                    data-bs-custom-class="explorer-tooltip"
+                    {% if not page_obj.has_next %}disabled{% endif %}>
+                <i class="bi bi-chevron-double-right"></i>
+            </button>
+        </div>
+
+        <div class="badge background-0 border rounded-2 py-2 px-5 mx-auto {% if filtered_applications != total_applications %}border-primary text-primary{% else %}border-success text-success{% endif %}">
+            {{ ui.COUNT_FILTERED }}: {{ filtered_applications }}
+        </div>
+
     </div>
 </div>

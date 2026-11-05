@@ -1,4 +1,21 @@
 # src/fraud_graph_explorer/graph_explorer/ui_translations.py
+
+# Fraud Graph Explorer
+# Copyright (C) 2026 Luca Amodeo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from typing import Dict
 
 # Country adjectives, translated per browser UI language.
@@ -727,11 +744,11 @@ UI_STRINGS = {
         "en-gb": "Total applications"
         },
     "COUNT_FILTERED": {
-        "it": "filtrate",
-        "de": "gefiltert",
-        "fr": "filtrées",
-        "es": "filtradas",
-        "en-gb": "filtered",
+        "it": "Domande filtrate",
+        "de": "Gefilterte Anträge",
+        "fr": "Demandes filtrées",
+        "es": "Solicitudes filtradas",
+        "en-gb": "Filtered applications"
         },
     "LIST_EMPTY": {
         "it": "Nessuna domanda di prestito trovata",

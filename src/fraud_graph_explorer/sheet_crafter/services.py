@@ -1,12 +1,28 @@
 # src/fraud_graph_explorer/sheet_crafter/services.py
 
+# Fraud Graph Explorer
+# Copyright (C) 2026 Luca Amodeo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import os
 import re
 import base64
 import hashlib
 import mimetypes
-
 import codicefiscale
+
 from typing import cast, Literal
 from xhtml2pdf import pisa
 from django.conf import settings
@@ -193,7 +209,10 @@ def generate_dynamic_initial_data(country_code: str) -> dict:
             fake_type = config.get("fake_type")
             if fake_type:
                 # Pass **initial_data so get_random_data can read the company_name!
-                initial_data[internal_name] = get_random_data(country_code, fake_type, **initial_data)
+                initial_value = get_random_data(country_code, fake_type, **initial_data)
+                if fake_type == "amount" and country_code == "GB":
+                    initial_value = initial_value.replace('.', ',')
+                initial_data[internal_name] = initial_value
 
     initial_data['country_code'] = country_code
 
