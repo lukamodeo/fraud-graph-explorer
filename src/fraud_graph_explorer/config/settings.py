@@ -19,7 +19,7 @@
 import os
 import mimetypes
 from pathlib import Path
-
+from datetime import timedelta
 from dotenv import load_dotenv
 
 # This points to: fraud-graph-explorer/src/fraud_graph_explorer/
@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'fraud_graph_explorer.sheet_crafter',
     'fraud_graph_explorer.graph_explorer',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -94,7 +95,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware', # <== should be LAST, after session/auth middleware
 ]
+
 
 ROOT_URLCONF = 'fraud_graph_explorer.config.urls'
 
@@ -110,6 +113,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'fraud_graph_explorer.config.context_processors.lockout_translations',
             ],
         },
     },
@@ -186,7 +190,27 @@ mimetypes.add_type("font/woff2", ".woff2", True)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# ─── Authentication backends ───
+# AxesStandaloneBackend goes FIRST so it runs before the real auth check.
+# If the IP is locked, it returns None (login fails) without even
+# checking the password — so brute-force attempts can't progress.
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # ─── Authentication settings ───
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/explorer/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+
+# ─── django-axes configuration ───
+AXES_ENABLED = not DEBUG                            # enable in production, disable in dev
+AXES_FAILURE_LIMIT = 3                              # 5 failed attempts ? lockout
+AXES_COOLOFF_TIME = timedelta(hours=0, minutes=2)   # locked for 1 hour (user's request)
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]            # lock by IP only (not IP+username)
+AXES_RESET_ON_SUCCESS = True                        # reset counter on successful login
+AXES_PROXY_COUNT = 1                                # 1 reverse proxy (Nginx) in front of Django
+AXES_LOCKOUT_TEMPLATE = "registration/lockout.html" # custom lockout page (optional, see below)

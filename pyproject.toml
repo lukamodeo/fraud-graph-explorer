@@ -9,6 +9,7 @@ description = "Detect fraud in bank loan applications using graph exploration"
 requires-python = ">=3.10"
 dependencies = [
     "django",
+    "django-axes",
     "xhtml2pdf",
     "markdown2",
     "python-dotenv",

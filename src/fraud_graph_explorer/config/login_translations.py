@@ -58,5 +58,46 @@ LOGIN_STRINGS = {
         'submit': 'Sign In',
         'error': 'Invalid username or password.',
         'next': 'Please log in to access that page.',
-        }
+    }
+}
+
+# config/login_translations.py
+
+LOCKOUT_STRINGS = {
+    "it": {
+        "title": "Accesso Temporaneamente Bloccato",
+        "icon": "bi-shield-lock",
+        "message": "Troppi tentativi di accesso falliti da questo indirizzo IP.",
+        "cooldown": "Riprova tra circa 1 ora.",
+        "back": "Torna al Login",
+    },
+    "fr": {
+        "title": "Accès Temporairement Bloqué",
+        "icon": "bi-shield-lock",
+        "message": "Trop de tentatives de connexion échouées depuis cette adresse IP.",
+        "cooldown": "Veuillez réessayer dans environ 1 heure.",
+        "back": "Retour à la connexion",
+    },
+    "de": {
+        "title": "Zugriff Vorübergehend Gesperrt",
+        "icon": "bi-shield-lock",
+        "message": "Zu viele fehlgeschlagene Anmeldeversuche von dieser IP-Adresse.",
+        "cooldown": "Bitte versuchen Sie es in etwa 1 Stunde erneut.",
+        "back": "Zurück zur Anmeldung",
+    },
+    "es": {
+        "title": "Acceso Temporalmente Bloqueado",
+        "icon": "bi-shield-lock",
+        "message": "Demasiados intentos de inicio de sesión fallidos desde esta dirección IP.",
+        "cooldown": "Inténtelo de nuevo en aproximadamente 1 hora.",
+        "back": "Volver al inicio de sesión",
+    },
+    "en": {
+        "title": "Access Temporarily Blocked",
+        "icon": "bi-shield-lock",
+        "message": "Too many failed login attempts from this IP address.",
+        "cooldown": "Please try again in approximately 1 hour.",
+        "back": "Back to Login",
+    },
+
 }

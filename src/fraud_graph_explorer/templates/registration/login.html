@@ -11,6 +11,7 @@
         background: initial;
         color: white;
         border: 1px solid cadetblue;
+        max-width: 480px;
     }
 </style>
 {% endblock %}
@@ -31,12 +32,15 @@
                                  height="48">
                             Fraud Graph Explorer
                         </h3>
-                        <p class="text-center text-info mb-4">{{ login_ui.subtitle }}</p>
+
+                        <p class="text-center text-info mb-2">{{ login_ui.subtitle }}</p>
 
                         {% if form.errors %}
-                        <div class="alert alert-danger text-center py-2">
+                        <div class="alert alert-danger text-center py-2 mb-2">
                             {{ login_ui.error }}
                         </div>
+                        {% else %}
+                        <div class="py-2 mb-2">&nbsp;</div>
                         {% endif %}
 
                         {% if next %}

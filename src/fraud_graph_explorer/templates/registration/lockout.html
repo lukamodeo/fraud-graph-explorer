@@ -1,0 +1,35 @@
+{# templates/registration/lockout.html #}
+
+{% extends "base.html" %}
+
+{% block title %}Access Blocked{% endblock %}
+
+{% block extra_head %}
+<style>
+    .card {
+        backdrop-filter: blur(10px);
+        background: initial;
+        color: white;
+        border: 1px solid cadetblue;
+        max-width: 480px;
+    }
+</style>
+{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block content %}
+    <div class="d-flex align-items-center justify-content-center vh-100">
+        <div class="card shadow">
+            <div class="card-body text-center p-4">
+                <i class="bi {{ lockout_ui.icon }} fs-1 text-danger mb-3"></i>
+                <h3 class="card-title mb-3">{{ lockout_ui.title }}</h3>
+                <p class="card-text text-white small">{{ lockout_ui.message }}</p>
+                <p class="card-text">{{ lockout_ui.cooldown }}</p>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary mt-3">
+                {{ lockout_ui.back }}
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
