@@ -424,6 +424,13 @@ if (appList) {
             }
             // Clear the pending ID so it doesn't trigger again on normal pagination
             pendingSelectSheetId = null;
+            return;   // Don't run the filter-reset below during auto-select
+        }
+
+        // ─── Reset graph + detail when the list is re-rendered ───
+        // Covers: filter changes, filter removals, clear-all, pagination
+        if (window.currentRootSheet) {
+            resetRootSheetView();
         }
     });
 }

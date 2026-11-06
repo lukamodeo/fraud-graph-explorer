@@ -27,7 +27,7 @@ from urllib.parse import urlparse, parse_qs, urlencode
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Count, Exists, OuterRef, Subquery
+from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.utils.translation import get_language
@@ -150,6 +150,41 @@ def _get_translated_field_context(internal_name, country_code):
         return f"{section_label}: {field_label}"
     return field_label
 
+def _build_wildcard_search(search_string, fields):
+    """
+    Word-aware wildcard search across multiple fields.
+
+    - No '*' → whole-word match (\bMario\b)
+      "Mario" matches "Mario", "Di Mario" but NOT "Mariolino"
+    - '*' present → '*' becomes '.*', bounded by word boundaries
+      "Mario*" matches "Mario", "Mariolino", "Di Mario", "Di Mariolino"
+      "*Mario" matches "Mario", "Di Mario", "Supermario"
+      "*Mario*" matches any word containing "Mario"
+
+    re.escape() prevents regex injection — parentheses, dots, brackets
+    are treated as literal characters.
+    """
+    if not search_string or not search_string.strip():
+        return None
+
+    search_string = search_string.strip()
+
+    if '*' in search_string:
+        # Convert glob * to regex .*
+        # re.escape handles special chars, then we restore * → .*
+        pattern = re.escape(search_string).replace(r'\*', '.*')
+    else:
+        pattern = re.escape(search_string)
+
+    # Word boundaries on both sides → whole-word or word-part matching
+    regex = rf'\b{pattern}\b'
+
+    q = Q()
+    for field in fields:
+        q |= Q(**{f"{field}__iregex": regex})
+
+    return q
+
 
 @login_required
 def entity_icon_view(request, entity_type):
@@ -214,7 +249,6 @@ def delete_application_view(request, sheet_id):
     end_date = params.get('end_date', [''])[0]
 
     # Check if the filtered list is now EMPTY
-    #qs = Application.objects.all()
     qs = Application.objects.filter(user=request.user)
     if query:
         q_objs = Q(request_number__icontains=query) | Q(company_name__icontains=query) | Q(company_vat__icontains=query) | Q(entities__value__icontains=query)
@@ -274,16 +308,29 @@ def dashboard_view(request):
 
     active_filters = []
 
+    # if query:
+    #     # Safely handle wildcards using Regex
+    #     # Escape all regex special chars (like ., +, ?) EXCEPT our *
+    #     safe_query = re.escape(query).replace(r'\*', '.*')
+    #     q_objects = Q(request_number__iregex=safe_query)
+    #     q_objects |= Q(company_name__iregex=safe_query)
+    #     q_objects |= Q(company_vat__iregex=safe_query)
+    #     q_objects |= Q(entities__value__iregex=safe_query)
+    #     queryset = queryset.filter(q_objects).distinct()
+    #     active_filters.append({"key": "q", "value": query})
+
     if query:
-        # Safely handle wildcards using Regex
-        # Escape all regex special chars (like ., +, ?) EXCEPT our *
-        safe_query = re.escape(query).replace(r'\*', '.*')
-        q_objects = Q(request_number__iregex=safe_query)
-        q_objects |= Q(company_name__iregex=safe_query)
-        q_objects |= Q(company_vat__iregex=safe_query)
-        q_objects |= Q(entities__value__iregex=safe_query)
-        queryset = queryset.filter(q_objects).distinct()
-        active_filters.append({"key": "q", "value": query})
+        search_fields = [
+            'request_number',
+            'request_branch_location',
+            #'company_name',
+            #'company_vat',
+            'entities__value',
+        ]
+        q_filter = _build_wildcard_search(query, search_fields)
+        if q_filter:
+            queryset = queryset.filter(q_filter).distinct()
+            active_filters.append({"key": "q", "value": query})
 
     if country:
         queryset = queryset.filter(country_code=country)

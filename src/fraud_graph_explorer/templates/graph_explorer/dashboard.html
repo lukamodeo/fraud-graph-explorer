@@ -113,13 +113,19 @@
                                     {# Search Input + Search Button (Grouped) #}
                                     <div class="d-flex align-items-center gap-1">
                                         <label for="filter-q" class="form-label mb-0 whitespace-nowrap">{{ ui.FILTER_SEARCH }}:</label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="text" name="q" id="filter-q" class="form-control" placeholder="{{ ui.FILTER_PLACEHOLDER }}" value="{{ query }}" style="min-width: 150px;">
+                                        <div class="input-group input-group-sm search-input-group">
+                                            <input type="search"
+                                                   name="q"
+                                                   id="filter-q"
+                                                   class="form-control"
+                                                   placeholder="{{ ui.FILTER_SEARCH_HINT }}"
+                                                   value="{{ query }}"
+                                                   data-bs-toggle="tooltip"
+                                                   data-bs-title="{{ ui.FILTER_SEARCH_TOOLTIP }}"
+                                                   data-bs-custom-class="explorer-tooltip"
+                                                   style="min-width: 150px;">
                                             {# Search Button with Icon #}
-                                            <button type="submit" class="btn btn-primary"
-                                                    data-bs-toggle="tooltip"
-                                                    data-bs-title="{{ ui.FILTER_SEARCH }}"
-                                                    data-bs-custom-class="explorer-tooltip">
+                                            <button type="submit" class="btn btn-primary" title="">
                                                 <i class="bi bi-search"></i>
                                             </button>
                                         </div>

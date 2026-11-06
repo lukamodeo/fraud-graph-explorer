@@ -28,40 +28,40 @@ from typing import Dict
 COUNTRY_ADJECTIVES = {
     'IT': {
         'en-gb': 'Italian',
-        'it':    'Italiano',
-        'de':    'Italienisch',
-        'fr':    'Italien',
-        'es':    'Italiano',
-    },
+        'it': 'Italiano',
+        'de': 'Italienisch',
+        'fr': 'Italien',
+        'es': 'Italiano',
+        },
     'DE': {
         'en-gb': 'German',
-        'it':    'Tedesco',
-        'de':    'Deutsch',
-        'fr':    'Allemand',
-        'es':    'Alemán',
-    },
+        'it': 'Tedesco',
+        'de': 'Deutsch',
+        'fr': 'Allemand',
+        'es': 'Alemán',
+        },
     'FR': {
         'en-gb': 'French',
-        'it':    'Francese',
-        'de':    'Französisch',
-        'fr':    'Français',
-        'es':    'Francés',
-    },
+        'it': 'Francese',
+        'de': 'Französisch',
+        'fr': 'Français',
+        'es': 'Francés',
+        },
     'ES': {
         'en-gb': 'Spanish',
-        'it':    'Spagnolo',
-        'de':    'Spanisch',
-        'fr':    'Espagnol',
-        'es':    'Español',
-    },
+        'it': 'Spagnolo',
+        'de': 'Spanisch',
+        'fr': 'Espagnol',
+        'es': 'Español',
+        },
     'GB': {
         'en-gb': 'British',
-        'it':    'Britannico',
-        'de':    'Britisch',
-        'fr':    'Britannique',
-        'es':    'Británico',
-    },
-}
+        'it': 'Britannico',
+        'de': 'Britisch',
+        'fr': 'Britannique',
+        'es': 'Británico',
+        },
+    }
 
 # Country-specific nouns for VAT/TIN/IBAN identifiers.
 # These are language-INVARIANT — they're abbreviations of each country's
@@ -79,14 +79,14 @@ IDENTIFIER_NOUNS_BY_COUNTRY = {
         'FR': 'TVA',
         'ES': 'NIF',
         'GB': 'VAT Reg.',
-    },
+        },
     'TIN': {
         'IT': 'Codice Fiscale',
         'DE': 'Steuer-ID',
         'FR': 'NIR',
         'ES': 'DNI',
         'GB': 'UTR',
-    },
+        },
     'IBAN': {
         # IBAN is the same abbreviation in all 5 countries
         'IT': 'IBAN',
@@ -94,8 +94,8 @@ IDENTIFIER_NOUNS_BY_COUNTRY = {
         'FR': 'IBAN',
         'ES': 'IBAN',
         'GB': 'IBAN',
-    },
-}
+        },
+    }
 
 UI_STRINGS = {
     "COUNTRY_FLAGS_NAMES": {
@@ -111,7 +111,7 @@ UI_STRINGS = {
         "fr": [('IT', 'Italie'), ('DE', 'Allemagne'), ('FR', 'France'), ('ES', 'Espagne'), ('GB', 'Royaume-Uni')],
         "es": [('IT', 'Italia'), ('DE', 'Alemania'), ('FR', 'Francia'), ('ES', 'España'), ('GB', 'Reino Unido')],
         "en-gb": [('IT', 'Italy'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'), ('GB', 'United Kingdom')]
-    },
+        },
     "TAB_01": {
         "it": "Gestione domande",
         "de": "Antragsverwaltung",
@@ -189,13 +189,20 @@ UI_STRINGS = {
         "es": "Buscar en todo el texto",
         "en-gb": "Search all text"
         },
-    "FILTER_PLACEHOLDER": {
-        "it": "es. Mario*, IT123*",
-        "de": "z.B. Lukas*, DE123*",
-        "fr": "ex. Pierre*, FR12*",
-        "es": "ej. Juan*, A123*",
-        "en-gb": "e.g. John*, GB123*"
-    },
+    "FILTER_SEARCH_HINT": {
+        "it": "Cerca...",
+        "fr": "Rechercher...",
+        "de": "Suchen...",
+        "es": "Buscar...",
+        "en-gb": "Search...",
+        },
+    "FILTER_SEARCH_TOOLTIP": {
+        "it": "Ricerca esatta o con * come jolly:<br>Mario* (inizia con), *Mario (termina con), *Mario* (contiene)",
+        "de": "Exakte Suche oder * als Platzhalter:<br>Hans* (beginnt mit), *Hans (endet mit), *Hans* (enthält)",
+        "fr": "Recherche exacte ou * comme joker :<br>Jean* (commence par), *Jean (se termine par), *Jean* (contient)",
+        "es": "Búsqueda exacta o * como comodín:<br>Juan* (empieza por), *Juan (termina por), *Juan* (contiene)",
+        "en-gb": "Exact search or * as a wildcard:<br>James* (starts with), *James (ends with), *James* (contains)"
+        },
     "FILTER_COUNTRY": {
         "it": "Paese",
         "de": "Land",
@@ -237,7 +244,7 @@ UI_STRINGS = {
         "fr": "Avec alertes",
         "es": "Con alertas",
         "en-gb": "With Alerts"
-    },
+        },
     "FILTER_STATUS_ERR_OR_WARN": {
         "it": "Con Errori o Segnalazioni",
         "de": "Mit Fehlern oder Warnungen",
@@ -288,7 +295,7 @@ UI_STRINGS = {
         "en-gb": "maximum"
         },
     "FILTER_BTN_CLEAR": {
-        "it": "Rimuovi tutti i Filtri", #TODO
+        "it": "Rimuovi tutti i Filtri",  # TODO
         "de": "Filter löschen",
         "fr": "Effacer les filtres",
         "es": "Borrar filtros",
@@ -342,91 +349,91 @@ UI_STRINGS = {
         "fr": "Page {current} sur {total}",
         "es": "Página {current} de {total}",
         "en-gb": "Page {current} of {total}"
-    },
+        },
     "PAG_FIRST": {
         "it": "Prima",
         "de": "Erste",
         "fr": "Première",
         "es": "Primera",
         "en-gb": "First"
-    },
+        },
     "PAG_PREV": {
         "it": "Precedente",
         "de": "Zurück",
         "fr": "Précédent",
         "es": "Anterior",
         "en-gb": "Previous"
-    },
+        },
     "PAG_NEXT": {
         "it": "Successiva",
         "de": "Weiter",
         "fr": "Suivant",
         "es": "Siguiente",
         "en-gb": "Next"
-    },
+        },
     "PAG_LAST": {
         "it": "Ultima",
         "de": "Letzte",
         "fr": "Dernière",
         "es": "Última",
         "en-gb": "Last"
-    },
+        },
     "DEL_TITLE": {
         "it": "Conferma Eliminazione",
         "de": "Löschen bestätigen",
         "fr": "Confirmer la suppression",
         "es": "Confirmar eliminación",
         "en-gb": "Confirm Deletion"
-    },
+        },
     "DEL_MSG": {
         "it": "Sei sicuro di voler eliminare la domanda <b id='del-req-num'></b>?<br>Questa azione è irreversibile.",
         "de": "Möchten Sie den Antrag <b id='del-req-num'></b> wirklich löschen?<br>Diese Aktion ist unwiderruflich.",
         "fr": "Êtes-vous sûr de vouloir supprimer la demande <b id='del-req-num'></b> ?<br>Cette action est irréversible.",
         "es": "¿Está seguro de que desea eliminar la solicitud <b id='del-req-num'></b>?<br>Esta acción es irreversible.",
         "en-gb": "Are you sure you want to delete application <b id='del-req-num'></b>?<br>This action is irreversible."
-    },
+        },
     "DEL_BTN_CONFIRM": {
         "it": "Elimina",
         "de": "Löschen",
         "fr": "Supprimer",
         "es": "Eliminar",
         "en-gb": "Delete"
-    },
+        },
     "DEL_BTN_CANCEL": {
         "it": "Annulla",
         "de": "Abbrechen",
         "fr": "Annuler",
         "es": "Cancelar",
         "en-gb": "Cancel"
-    },
+        },
     "DUP_TITLE": {
         "it": "Duplicato Rilevato",
         "de": "Duplikat erkannt",
         "fr": "Doublon détecté",
         "es": "Duplicado detectado",
         "en-gb": "Duplicate Detected"
-    },
+        },
     "DUP_MSG": {
         "it": "La domanda <b>{req_num}</b> esiste già (File: <i>{old_file}</i>).<br>Vuoi sovrascrivere il record e il file?",
         "de": "Antrag <b>{req_num}</b> existiert bereits (Datei: <i>{old_file}</i>).<br>Möchten Sie den Datensatz und die Datei überschreiben?",
         "fr": "La demande <b>{req_num}</b> existe déjà (Fichier : <i>{old_file}</i>).<br>Voulez-vous écraser l'enregistrement et le fichier ?",
         "es": "La solicitud <b>{req_num}</b> ya existe (Archivo: <i>{old_file}</i>).<br>¿Desea sobrescribir el registro y el archivo?",
         "en-gb": "Application <b>{req_num}</b> already exists (File: <i>{old_file}</i>).<br>Do you want to overwrite the record and file?"
-    },
+        },
     "DUP_BTN_OVERWRITE": {
         "it": "Sovrascrivi",
         "de": "Überschreiben",
         "fr": "Écraser",
         "es": "Sobrescribir",
         "en-gb": "Overwrite"
-    },
+        },
     "DUP_BTN_CANCEL": {
         "it": "Annulla",
         "de": "Abbrechen",
         "fr": "Annuler",
         "es": "Cancelar",
         "en-gb": "Cancel"
-    },
+        },
     "INGEST_SUCCESS": {
         "it": "Inserito: {req_num}",
         "de": "Erfasst: {req_num}",
@@ -454,21 +461,21 @@ UI_STRINGS = {
         "fr": "Ignoré : {req_num} déjà intégré",
         "es": "Omitido: {req_num} ya ingestado",
         "en-gb": "Skipped: {req_num} already ingested"
-    },
+        },
     "INGEST_ERR_INVALID_SHEET": {
         "it": "Fallito: non è una Domanda di Prestito valida",
         "de": "Fehlgeschlagen: Kein gültiger Kreditantrag",
         "fr": "Échec : il n'est pas une demande de prêt valide",
         "es": "Error: no es una solicitud de préstamo válida",
         "en-gb": "Failed: not a valid loan application",
-    },
+        },
     "INGEST_ERR_PARSE_ERROR": {
         "it": "Fallito: PDF corrotto o crittografato",
         "de": "Fehlgeschlagen: PDF beschädigt oder verschlüsselt",
         "fr": "Échec : le PDF est corrompu ou chiffré",
         "es": "Error: el PDF está dañado o cifrado",
         "en-gb": "Failed: PDF is corrupted or encrypted",
-    },
+        },
     "INGEST_ERR_UNKNOWN": {
         "it": "Inserimento fallito. Controllare i log",
         "de": "Einfügen fehlgeschlagen. Bitte überprüfen Sie die Protokolle",
@@ -482,7 +489,7 @@ UI_STRINGS = {
         "fr": "Aucun fichier téléchargé",
         "es": "Ningún archivo subido",
         "en-gb": "No file uploaded"
-    },
+        },
     "GRAPH_ROOT_TITLE": {
         "it": "Domanda al centro dell'indagine",
         "de": "Antrag im Zentrum der Untersuchung",
@@ -651,26 +658,26 @@ UI_STRINGS = {
         "en-gb": "Download PDF"
         },
     "DETAIL_NO_DATA": {
-        "it":    "Nessun dato",
-        "de":    "Keine Daten",
-        "fr":    "Aucune donnée",
-        "es":    "Sin datos",
+        "it": "Nessun dato",
+        "de": "Keine Daten",
+        "fr": "Aucune donnée",
+        "es": "Sin datos",
         "en-gb": "No data",
-    },
+        },
     "DETAIL_FOREIGN": {
-        "it":    "Identificativo estero",
-        "de":    "Ausländische Kennung",
-        "fr":    "Identifiant étranger",
-        "es":    "Identificador extranjero",
+        "it": "Identificativo estero",
+        "de": "Ausländische Kennung",
+        "fr": "Identifiant étranger",
+        "es": "Identificador extranjero",
         "en-gb": "Foreign identifier",
-    },
+        },
     "DETAIL_INVALID": {
-        "it":    "Formato non valido",
-        "de":    "Ungültiges Format",
-        "fr":    "Format invalide",
-        "es":    "Formato no válido",
+        "it": "Formato non valido",
+        "de": "Ungültiges Format",
+        "fr": "Format invalide",
+        "es": "Formato no válido",
         "en-gb": "Invalid format",
-    },
+        },
     # VAT: Combined string, browser language term placed first
     "LEGEND_VAT": {
         "it": "P.IVA / USt-IdNr. / N° TVA / NIF / VAT R.No.",
@@ -763,21 +770,21 @@ UI_STRINGS = {
         "fr": "Ok",
         "es": "Ok",
         "en-gb": "OK"
-    },
+        },
     "BDG_ERR": {
         "it": "Errori",
         "de": "Fehler",
         "fr": "Erreurs",
         "es": "Errores",
         "en-gb": "Errors"
-    },
+        },
     "BDG_WARN": {
         "it": "Segnalazioni",
         "de": "Warnungen",
         "fr": "Alertes",
         "es": "Alertas",
         "en-gb": "Alerts"
-    },
+        },
     "HAS_LINKS": {
         "it": "Presenta collegamenti con altre domande",
         "de": "Mit anderen Anträgen verknüpft",
@@ -798,35 +805,35 @@ UI_STRINGS = {
         "fr": "Explorer Graph",
         "es": "Explorar Grafo",
         "en-gb": "Explore Graph"
-    },
+        },
     "ACT_DETAILS": {
         "it": "Dettagli",
         "de": "Details",
         "fr": "Détails",
         "es": "Detalles",
         "en-gb": "Details"
-    },
+        },
     "ACT_DOWNLOAD": {
         "it": "Scarica PDF",
         "de": "PDF Herunterladen",
         "fr": "Télécharger PDF",
         "es": "Descargar PDF",
         "en-gb": "Download PDF"
-    },
+        },
     "ACT_DELETE": {
         "it": "Elimina",
         "de": "Löschen",
         "fr": "Supprimer",
         "es": "Eliminar",
         "en-gb": "Delete"
-    },
+        },
     "COL_COUNTRY": {
         "it": "Paese",
         "de": "Land",
         "fr": "Pays",
         "es": "País",
         "en-gb": "Country"
-    },
+        },
     "COL_LINKED": {
         "it": "Collegamenti",
         "de": "Verknüpfungen",
@@ -835,33 +842,33 @@ UI_STRINGS = {
         "en-gb": "Links"
         },
     "COL_AMOUNT": {
-        "it":    "Importo",
-        "de":    "Betrag",
-        "fr":    "Montant",
-        "es":    "Importe",
+        "it": "Importo",
+        "de": "Betrag",
+        "fr": "Montant",
+        "es": "Importe",
         "en-gb": "Amount",
-    },
+        },
     "COL_ACQ_DATE": {
         "it": "Data Acquisizione",
         "de": "Erfassungsdatum",
         "fr": "Date d'acquisition",
         "es": "Fecha de adquisición",
         "en-gb": "Acquisition Date"
-    },
+        },
     "COL_STATUS": {
         "it": "Stato",
         "de": "Status",
         "fr": "Statut",
         "es": "Estado",
         "en-gb": "Status"
-    },
+        },
     "COL_ACTION": {
         "it": "Azioni",
         "de": "Aktion",
         "fr": "Action",
         "es": "Acción",
         "en-gb": "Action"
-    },
+        },
     # The specific list labels referenced by domain_schema.py
     "COL_ID": {
         "it": "N. Domanda",
@@ -869,14 +876,14 @@ UI_STRINGS = {
         "fr": "N° Demande",
         "es": "N.° Solicitud",
         "en-gb": "Req. No."
-    },
+        },
     "COL_COMP_NAME": {
         "it": "Azienda",
         "de": "Firma",
         "fr": "Entreprise",
         "es": "Empresa",
         "en-gb": "Company"
-    },
+        },
     "COL_COMP_VAT": {
         # "it": "Partita IVA",
         # "de": "USt-IdNr.",
@@ -888,7 +895,7 @@ UI_STRINGS = {
         "fr": "N° TVA (P.IVA/USt-IdNr./NIF/VAT N.)",
         "es": "NIF (P.IVA/USt-IdNr./N°TVA/VAT N.)",
         "en-gb": "VAT N. (P.IVA/USt-IdNr./N°TVA/NIF)"
-    },
+        },
 
     # The Validations and Rules message strings
     "EVIDENCE_LINKED_TOOLTIP": {
@@ -907,34 +914,34 @@ UI_STRINGS = {
         },
 
     "SEVERITY_HIGH": {
-        "it":    "Alto",
-        "de":    "Hoch",
-        "fr":    "Élevé",
-        "es":    "Alto",
+        "it": "Alto",
+        "de": "Hoch",
+        "fr": "Élevé",
+        "es": "Alto",
         "en-gb": "High",
-    },
+        },
     "SEVERITY_MEDIUM": {
-        "it":    "Medio",
-        "de":    "Mittel",
-        "fr":    "Moyen",
-        "es":    "Medio",
+        "it": "Medio",
+        "de": "Mittel",
+        "fr": "Moyen",
+        "es": "Medio",
         "en-gb": "Medium",
-    },
+        },
     "SEVERITY_LOW": {
-        "it":    "Basso",
-        "de":    "Niedrig",
-        "fr":    "Bas",
-        "es":    "Bajo",
+        "it": "Basso",
+        "de": "Niedrig",
+        "fr": "Bas",
+        "es": "Bajo",
         "en-gb": "Low",
-    },
+        },
 
     "OCCURRENCES_COUNT": {
-        "it":    "occorrenze",
-        "de":    "Vorkommen",
-        "fr":    "occurrences",
-        "es":    "ocurrencias",
+        "it": "occorrenze",
+        "de": "Vorkommen",
+        "fr": "occurrences",
+        "es": "ocurrencias",
         "en-gb": "occurrences",
-    },
+        },
 
     "TYPE_SYSTEM": {
         "it": "Errore di sistema",
@@ -949,7 +956,7 @@ UI_STRINGS = {
         "fr": "'{}': {}",
         "es": "'{}': {}",
         "en-gb": "'{}': {}"
-    },
+        },
 
     "TYPE_REQUIRED": {
         "it": "Campo obbligatorio",
@@ -957,7 +964,7 @@ UI_STRINGS = {
         "fr": "Champ obligatoire",
         "es": "Campo obligatorio",
         "en-gb": "Required field"
-    },
+        },
     "REASON_REQUIRED": {
         "it": "Dato mancante",
         "de": "Fehlende Angabe",
@@ -972,7 +979,7 @@ UI_STRINGS = {
         "fr": "Format numérique",
         "es": "Formato numérico",
         "en-gb": "Numeric Format"
-    },
+        },
     "REASON_NUMERIC_INVALID": {
         "it": "Numero non valido",
         "de": "Ungültige Zahl",
@@ -987,7 +994,7 @@ UI_STRINGS = {
         "fr": "Valeur positive",
         "es": "Valor positivo",
         "en-gb": "Positive Value"
-    },
+        },
     "REASON_POSITIVE_INVALID": {
         "it": "Numero inferiore o uguale a zero",
         "de": "Zahl kleiner oder gleich null",
@@ -1002,7 +1009,7 @@ UI_STRINGS = {
         "fr": "E-mail",
         "es": "Correo electrónico",
         "en-gb": "E-mail"
-    },
+        },
     "REASON_EMAIL_INVALID": {
         "it": "Indirizzo non valido",
         "de": "Ungültige Adresse",
@@ -1197,21 +1204,21 @@ UI_STRINGS = {
         "fr": "Liste noire",
         "es": "Lista negra",
         "en-gb": "Blacklist"
-    },
+        },
     "TYPE_BLACKLIST_IP": {
         "it": "Blacklist IPv4",
         "de": "IPv4-Sperrliste",
         "fr": "Liste noire IPv4",
         "es": "Lista negra de IPv4",
         "en-gb": "IPv4 Blacklist"
-    },
+        },
     "TYPE_BLACKLIST_IBAN": {
         "it": "Blacklist IBAN",
         "de": "IBAN-Sperrliste",
         "fr": "Liste noire des IBAN",
         "es": "Lista negra de IBAN",
         "en-gb": "IBAN Blacklist"
-    },
+        },
     "TYPE_BLACKLIST_VAT": {
         "it": {
             "ANY": {
@@ -1485,14 +1492,14 @@ UI_STRINGS = {
         "fr": "Valeur en double",
         "es": "Valor duplicado",
         "en-gb": "Duplicate value"
-    },
+        },
     "TYPE_DUPLICATE_IP": {
         "it": "IPv4 duplicato",
         "de": "Doppelte IPv4-Adresse",
         "fr": "Adresse IPv4 en double",
         "es": "IPv4 duplicada",
         "en-gb": "Duplicate IPv4"
-    },
+        },
     "TYPE_DUPLICATE_IBAN": {
         "it": {
             "ANY": {
@@ -1640,7 +1647,7 @@ UI_STRINGS = {
         "fr": "Valeur en double détectée dans la même demande",
         "es": "Valor duplicado detectado en la misma solicitud",
         "en-gb": "Duplicate value detected in the same application"
-    },
+        },
 
     "TYPE_MISMATCH": {
         "it": "Incongruenza dati",
@@ -1648,7 +1655,7 @@ UI_STRINGS = {
         "fr": "Incohérence des données",
         "es": "Incongruencia de datos",
         "en-gb": "Data inconsistency"
-    },
+        },
     "TYPE_TIN_NAME_MISMATCH": {
         "it": {
             "ANY": {
@@ -1750,14 +1757,14 @@ UI_STRINGS = {
         "fr": "Concept",
         "es": "Concepto",
         "en-gb": "Concept"
-    },
+        },
     "ABOUT_SUBTITLE": {
-        "it":    "Documentazione del progetto renderizzata da README.md",
-        "de":    "Projektdokumentation, gerendert aus README.md",
-        "fr":    "Documentation du projet rendue depuis README.md",
-        "es":    "Documentación del proyecto renderizada desde README.md",
+        "it": "Documentazione del progetto renderizzata da README.md",
+        "de": "Projektdokumentation, gerendert aus README.md",
+        "fr": "Documentation du projet rendue depuis README.md",
+        "es": "Documentación del proyecto renderizada desde README.md",
         "en-gb": "Project documentation rendered from README.md",
-    },
+        },
     "ABOUT_SUMMARY": {
         "it": (
             "Un proof of concept basato su Django per la rilevazione di frodi transfrontaliere "
@@ -1830,8 +1837,8 @@ UI_STRINGS = {
             "applyEvidence for forensic investigations."
         ),
 
-    },
-}
+        },
+    }
 
 
 def get_ui_strings(lang_code: str, pdf_country_code: str = "GB") -> Dict[str, str]:

@@ -208,9 +208,9 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 # ─── django-axes configuration ───
 AXES_ENABLED = not DEBUG                            # enable in production, disable in dev
-AXES_FAILURE_LIMIT = 3                              # 5 failed attempts ? lockout
-AXES_COOLOFF_TIME = timedelta(hours=0, minutes=2)   # locked for 1 hour (user's request)
+AXES_FAILURE_LIMIT = 5                              # 5 failed attempts => lockout
+AXES_COOLOFF_TIME = timedelta(hours=1, minutes=0)   # locked for 1 hour (user's request)
 AXES_LOCKOUT_PARAMETERS = ["ip_address"]            # lock by IP only (not IP+username)
 AXES_RESET_ON_SUCCESS = True                        # reset counter on successful login
-AXES_PROXY_COUNT = 1                                # 1 reverse proxy (Nginx) in front of Django
+IPWARE_PROXY_COUNT = 1                              # 1 reverse proxy (Nginx) in front of Django
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html" # custom lockout page (optional, see below)
