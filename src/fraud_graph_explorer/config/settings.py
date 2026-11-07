@@ -43,11 +43,7 @@ load_dotenv(PROJECT_ROOT / '.env')
 
 # Read SECRET_KEY from environment (with a clear error if missing)
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    raise ValueError(
-        "SECRET_KEY is not set. Add 'SECRET_KEY=...' to your .env file "
-        f"at {PROJECT_ROOT / '.env'}"
-    )
+if not SECRET_KEY: raise ValueError( f"SECRET_KEY is not set. Add 'SECRET_KEY=...' to your .env file at {PROJECT_ROOT / '.env'}" )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
@@ -125,12 +121,27 @@ WSGI_APPLICATION = 'fraud_graph_explorer.config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('DB_ENGINE') == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'fraud_graph'),
+            'USER': os.environ.get('DB_USER', 'fraud_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -180,6 +191,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Where collectstatic copies files to (production only)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Tell Django that .ttf files are font files, not generic binary files
 mimetypes.add_type("font/ttf", ".ttf", True)
 mimetypes.add_type("font/woff", ".woff", True)
@@ -204,6 +218,13 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/explorer/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Security settings for production
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # ─── django-axes configuration ───

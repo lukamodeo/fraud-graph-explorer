@@ -253,7 +253,7 @@ def ingest_pdf(pdf_bytes: bytes, file_name: str, overwrite: bool = False, user=N
                     if line in SECTION_LOOKUP:
                         current_section = SECTION_LOOKUP[line]
                         expected_fields_queue = list(SECTIONS_BY_INTERNAL[current_section].get("fields", []))
-                        print(f"\n[STATE] Found Section: {current_section}. Expected fields: {expected_fields_queue}")
+                        # print(f"\n[STATE] Found Section: {current_section}. Expected fields: {expected_fields_queue}")
                         continue
 
                     # Check for Field

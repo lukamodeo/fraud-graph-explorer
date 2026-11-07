@@ -21,6 +21,7 @@ from collections import defaultdict
 
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from stdnum import vatin, iban
 
 from fraud_graph_explorer.domain_schema import split_italian_full_name
 # Use the shared country-detection helpers — they encapsulate "try all 5
@@ -204,22 +205,17 @@ def check_iban(raw_value, norm_value, config, all_data, **kwargs):
     """
     Validates IBAN — restricted to our 5 target countries.
 
-    detect_iban_country() returns None if either:
-      - the value is not a valid IBAN (fails checksum), OR
-      - the value is a valid IBAN but the country prefix is outside
-        our 5-country target set (e.g., 'NL91...', 'BE68...')
+    detect_iban_country() returns None if:
+      - the country prefix is outside our 5-country target set (e.g., 'NL91...', 'BE68...')
 
-    Both cases produce one REASON_IBAN_INVALID error.
-
-    identifier_country is extracted from the first 2 chars so the alert's
-    type_label reflects the intended country — e.g., 'ES000000' on an IT
-    sheet shows "Spanish IBAN invalid", not "Italian IBAN invalid".
+    iban.is_valid returns True if:
+      - the value is a valid IBAN
     """
     if not norm_value:
         return []
 
-    if detect_iban_country(norm_value) is None:
-        identifier_country = norm_value[:2].upper() if len(norm_value) >= 2 else ''
+    identifier_country = detect_iban_country(norm_value) or ''
+    if not (identifier_country and iban.is_valid(norm_value)):
         return [{
             "value": norm_value,
             "raw_value": raw_value,
@@ -240,21 +236,18 @@ def check_vat(raw_value, norm_value, config, all_data, **kwargs):
     """
     Validates VAT — restricted to our 5 target countries.
 
-    detect_vat_country() returns None if either:
-      - the value is not a valid EU VAT (fails vatin.is_valid), OR
-      - the value is a valid EU VAT but the country prefix is outside
-        our 5-country target set (e.g., 'NL123...', 'AT123...')
+    detect_vat_country() returns None if:
+      - the country prefix is outside our 5-country target set (e.g., 'NL123...', 'AT123...')
 
-    Both cases produce one REASON_VAT_INVALID error.
-
-    identifier_country is extracted from the first 2 chars so the alert's
-    type_label reflects the intended country.
+    vatin.is_valid returns True if:
+      - the value is a valid VAT
     """
+
     if not norm_value:
         return []
 
-    if detect_vat_country(norm_value) is None:
-        identifier_country = norm_value[:2].upper() if len(norm_value) >= 2 else ''
+    identifier_country = detect_vat_country(norm_value) or ''
+    if not (identifier_country and vatin.is_valid(norm_value)):
         return [{
             "value": norm_value,
             "raw_value": raw_value,
@@ -262,6 +255,7 @@ def check_vat(raw_value, norm_value, config, all_data, **kwargs):
         }]
 
     return []
+
 
 @ValidationRegistry.register(
     item_id="tin",
@@ -472,17 +466,20 @@ def rule_positive(raw_value, norm_value, config, all_data, **kwargs):
 )
 def rule_foreign_identifier(raw_value, norm_value, config, all_data, **kwargs):
     """
-    Warn when an identifier is valid in a country OTHER than the sheet's
-    own country. Cross-border identifier — could be legitimate (e.g., a
-    British guarantor on an Italian sheet) but worth flagging for review.
-
-    The validation engine (Step 4) already accepted the value as valid
-    for some country; this rule emits a warning when that country
-    differs from the sheet's country.
+    Warn when an identifier's intended country differs from the sheet's country.
+    Cross-border identifier — could be legitimate (e.g., a British
+    guarantor on an Italian sheet) but worth flagging for review.
 
     Applies to fields with VAT, TIN, or IBAN in their tags. Other identifier
     types (FULLNAME, IP, EMAIL, PHONE, COMPANY, LOCATION) don't have
     country-aware formats, so the "foreign" concept doesn't apply.
+
+    For VAT/IBAN: the country is determined from the prefix, so this rule
+    fires even if the identifier is invalid (e.g., an invalid Spanish VAT
+    on an Italian sheet → both "invalid" error AND "foreign" warning).
+
+    For TIN: the country is determined by format validation, so this rule
+    only fires for valid TINs (invalid TINs have no detectable country).
 
     Payload (added to each warning dict):
       - value:              normalized value
