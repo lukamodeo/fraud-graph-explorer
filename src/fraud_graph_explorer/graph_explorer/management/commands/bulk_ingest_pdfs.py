@@ -23,7 +23,9 @@ Usage:
     python manage bulk_ingest_pdfs --folder /tmp/fraud_pdfs
     python manage bulk_ingest_pdfs --folder /tmp/fraud_pdfs --overwrite
 """
+
 import os
+import random
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
@@ -35,9 +37,17 @@ class Command(BaseCommand):
     help = "Bulk-ingest PDF loan applications from a folder."
 
     def add_arguments(self, parser):
-        parser.add_argument('--user', type=str, required=True, help="Username to ingest the PDFs as (required)")
-        parser.add_argument('--folder', type=str, required=True, help="Path to the folder containing PDF files")
-        parser.add_argument('--overwrite', action='store_true', help="Overwrite existing sheets with the same request number")
+        parser.add_argument('--user', type=str, required=True,
+                            help="Username to ingest the PDFs as (required)")
+
+        parser.add_argument('--folder', type=str, required=True,
+                            help="Path to the folder containing PDF files")
+
+        parser.add_argument('--overwrite', action='store_true',
+                            help="Overwrite existing sheets with the same request number")
+
+        parser.add_argument('--shuffle', action='store_true',
+                            help="Ingest PDFs in random order instead of alphabetical")
 
     def handle(self, *args, **options):
         folder = options['folder']
@@ -61,7 +71,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Folder not found: {folder}"))
             return
 
-        pdf_files = sorted(f for f in os.listdir(folder) if f.lower().endswith('.pdf'))
+        pdf_files = [f for f in os.listdir(folder) if f.lower().endswith('.pdf')]
+        if options['shuffle']:
+            random.shuffle(pdf_files)
+            self.stdout.write(f"Shuffled ingestion order (random)")
+        else:
+            pdf_files.sort()
 
         if not pdf_files:
             self.stdout.write(self.style.WARNING(f"No PDF files in {folder}"))

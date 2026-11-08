@@ -55,17 +55,23 @@ Each analyst works in a private workspace while the entity graph stays globally 
 
 ### 7. Bulk Generation & Ingestion CLI
 Two management commands for demos and bulk testing:
-*   **`bulk_generate_pdfs`:** Generates N synthetic PDFs with optional cross-country identifier mixing (configurable probability per VAT/TIN/IBAN field).
-*   **`bulk_ingest_pdfs`:** Ingests every PDF in a folder, with optional overwrite and user assignment.
+*   **`bulk_generate_pdfs`:** Generates N synthetic PDFs with optional cross-country identifier mixing and typo injection. Mixing overrides VAT/TIN/IBAN fields with foreign-country values (configurable probability per field). Typo injection introduces random character errors in identifiers — substituting, deleting, or inserting a character while preserving the country prefix, so the identifier is still recognizable as a specific country's format but has an invalid checksum. Useful for testing the validation engine, the `identifier_country` extraction, and the foreign-identifier warnings with realistic bad data.
+*   **`bulk_ingest_pdfs`:** Ingests every PDF in a folder, with optional overwrite, user assignment, and random ingestion order (`--shuffle` produces a realistic mix of countries in the dashboard list instead of grouped by filename). If the specified user doesn't exist, the command lists available usernames instead of crashing.
 
 ```bash
-manage bulk_generate_pdfs --count 50 --output-dir /tmp/pdfs --mixing --mixing-probability 0.3
-manage bulk_ingest_pdfs --folder /tmp/pdfs --user alice
+# Generate 50 PDFs with mixing + typos:
+manage bulk_generate_pdfs --count 50 --output-dir /tmp/pdfs \
+    --mixing --mixing-probability 0.3 \
+    --typo --typo-probability 0.2
+
+# Ingest in random order:
+manage bulk_ingest_pdfs --folder /tmp/pdfs --user alice --shuffle
 ```
 
 ## 🏗️ Architecture & Tech Stack
 
 *   **Backend:** Django (modern `src` layout, `config` settings module).
+*   **Database:** SQLite for development (zero-config), PostgreSQL (recommended) or MySQL/MariaDB for production — selected via `DB_ENGINE` env var. See `.env.example` for configuration templates.
 *   **Authentication:** Django's built-in auth + brute-force protection via `django-axes`.
 *   **PDF Generation:** `xhtml2pdf` for HTML/CSS-to-PDF rendering.
 *   **PDF Extraction:** `pdfplumber` for raw text extraction and state-machine parsing.
@@ -106,6 +112,8 @@ manage bulk_ingest_pdfs --folder /tmp/pdfs --user alice
    # Generate a SECRET_KEY and paste it in .env
    python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
    ```
+
+   For local development, SQLite is the default — no database configuration needed. For production, set `DB_ENGINE=postgresql` (recommended) or `DB_ENGINE=mysql` in `.env`, and create the database + user. See `.env.example` for the full configuration template.
 
 5. **Run database migrations:**
    ```bash

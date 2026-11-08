@@ -923,3 +923,18 @@ document.addEventListener('DOMContentLoaded', initTooltips);
 
 // Re-initialize after HTMX swaps (detail panes, filter results, badges)
 document.body.addEventListener('htmx:afterSettle', initTooltips);
+
+// ─── Dispose tooltips BEFORE HTMX swap (prevents orphaned tooltip divs) ───
+// When HTMX replaces content (pagination, filter change), the old tooltip
+// trigger elements are removed from the DOM. But their tooltip divs
+// (appended to <body>) stay as orphans — stuck visible.
+// This disposes them before the swap removes the triggers.
+document.body.addEventListener('htmx:beforeSwap', function(event) {
+    const target = event.detail.target;
+    if (!target) return;
+
+    target.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        const tip = bootstrap.Tooltip.getInstance(el);
+        if (tip) tip.dispose();
+    });
+});

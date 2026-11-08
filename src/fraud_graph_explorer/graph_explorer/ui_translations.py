@@ -463,25 +463,25 @@ UI_STRINGS = {
         "en-gb": "Skipped: {req_num} already ingested"
         },
     "INGEST_ERR_INVALID_SHEET": {
-        "it": "Fallito: non è una Domanda di Prestito valida",
-        "de": "Fehlgeschlagen: Kein gültiger Kreditantrag",
-        "fr": "Échec : il n'est pas une demande de prêt valide",
-        "es": "Error: no es una solicitud de préstamo válida",
-        "en-gb": "Failed: not a valid loan application",
+        "it": "Non è una Domanda di Prestito valida",
+        "de": "Kein gültiger Kreditantrag",
+        "fr": "Ce n’est pas une demande de prêt valide",
+        "es": "No es una solicitud de préstamo válida",
+        "en-gb": "Not a valid loan application"
         },
     "INGEST_ERR_PARSE_ERROR": {
-        "it": "Fallito: PDF corrotto o crittografato",
-        "de": "Fehlgeschlagen: PDF beschädigt oder verschlüsselt",
-        "fr": "Échec : le PDF est corrompu ou chiffré",
-        "es": "Error: el PDF está dañado o cifrado",
-        "en-gb": "Failed: PDF is corrupted or encrypted",
+        "it": "PDF corrotto o crittografato",
+        "de": "PDF beschädigt oder verschlüsselt",
+        "fr": "PDF corrompu ou chiffré",
+        "es": "PDF dañado o cifrado",
+        "en-gb": "PDF is corrupted or encrypted"
         },
     "INGEST_ERR_UNKNOWN": {
-        "it": "Inserimento fallito. Controllare i log",
-        "de": "Einfügen fehlgeschlagen. Bitte überprüfen Sie die Protokolle",
-        "fr": "Échec de l’insertion. Veuillez consulter les journaux",
-        "es": "Error al insertar. Compruebe los registros",
-        "en-gb": "Insertion failed. Check the logs"
+        "it": "Inserimento fallito",
+        "de": "Einfügen fehlgeschlagen",
+        "fr": "Échec de l’insertion",
+        "es": "Error al insertar",
+        "en-gb": "Upload failed"
         },
     "INGEST_ERR_NO_FILE": {
         "it": "Nessun file caricato",
