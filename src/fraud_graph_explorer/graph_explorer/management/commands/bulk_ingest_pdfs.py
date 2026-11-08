@@ -43,7 +43,19 @@ class Command(BaseCommand):
         folder = options['folder']
         overwrite = options['overwrite']
 
-        user = User.objects.get(username=options['user'])
+        # ─── Validate user exists (graceful error, not a crash) ───
+        try:
+            user = User.objects.get(username=options['user'])
+        except User.DoesNotExist:
+            self.stdout.write(self.style.ERROR(
+                f"User '{options['user']}' does not exist."
+            ))
+            available = list(User.objects.values_list('username', flat=True))
+            if available:
+                self.stdout.write(f"  Available users: {', '.join(available)}")
+            else:
+                self.stdout.write(f"  No users found. Create one with: manage createsuperuser")
+            return
 
         if not os.path.isdir(folder):
             self.stdout.write(self.style.ERROR(f"Folder not found: {folder}"))

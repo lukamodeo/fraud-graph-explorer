@@ -45,11 +45,6 @@ load_dotenv(PROJECT_ROOT / '.env')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY: raise ValueError( f"SECRET_KEY is not set. Add 'SECRET_KEY=...' to your .env file at {PROJECT_ROOT / '.env'}" )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
-
-ALLOWED_HOSTS = []
-
 # Enable translation system (required for get_language() to work)
 USE_I18N = True
 USE_L10N = True
@@ -121,7 +116,20 @@ WSGI_APPLICATION = 'fraud_graph_explorer.config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get('DB_ENGINE') == 'mysql':
+DB_ENGINE = os.environ.get('DB_ENGINE', '')
+
+if DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'fraud_graph'),
+            'USER': os.environ.get('DB_USER', 'fraud_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+elif DB_ENGINE == 'mysql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -219,6 +227,12 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/explorer/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+_allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_raw.split(',') if h.strip()]
+
 # Security settings for production
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -228,10 +242,10 @@ if not DEBUG:
 
 
 # ─── django-axes configuration ───
-AXES_ENABLED = not DEBUG                            # enable in production, disable in dev
-AXES_FAILURE_LIMIT = 5                              # 5 failed attempts => lockout
-AXES_COOLOFF_TIME = timedelta(hours=1, minutes=0)   # locked for 1 hour (user's request)
-AXES_LOCKOUT_PARAMETERS = ["ip_address"]            # lock by IP only (not IP+username)
-AXES_RESET_ON_SUCCESS = True                        # reset counter on successful login
-IPWARE_PROXY_COUNT = 1                              # 1 reverse proxy (Nginx) in front of Django
-AXES_LOCKOUT_TEMPLATE = "registration/lockout.html" # custom lockout page (optional, see below)
+AXES_ENABLED = os.environ.get('AXES_ENABLED', str(not DEBUG) ).lower() in ('true', '1')     # enable in production, disable in dev
+IPWARE_PROXY_COUNT = int(os.environ.get('IPWARE_PROXY_COUNT', 0))                           # 1 reverse proxy (Nginx) in front of Django
+AXES_FAILURE_LIMIT = 5                                                                      # 5 failed attempts => lockout
+AXES_COOLOFF_TIME = timedelta(hours=1)                                                      # locked for 1 hour (user's request)
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]                                                    # lock by IP only (not IP+username)
+AXES_RESET_ON_SUCCESS = True                                                                # reset counter on successful login
+AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"                                         # custom lockout page (optional, see below)
