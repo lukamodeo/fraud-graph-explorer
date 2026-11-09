@@ -7,7 +7,7 @@
 *.txt
 *.old
 seed_gen.py
-test_*.py
+src/test_*.py
 
 # Python
 __pycache__/
