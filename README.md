@@ -9,6 +9,8 @@ This project allows users to generate synthetic, formally valid loan application
 
 A built-in **authentication system** ensures each analyst works in their own private workspace: applications are isolated per user, while the global entity graph (shared identifiers, blacklists) remains common across the whole deployment.
 
+![Fraud Graph Explorer Web UI](screenshots/graph_02.png)
+
 ## 🎯 Core Features
 
 ### 1. Synthetic Application Crafter (`sheet_crafter`)
