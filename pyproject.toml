@@ -16,6 +16,8 @@ dependencies = [
     "python-stdnum",
     "python-codicefiscale",
     "pdfplumber",
+    "psycopg[binary]",
+    "gunicorn",
 ]
 
 [project.scripts]
