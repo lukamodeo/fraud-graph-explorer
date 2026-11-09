@@ -938,3 +938,26 @@ document.body.addEventListener('htmx:beforeSwap', function(event) {
         if (tip) tip.dispose();
     });
 });
+
+
+// ─── About tab: always keep one accordion open ───
+// When one accordion is fully closed, if the other is also closed,
+// auto-open the other — ensures at least one is always visible.
+document.addEventListener('DOMContentLoaded', function () {
+    const summaryCollapse = document.getElementById('summaryCollapse');
+    const readmeCollapse   = document.getElementById('readmeCollapse');
+
+    if (!summaryCollapse || !readmeCollapse) return;
+
+    summaryCollapse.addEventListener('hidden.bs.collapse', function () {
+        if (!readmeCollapse.classList.contains('show')) {
+            bootstrap.Collapse.getOrCreateInstance(readmeCollapse).show();
+        }
+    });
+
+    readmeCollapse.addEventListener('hidden.bs.collapse', function () {
+        if (!summaryCollapse.classList.contains('show')) {
+            bootstrap.Collapse.getOrCreateInstance(summaryCollapse).show();
+        }
+    });
+});

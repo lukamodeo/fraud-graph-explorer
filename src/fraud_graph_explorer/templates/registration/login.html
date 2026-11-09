@@ -4,25 +4,13 @@
 
 {% load static %}
 
-{% block extra_head %}
-<style>
-    .card {
-        backdrop-filter: blur(10px);
-        background: initial;
-        color: white;
-        border: 1px solid cadetblue;
-        max-width: 480px;
-    }
-</style>
-{% endblock %}
-
 {% block nav %}{% endblock %}
 
 {% block content %}
     <div class="container-fluid">
         <div class="row justify-content-center align-items-center vh-100">
-            <div class="col-md-3">
-                <div class="card shadow">
+            <div class="col-xxl-4 col-xl-5 col-md-6">
+                <div id="login-card" class="card shadow bg-blur">
                     <div class="card-body py-4 px-5">
 
                         <h3 class="text-center mb-1">
@@ -33,33 +21,27 @@
                             Fraud Graph Explorer
                         </h3>
 
-                        <p class="text-center text-info mb-2">{{ login_ui.subtitle }}</p>
+                        <p class="text-center text-info mb-2">{{ common_ui.LOGIN_SUBTITLE }}</p>
 
                         {% if form.errors %}
                         <div class="alert alert-danger text-center py-2 mb-2">
-                            {{ login_ui.error }}
+                            {{ common_ui.LOGIN_ERROR }}
                         </div>
                         {% else %}
                         <div class="py-2 mb-2">&nbsp;</div>
                         {% endif %}
 
-                        {% if next %}
-                        <div class="alert alert-warning text-center py-2">
-                            {{ login_ui.next }}
-                        </div>
-                        {% endif %}
-
                         <form method="post" class="w-75 mx-auto">
                             {% csrf_token %}
                             <div class="mb-3">
-                                <label class="form-label" for="id_username">{{ login_ui.username }}</label>
+                                <label class="form-label" for="id_username">{{ common_ui.LOGIN_USERNAME }}</label>
                                 <input type="text" name="username"
                                        id="id_username" class="form-control"
                                        style="border: 1px solid #999;"
                                        autofocus autocomplete="username" required>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label" for="id_password">{{ login_ui.password }}</label>
+                                <label class="form-label" for="id_password">{{ common_ui.LOGIN_PASSWORD }}</label>
                                 <input type="password" name="password"
                                        id="id_password" class="form-control"
                                        style="border: 1px solid #999;"
@@ -67,7 +49,7 @@
                             </div>
                             <div class="d-grid mb-3">
                                 <button type="submit" class="btn btn-primary rounded-pill">
-                                    {{ login_ui.submit }}
+                                    {{ common_ui.LOGIN_SUBMIT }}
                                 </button>
                             </div>
                         </form>

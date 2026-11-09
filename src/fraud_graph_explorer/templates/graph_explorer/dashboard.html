@@ -45,7 +45,7 @@
             <div class="d-flex gap-3 flex-shrink-0" style="height: 220px;">
 
                 {# Column 1: Upload Card (1/5 width - Primary color by default) #}
-                <div id="upload-card" class="card border-primary border-3 rounded-3 overflow-hidden min-width-0" style="flex: 1;">
+                <div id="upload-card" class="card border-primary border-3 rounded-3 overflow-hidden min-width-0">
                     <div class="card-header d-flex justify-content-between align-items-center text-bg-primary py-1">
                         <i class="bi bi-filetype-pdf fs-5"></i> {{ ui.UPLOAD_TITLE }}
                     </div>
@@ -96,7 +96,7 @@
                             </div>
                             <button id="buttonAccordion" class="accordion-button collapsed w-auto flex-grow-0 py-1 ps-4 pe-3 mt-auto mb-0 rounded-pill bg-info rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
                                 <strong>{{ ui.FILTER_TITLE }}</strong>
-                                <i class="bi bi-caret-down-fill my-auto ms-1 me-0 my-auto accordion-button-icon"></i>
+                                <i class="bi bi-caret-down-fill my-auto ms-1 me-0 accordion-button-icon"></i>
                             </button>
                         </div>
 
@@ -314,21 +314,55 @@
             {# Single pane filling the whole tab #}
             <div class="p-0 d-flex flex-column h-100 min-height-0 min-width-0">
 
-                {# Header (fixed at top) #}
-                <div class="bg-light rounded flex-shrink-0 min-height-0 min-width-0 my-0 py-4 px-5">
-                    <h2 class="mb-2">{{ ui.ABOUT_TITLE|default:'About' }}</h2>
+                {# ─── Two-accordion stack (scrollable) ─── #}
+                <div class="accordion flex-fill min-height-0" id="aboutAccordion" style="--bs-accordion-border-color: cadetblue!important;">
 
-                    {# ─── Translated summary (fixed at top, doesn't scroll) ─── #}
-                    <p class="fs-5 fst-italic mb-2" style="text-align: justify;">{{ ui.ABOUT_SUMMARY }}</p>
-                </div>
-                <div class="background-transparent m-2">
-
-                </div>
-                {# Scrollable README content #}
-                <div class="bg-white rounded flex-fill overflow-y-auto min-height-0 my-0 py-4 px-5">
-                    <div class="readme-content">
-                        {{ readme_html|safe }}
+                    {# ─── Accordion 1: Project Summary (OPEN by default) ─── #}
+                    <div class="accordion-item bg-transparent">
+                        <h2 class="accordion-header rounded-top-4 bg-blur">
+                            <button class="accordion-button fs-3 bg-transparent text-white" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#summaryCollapse"
+                                    aria-expanded="true"
+                                    aria-controls="summaryCollapse">
+                                {{ ui.ABOUT_SUMMARY_TITLE|default:'Project Summary' }}
+                                <i class="bi bi-caret-down-fill my-auto ms-auto me-3 my-auto accordion-button-icon"></i>
+                            </button>
+                        </h2>
+                        <div id="summaryCollapse"
+                             class="bg-white accordion-collapse collapse show"
+                             data-bs-parent="#aboutAccordion">
+                            <div class="accordion-body">
+                                <p class="fs-5 fst-italic mb-0 px-3 pt-3 pb-5" style="text-align: justify;">
+                                    {{ ui.ABOUT_SUMMARY }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
+
+                   {# ─── Accordion 2: Full README (fills remaining space when open, body scrolls) ─── #}
+                    <div class="accordion-item bg-transparent accordion-item-fill">
+                        <h2 class="accordion-header rounded-bottom-4 bg-blur">
+                            <button class="accordion-button collapsed fs-3 bg-transparent text-white" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#readmeCollapse"
+                                    aria-expanded="false"
+                                    aria-controls="readmeCollapse">
+                                {{ ui.ABOUT_README_TITLE|default:'Full Documentation (README)' }}
+                                <i class="bi bi-caret-down-fill my-auto ms-auto me-3 accordion-button-icon"></i>
+                            </button>
+                        </h2>
+                        <div id="readmeCollapse"
+                             class="bg-white accordion-collapse collapse"
+                             data-bs-parent="#aboutAccordion">
+                            <div class="accordion-body p-0 overflow-y-auto">
+                                <div class="readme-content p-4">
+                                    {{ readme_html|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>

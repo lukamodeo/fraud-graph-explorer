@@ -1751,20 +1751,20 @@ UI_STRINGS = {
             }
         },
 
-    "ABOUT_TITLE": {
+    "ABOUT_SUMMARY_TITLE": {
         "it": "Concept",
         "de": "Konzept",
         "fr": "Concept",
         "es": "Concepto",
         "en-gb": "Concept"
         },
-    "ABOUT_SUBTITLE": {
-        "it": "Documentazione del progetto renderizzata da README.md",
-        "de": "Projektdokumentation, gerendert aus README.md",
-        "fr": "Documentation du projet rendue depuis README.md",
-        "es": "Documentación del proyecto renderizada desde README.md",
-        "en-gb": "Project documentation rendered from README.md",
-        },
+    "ABOUT_README_TITLE": {
+        "en": "Full Documentation (README)",
+        "it": "Documentazione Completa (README)",
+        "fr": "Documentation Complète (README)",
+        "de": "Vollständige Dokumentation (README)",
+        "es": "Documentación Completa (README)",
+    },
     "ABOUT_SUMMARY": {
         "it": (
             "Un proof of concept basato su Django per la rilevazione di frodi transfrontaliere "
@@ -1837,8 +1837,8 @@ UI_STRINGS = {
             "applyEvidence for forensic investigations."
         ),
 
-        },
-    }
+    },
+}
 
 
 def get_ui_strings(lang_code: str, pdf_country_code: str = "GB") -> Dict[str, str]:

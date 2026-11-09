@@ -51,6 +51,7 @@
 
 #upload-card {
     flex: 1;
+    min-width: 260px;
 }
 
 #errors-card,
@@ -461,3 +462,41 @@ input:disabled + .slider {
 
 
 
+
+/* ─── About tab: accordion with scrollable README body ─── */
+/* The accordion is a flex column that fills the remaining space */
+#aboutAccordion {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;           /* no scroll on the container */
+}
+
+/* Default: accordion items size to their content */
+#aboutAccordion .accordion-item {
+    flex: 0 0 auto;
+}
+
+/* ─── The README accordion fills remaining space WHEN OPEN ─── */
+/* :has(.accordion-collapse.show) = "this item contains an open panel" */
+#aboutAccordion .accordion-item.accordion-item-fill:has(.accordion-collapse.show) {
+    flex: 1 1 0;                 /* grow to fill remaining space */
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The open collapse fills the item */
+#aboutAccordion .accordion-item.accordion-item-fill .accordion-collapse.show {
+    display: flex !important;    /* override Bootstrap's display:block */
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+/* The body scrolls — this is the only scrollable area */
+#aboutAccordion .accordion-item.accordion-item-fill .accordion-body {
+    overflow-y: auto;
+    flex: 1 1 0;
+    min-height: 0;
+}

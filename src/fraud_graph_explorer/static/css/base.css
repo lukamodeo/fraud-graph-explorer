@@ -1,0 +1,58 @@
+
+body {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;      /* fallback — older browsers */
+    height: 100dvh;     /* modern browsers — adjusts when address bar shows/hides */
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#main-nav {
+    border-bottom: 1px solid cadetblue;
+    flex-shrink: 0;
+    height: 34px;
+}
+
+
+.bg-blur {
+    backdrop-filter: blur(10px);
+    background: initial;
+}
+
+#login-card,
+#lockout-card,
+#resolution-card {
+    color: white;
+    border: 1px solid cadetblue;
+    max-width: 480px;
+}
+
+
+/* ─── Resolution warning (hidden by default, shown below 1280px) ─── */
+.resolution-warning {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bs-body-bg);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* ─── Below 1280px: show warning, hide everything else ─── */
+@media (max-width: 1279px) {
+    .resolution-warning {
+        display: flex;
+    }
+    body > *:not(.resolution-warning) {
+        display: none !important;
+    }
+}
