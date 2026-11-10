@@ -249,3 +249,25 @@ AXES_COOLOFF_TIME = timedelta(hours=1)                                          
 AXES_LOCKOUT_PARAMETERS = ["ip_address"]                                                    # lock by IP only (not IP+username)
 AXES_RESET_ON_SUCCESS = True                                                                # reset counter on successful login
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"                                         # custom lockout page (optional, see below)
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'fraud_graph_explorer': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

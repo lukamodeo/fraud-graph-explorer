@@ -19,6 +19,7 @@
 import os
 import json
 import tempfile
+import logging
 
 from django.shortcuts import render
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
@@ -31,6 +32,8 @@ from .ui_translations import get_ui_strings
 from .seed_data import get_random_data, get_random_profile
 from fraud_graph_explorer.domain_schema import FIELDS, CountryCodes
 from fraud_graph_explorer.validators.country_detection import detect_tin_country
+
+logger = logging.getLogger('fraud_graph_explorer')
 
 # HELPER FUNCTIONS
 def _extract_hints(ui_strings, country):
@@ -293,11 +296,11 @@ def sheet_crafter_view(request):
                 return response
             raise Http404("PDF generation failed.")
         else:
-            print("--- FORM VALIDATION FAILED ---")
-            print(f"Errors: {form.errors.as_json()}")
-            print(f"POST country_code: {request.POST.get('country_code')!r}")
-            print(f"POST keys: {list(request.POST.keys())}")
-            print("-------------------------------")
+            logger.error("--- FORM VALIDATION FAILED ---")
+            logger.error(f"Errors: {form.errors.as_json()}")
+            logger.error(f"POST country_code: {request.POST.get('country_code')!r}")
+            logger.error(f"POST keys: {list(request.POST.keys())}")
+            logger.error("-------------------------------")
 
             # ─── FIX: Re-render WITH the user's submitted data (don't lose edits) ───
             resolved_hints, hints_json = _extract_hints(ui_strings, country)

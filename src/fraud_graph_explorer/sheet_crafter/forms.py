@@ -63,7 +63,8 @@ class SheetCrafterForm(forms.Form):
                 else:
                     self.fields[internal_name] = forms.CharField(
                         required=False,
-                        max_length=max_length
+                        max_length=max_length,
+                        widget=forms.TextInput(attrs={'class': 'form-control'})
                     )
                     # Assign the localized label
                     labels = field_config.get("labels", {})

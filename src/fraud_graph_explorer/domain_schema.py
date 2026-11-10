@@ -258,7 +258,7 @@ FIELDS = {
         "type": "string",
         "tags": ["EMAIL"],
         "validations": ["email"],
-        "max_length": 50,
+        "max_length": 100,
         "fake_type": "email",
         "labels": {
             "IT": "INDIRIZZO PEC",

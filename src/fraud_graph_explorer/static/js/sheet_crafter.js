@@ -189,3 +189,76 @@ document.addEventListener('DOMContentLoaded', initTooltips);
 
 // Re-initialize after HTMX swaps (when form is re-rendered on country change)
 document.body.addEventListener('htmx:afterSettle', initTooltips);
+
+
+// ─── Auto-highlight fields that exceed maxlength ───
+// The browser's :invalid pseudo-class doesn't trigger on pre-filled
+// values until the user interacts. This manually checks on load + on
+// every edit, so invalid fields are highlighted immediately and the
+// highlight auto-removes when the user fixes the value.
+function checkFieldValidity(input) {
+    var maxLen = parseInt(input.getAttribute('maxlength'), 10);
+
+    if (maxLen && input.value.length > maxLen) {
+        // ─── Invalid: add red border + tooltip with error message ───
+        input.classList.add('is-invalid');
+
+        var msg = 'Maxi ' + maxLen + ' characters<br>(currently ' + input.value.length + ')';
+
+        // Set tooltip attributes (so initTooltips can also manage it)
+        input.setAttribute('data-bs-toggle', 'tooltip');
+        input.setAttribute('data-bs-title', msg);
+        input.setAttribute('data-bs-custom-class', 'crafter-tooltip');
+
+        // Create or update the Bootstrap tooltip
+        var tooltip = bootstrap.Tooltip.getOrCreateInstance(input, {
+            container: 'body',
+            placement: 'top',
+            html: true,
+            sanitize: false
+        });
+        tooltip.setContent({ '.tooltip-inner': msg });
+
+    } else {
+        // ─── Valid: remove red border + dispose tooltip ───
+        input.classList.remove('is-invalid');
+
+        // Dispose the tooltip instance (hides + removes from DOM)
+        var tooltip = bootstrap.Tooltip.getInstance(input);
+        if (tooltip) {
+            tooltip.dispose();
+        }
+
+        // Remove tooltip attributes
+        input.removeAttribute('data-bs-toggle');
+        input.removeAttribute('data-bs-title');
+        input.removeAttribute('data-bs-custom-class');
+    }
+}
+
+function initMaxlengthValidation() {
+    document.querySelectorAll('input[maxlength], textarea[maxlength]').forEach(function(input) {
+        // Check immediately (catches pre-filled values from server)
+        checkFieldValidity(input);
+
+        // Re-check on every edit (auto-remove highlight when fixed)
+        input.addEventListener('input', function() {
+            checkFieldValidity(input);
+        });
+    });
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', initMaxlengthValidation);
+
+// Re-run after HTMX swaps (if the form is re-rendered)
+document.body.addEventListener('htmx:afterSettle', initMaxlengthValidation);
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    var firstInvalid = document.querySelector('.is-invalid');
+    if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+    }
+});
